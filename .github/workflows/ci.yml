@@ -21,7 +21,7 @@ jobs:
       - name: Check if backend exists
         id: check
         run: |
-          if [ -f "*.sln" ] || [ -f "**/*.csproj" ]; then
+          if find . -maxdepth 2 -name "*.sln" -o -name "*.csproj" | grep -q .; then
             echo "exists=true" >> $GITHUB_OUTPUT
           else
             echo "exists=false" >> $GITHUB_OUTPUT
@@ -97,7 +97,7 @@ jobs:
 
       - name: Test
         if: steps.check.outputs.exists == 'true'
-        run: npm run test --passWithNoTests 2>/dev/null || true
+        run: npm run test -- --passWithNoTests
 
       - name: Skip (no frontend yet)
         if: steps.check.outputs.exists == 'false'
