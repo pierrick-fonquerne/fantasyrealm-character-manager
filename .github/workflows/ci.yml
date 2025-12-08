@@ -21,7 +21,7 @@ jobs:
       - name: Check if backend exists
         id: check
         run: |
-          if find . -maxdepth 2 -name "*.sln" -o -name "*.csproj" | grep -q .; then
+          if find . -name "*.sln" -o -name "*.csproj" 2>/dev/null | grep -q .; then
             echo "exists=true" >> $GITHUB_OUTPUT
           else
             echo "exists=false" >> $GITHUB_OUTPUT
