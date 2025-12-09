@@ -1,3 +1,5 @@
+using FantasyRealm.Application.Interfaces;
+using FantasyRealm.Infrastructure.Email;
 using FantasyRealm.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -38,6 +40,10 @@ namespace FantasyRealm.Infrastructure
                     return new MongoDbContext(client, mongoDbDatabaseName);
                 });
             }
+
+            services.Configure<EmailSettings>(configuration.GetSection(EmailSettings.SectionName));
+            services.AddSingleton<ISmtpClientFactory, SmtpClientFactory>();
+            services.AddScoped<IEmailService, SmtpEmailService>();
 
             return services;
         }
