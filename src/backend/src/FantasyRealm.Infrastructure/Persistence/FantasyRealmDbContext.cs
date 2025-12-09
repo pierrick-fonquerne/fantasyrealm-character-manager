@@ -74,7 +74,9 @@ namespace FantasyRealm.Infrastructure.Persistence
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Name).HasMaxLength(50).IsRequired();
                 entity.Property(e => e.Gender)
-                      .HasConversion<string>()
+                      .HasConversion(
+                          v => v.ToString().ToLowerInvariant(),
+                          v => Enum.Parse<Gender>(v, true))
                       .HasMaxLength(20)
                       .IsRequired();
                 entity.Property(e => e.SkinColor).HasMaxLength(7).IsRequired();
@@ -102,7 +104,9 @@ namespace FantasyRealm.Infrastructure.Persistence
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Name).HasMaxLength(100).IsRequired();
                 entity.Property(e => e.Type)
-                      .HasConversion<string>()
+                      .HasConversion(
+                          v => v.ToString().ToLowerInvariant(),
+                          v => Enum.Parse<ArticleType>(v, true))
                       .HasMaxLength(20)
                       .IsRequired();
                 entity.Property(e => e.IsActive).HasDefaultValue(true);
@@ -138,7 +142,9 @@ namespace FantasyRealm.Infrastructure.Persistence
                 entity.Property(e => e.Rating).IsRequired();
                 entity.Property(e => e.Text).IsRequired();
                 entity.Property(e => e.Status)
-                      .HasConversion<string>()
+                      .HasConversion(
+                          v => v.ToString().ToLowerInvariant(),
+                          v => Enum.Parse<CommentStatus>(v, true))
                       .HasMaxLength(20)
                       .HasDefaultValue(CommentStatus.Pending);
                 entity.Property(e => e.CommentedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
