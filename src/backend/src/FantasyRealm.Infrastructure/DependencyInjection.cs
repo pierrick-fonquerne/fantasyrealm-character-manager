@@ -42,6 +42,7 @@ namespace FantasyRealm.Infrastructure
             }
 
             services.Configure<EmailSettings>(configuration.GetSection(EmailSettings.SectionName));
+            services.AddSingleton<ISmtpClientFactory, SmtpClientFactory>();
             services.AddScoped<IEmailService, SmtpEmailService>();
 
             return services;

@@ -13,16 +13,22 @@ namespace FantasyRealm.Infrastructure.Email
     public class SmtpEmailService : IEmailService
     {
         private readonly EmailSettings _settings;
+        private readonly ISmtpClientFactory _smtpClientFactory;
         private readonly ILogger<SmtpEmailService> _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SmtpEmailService"/> class.
         /// </summary>
         /// <param name="settings">The email configuration settings.</param>
+        /// <param name="smtpClientFactory">The factory for creating SMTP clients.</param>
         /// <param name="logger">The logger instance.</param>
-        public SmtpEmailService(IOptions<EmailSettings> settings, ILogger<SmtpEmailService> logger)
+        public SmtpEmailService(
+            IOptions<EmailSettings> settings,
+            ISmtpClientFactory smtpClientFactory,
+            ILogger<SmtpEmailService> logger)
         {
             _settings = settings.Value;
+            _smtpClientFactory = smtpClientFactory;
             _logger = logger;
         }
 
@@ -97,7 +103,7 @@ namespace FantasyRealm.Infrastructure.Email
 
             try
             {
-                using var client = new SmtpClient();
+                using var client = _smtpClientFactory.Create();
 
                 var secureSocketOptions = _settings.UseSsl
                     ? SecureSocketOptions.StartTls
