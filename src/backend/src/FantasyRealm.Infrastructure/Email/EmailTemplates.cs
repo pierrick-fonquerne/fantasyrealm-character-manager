@@ -39,7 +39,7 @@ namespace FantasyRealm.Infrastructure.Email
         /// <returns>The HTML email body.</returns>
         public static string GetPasswordResetTemplate(string pseudo, string resetToken)
         {
-            var resetUrl = $"{BaseUrl}/reset-password?token={Encode(resetToken)}";
+            var resetUrl = $"{BaseUrl}/reset-password?token={Uri.EscapeDataString(resetToken)}";
             return WrapInLayout($@"
                 <h1>Password Reset Request</h1>
                 <p>Hello {Encode(pseudo)},</p>

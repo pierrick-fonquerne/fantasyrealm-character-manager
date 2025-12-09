@@ -42,6 +42,18 @@ namespace FantasyRealm.Tests.Unit.Email
         }
 
         [Fact]
+        public void GetPasswordResetTemplate_UrlEncodesSpecialCharacters()
+        {
+            var pseudo = "TestPlayer";
+            var resetToken = "abc+def/ghi=jkl";
+
+            var result = EmailTemplates.GetPasswordResetTemplate(pseudo, resetToken);
+
+            Assert.Contains("token=abc%2Bdef%2Fghi%3Djkl", result);
+            Assert.DoesNotContain("token=abc+def", result);
+        }
+
+        [Fact]
         public void GetCharacterApprovedTemplate_ContainsCharacterName()
         {
             var pseudo = "TestPlayer";
