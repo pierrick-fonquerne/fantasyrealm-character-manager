@@ -1,4 +1,4 @@
-using System.Web;
+using System.Net;
 
 namespace FantasyRealm.Infrastructure.Email
 {
@@ -141,7 +141,7 @@ namespace FantasyRealm.Infrastructure.Email
 
         private static string Encode(string value)
         {
-            return HttpUtility.HtmlEncode(value);
+            return WebUtility.HtmlEncode(value);
         }
 
         private static string WrapInLayout(string content)
