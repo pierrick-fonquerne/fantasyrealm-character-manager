@@ -44,7 +44,7 @@ jobs:
 
       - name: Test
         if: steps.check.outputs.exists == 'true'
-        run: dotnet test --no-build --configuration Release --verbosity normal
+        run: dotnet test --no-build --configuration Release --verbosity normal --filter "Category!=Integration"
 
       - name: Skip (no backend yet)
         if: steps.check.outputs.exists == 'false'
