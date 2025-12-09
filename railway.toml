@@ -1,0 +1,10 @@
+# Railway configuration
+# Backend deployment will be configured in a future US
+# For now, skip automatic builds to prevent CI failures
+
+[build]
+builder = "nixpacks"
+buildCommand = "echo 'Backend deployment not configured yet - skipping build'"
+
+[deploy]
+startCommand = "echo 'Backend not deployed' && sleep infinity"
