@@ -7,8 +7,32 @@ on:
     branches: [main, develop]
 
 jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect file changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'src/backend/**'
+              - '.github/workflows/ci.yml'
+            frontend:
+              - 'src/frontend/**'
+              - '.github/workflows/ci.yml'
+
   backend:
     name: Backend (.NET)
+    needs: changes
+    if: ${{ needs.changes.outputs.backend == 'true' }}
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -18,40 +42,33 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Check if backend exists
-        id: check
-        run: |
-          if find . -name "*.sln" -o -name "*.csproj" 2>/dev/null | grep -q .; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-          fi
-        working-directory: src/backend
-
       - name: Setup .NET
-        if: steps.check.outputs.exists == 'true'
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
 
       - name: Restore dependencies
-        if: steps.check.outputs.exists == 'true'
         run: dotnet restore
 
       - name: Build
-        if: steps.check.outputs.exists == 'true'
         run: dotnet build --no-restore --configuration Release
 
       - name: Test
-        if: steps.check.outputs.exists == 'true'
         run: dotnet test --no-build --configuration Release --verbosity normal --filter "Category!=Email"
 
-      - name: Skip (no backend yet)
-        if: steps.check.outputs.exists == 'false'
-        run: echo "Backend not yet implemented - skipping"
+  backend-skip:
+    name: Backend (.NET) (pull_request)
+    needs: changes
+    if: ${{ needs.changes.outputs.backend == 'false' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skip
+        run: echo "No backend changes detected - skipping build"
 
   frontend:
     name: Frontend (React)
+    needs: changes
+    if: ${{ needs.changes.outputs.frontend == 'true' }}
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -61,18 +78,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Check if frontend exists
-        id: check
-        run: |
-          if [ -f "package.json" ]; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-          fi
-        working-directory: src/frontend
-
       - name: Setup Node.js
-        if: steps.check.outputs.exists == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -80,25 +86,25 @@ jobs:
           cache-dependency-path: src/frontend/package-lock.json
 
       - name: Install dependencies
-        if: steps.check.outputs.exists == 'true'
         run: npm ci
 
       - name: Lint
-        if: steps.check.outputs.exists == 'true'
         run: npm run lint
 
       - name: Type check
-        if: steps.check.outputs.exists == 'true'
         run: npm run type-check
 
       - name: Build
-        if: steps.check.outputs.exists == 'true'
         run: npm run build
 
       - name: Test
-        if: steps.check.outputs.exists == 'true'
         run: npm run test -- --passWithNoTests
 
-      - name: Skip (no frontend yet)
-        if: steps.check.outputs.exists == 'false'
-        run: echo "Frontend not yet implemented - skipping"
+  frontend-skip:
+    name: Frontend (React) (pull_request)
+    needs: changes
+    if: ${{ needs.changes.outputs.frontend == 'false' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skip
+        run: echo "No frontend changes detected - skipping build"
