@@ -1,68 +1,305 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
+@import 'tailwindcss';
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+ * SELF-HOSTED FONTS (RGPD compliant - no external requests)
+ * ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* Cinzel - Display font */
+@font-face {
+  font-family: 'Cinzel';
+  font-style: normal;
   font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  font-display: swap;
+  src: url('/fonts/Cinzel-Regular.woff2') format('woff2');
 }
 
-a {
+@font-face {
+  font-family: 'Cinzel';
+  font-style: normal;
   font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+  font-display: swap;
+  src: url('/fonts/Cinzel-Medium.woff2') format('woff2');
 }
 
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+@font-face {
+  font-family: 'Cinzel';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/Cinzel-SemiBold.woff2') format('woff2');
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+@font-face {
+  font-family: 'Cinzel';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/Cinzel-Bold.woff2') format('woff2');
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
+/* Inter - Body font */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url('/fonts/Inter-Light.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/Inter-Regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
   font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  font-display: swap;
+  src: url('/fonts/Inter-Medium.woff2') format('woff2');
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/Inter-SemiBold.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/Inter-Bold.woff2') format('woff2');
+}
+
+@theme {
+  /* ═══════════════════════════════════════════════════════════════════════════
+   * FANTASY REALM - Design System Tokens
+   * Based on the official style guide v3.0
+   * ═══════════════════════════════════════════════════════════════════════════ */
+
+  /* ─────────────────────────────────────────────────────────────────────────────
+   * COLORS - Primary Palette
+   * ───────────────────────────────────────────────────────────────────────────── */
+
+  /* Gold - Primary accent color */
+  --color-gold-50: #FFFBEB;
+  --color-gold-100: #FEF3C7;
+  --color-gold-200: #FDE68A;
+  --color-gold-300: #FCD34D;
+  --color-gold-400: #FBBF24;
+  --color-gold-500: #F59E0B;
+  --color-gold-600: #D97706;
+  --color-gold-700: #B45309;
+  --color-gold-800: #92400E;
+  --color-gold-900: #78350F;
+
+  /* Dark - Background colors */
+  --color-dark-950: #0A0908;
+  --color-dark-900: #0D0D0F;
+  --color-dark-800: #121110;
+  --color-dark-700: #18181B;
+  --color-dark-600: #242220;
+  --color-dark-500: #2A2A2E;
+  --color-dark-400: #3A3A3E;
+  --color-dark-300: #4A4644;
+  --color-dark-200: #6B6B70;
+  --color-dark-100: #A0A0A5;
+
+  /* Cream - Text colors */
+  --color-cream-50: #FAFAF9;
+  --color-cream-100: #F5F5F4;
+  --color-cream-200: #E8E4DE;
+  --color-cream-300: #D6D3D1;
+  --color-cream-400: #A8A29E;
+
+  /* Semantic colors */
+  --color-success-500: #22C55E;
+  --color-success-600: #16A34A;
+  --color-error-500: #EF4444;
+  --color-error-600: #DC2626;
+  --color-warning-500: #F59E0B;
+  --color-warning-600: #D97706;
+  --color-info-500: #3B82F6;
+  --color-info-600: #2563EB;
+
+  /* ─────────────────────────────────────────────────────────────────────────────
+   * TYPOGRAPHY - Font Families
+   * ───────────────────────────────────────────────────────────────────────────── */
+  --font-display: 'Cinzel', serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+
+  /* ─────────────────────────────────────────────────────────────────────────────
+   * SPACING - Based on 4px grid
+   * ───────────────────────────────────────────────────────────────────────────── */
+  --spacing-0: 0;
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-6: 24px;
+  --spacing-8: 32px;
+  --spacing-10: 40px;
+  --spacing-12: 48px;
+  --spacing-16: 64px;
+  --spacing-20: 80px;
+  --spacing-24: 96px;
+
+  /* ─────────────────────────────────────────────────────────────────────────────
+   * BORDER RADIUS
+   * ───────────────────────────────────────────────────────────────────────────── */
+  --radius-none: 0;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-full: 9999px;
+
+  /* ─────────────────────────────────────────────────────────────────────────────
+   * SHADOWS
+   * ───────────────────────────────────────────────────────────────────────────── */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-gold: 0 0 20px rgba(245, 158, 11, 0.3);
+  --shadow-gold-lg: 0 0 40px rgba(245, 158, 11, 0.4);
+
+  /* ─────────────────────────────────────────────────────────────────────────────
+   * TRANSITIONS
+   * ───────────────────────────────────────────────────────────────────────────── */
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+  --transition-slow: 350ms ease;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+ * BASE STYLES
+ * ═══════════════════════════════════════════════════════════════════════════════ */
+
+@layer base {
+  html {
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
-  a:hover {
-    color: #747bff;
+
+  body {
+    @apply bg-dark-900 text-cream-200 min-h-screen;
   }
-  button {
-    background-color: #f9f9f9;
+
+  /* Headings use Cinzel display font */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    @apply text-cream-100 font-semibold;
   }
+
+  h1 {
+    @apply text-4xl md:text-5xl;
+  }
+
+  h2 {
+    @apply text-3xl md:text-4xl;
+  }
+
+  h3 {
+    @apply text-2xl md:text-3xl;
+  }
+
+  h4 {
+    @apply text-xl md:text-2xl;
+  }
+
+  /* Links */
+  a {
+    @apply text-gold-500 hover:text-gold-400 transition-colors;
+  }
+
+  /* Focus states for accessibility */
+  *:focus-visible {
+    @apply outline-2 outline-offset-2 outline-gold-500;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+ * ANIMATIONS
+ * ═══════════════════════════════════════════════════════════════════════════════ */
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out;
+}
+
+.animate-fade-out {
+  animation: fade-out 0.2s ease-out;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out;
+}
+
+.animate-slide-down {
+  animation: slide-down 0.2s ease-out;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.2s ease-out;
 }
