@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "FantasyRealm Local",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "fantasyrealm",
+      "Username": "fantasyrealm",
+      "SSLMode": "prefer"
+    }
+  }
+}
