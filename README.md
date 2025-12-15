@@ -14,10 +14,11 @@ Application web permettant aux joueurs de :
 
 | Couche | Technologie |
 |--------|-------------|
-| Frontend | React 18 + TypeScript + Vite |
+| Frontend | React 19 + TypeScript + Vite |
 | Backend | .NET 8 (ASP.NET Core Web API) |
-| BDD Relationnelle | PostgreSQL |
-| BDD NoSQL | MongoDB (logs d'activité) |
+| BDD Relationnelle | PostgreSQL 18 |
+| BDD NoSQL | MongoDB 8.0 (logs d'activité) |
+| Conteneurisation | Docker Compose |
 
 ## Structure du projet
 
@@ -36,57 +37,89 @@ fantasyrealm-character-manager/
 
 ## Prérequis
 
-- [Node.js](https://nodejs.org/) 20 LTS
-- [.NET SDK](https://dotnet.microsoft.com/download) 8.0
-- [PostgreSQL](https://www.postgresql.org/download/) 16
-- [MongoDB](https://www.mongodb.com/try/download) 7.0
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (pour l'environnement local)
+- [Node.js](https://nodejs.org/) 20 LTS (pour le développement frontend)
+- [.NET SDK](https://dotnet.microsoft.com/download) 8.0 (optionnel, pour le développement backend hors Docker)
 
-## Installation
-
-### 1. Cloner le repository
+## Installation rapide (Docker)
 
 ```bash
-git clone https://github.com/votre-username/fantasyrealm-character-manager.git
+# Cloner le repository
+git clone https://github.com/pierrick-fonquerne/fantasyrealm-character-manager.git
 cd fantasyrealm-character-manager
+
+# Lancer l'installation automatique
+./scripts/install.sh
 ```
 
-### 2. Backend (.NET)
+Le script va :
+1. Vérifier que Docker est installé et démarré
+2. Générer automatiquement des mots de passe sécurisés dans `.env`
+3. Démarrer PostgreSQL 18, MongoDB 8.0 et l'API .NET
+4. Exécuter les migrations SQL
+
+**Services disponibles après installation :**
+
+| Service | URL |
+|---------|-----|
+| Frontend | http://localhost:5173 |
+| API | http://localhost:5000 |
+| Swagger | http://localhost:5000/swagger |
+| pgAdmin | http://localhost:5050 |
+| PostgreSQL | localhost:5432 |
+| MongoDB | localhost:27017 |
+
+## Scripts utilitaires
 
 ```bash
-cd src/backend
-dotnet restore
-cp appsettings.Development.example.json appsettings.Development.json
-# Configurer les connexions BDD dans appsettings.Development.json
-dotnet run --project src/FantasyRealm.Api
+./scripts/start.sh      # Démarrer l'environnement
+./scripts/stop.sh       # Arrêter l'environnement
+./scripts/logs.sh       # Voir les logs (tous les services)
+./scripts/logs.sh api   # Voir les logs de l'API
+./scripts/migrate.sh    # Exécuter les nouvelles migrations SQL
+./scripts/reset-db.sh   # Réinitialiser les bases de données
 ```
 
-L'API sera disponible sur `http://localhost:5000`
-
-### 3. Frontend (React)
+## Développement Frontend
 
 ```bash
 cd src/frontend
 npm install
-cp .env.example .env.local
-# Configurer l'URL de l'API dans .env.local
 npm run dev
 ```
 
 L'application sera disponible sur `http://localhost:5173`
 
-### 4. Base de données
+## Installation manuelle (sans Docker)
+
+<details>
+<summary>Cliquer pour voir les instructions manuelles</summary>
+
+### Prérequis
+
+- [PostgreSQL](https://www.postgresql.org/download/) 18
+- [MongoDB](https://www.mongodb.com/try/download) 8.0
+
+### Backend (.NET)
+
+```bash
+cd src/backend
+dotnet restore
+# Configurer les connexions BDD dans appsettings.Development.json
+dotnet run --project src/FantasyRealm.Api
+```
+
+### Base de données
 
 ```bash
 # PostgreSQL - Créer la base de données
 createdb -U postgres fantasyrealm
 
 # Exécuter les scripts SQL
-psql -U postgres -d fantasyrealm -f database/sql/001_create_tables.sql
-psql -U postgres -d fantasyrealm -f database/sql/002_seed_data.sql
-
-# MongoDB - Initialiser les collections
-mongosh fantasyrealm database/mongodb/init.js
+psql -U postgres -d fantasyrealm -f database/sql/001_initial_schema.sql
 ```
+
+</details>
 
 ## Commandes utiles
 
