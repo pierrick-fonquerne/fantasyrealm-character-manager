@@ -1,3 +1,5 @@
+using FantasyRealm.Infrastructure;
+
 namespace FantasyRealm.Api
 {
     public static class Program
@@ -23,9 +25,8 @@ namespace FantasyRealm.Api
                 });
             });
 
-            // TODO: Add JWT Authentication (FRO-1)
-            // TODO: Add Application services (FRO-15+)
-            // TODO: Add Infrastructure services (FRO-17)
+            // Infrastructure services (Database, Email, Auth)
+            builder.Services.AddInfrastructure(builder.Configuration);
 
             var app = builder.Build();
 

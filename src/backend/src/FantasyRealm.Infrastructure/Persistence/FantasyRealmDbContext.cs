@@ -52,10 +52,12 @@ namespace FantasyRealm.Infrastructure.Persistence
             {
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Pseudo).HasMaxLength(50).IsRequired();
-                entity.Property(e => e.Email).HasMaxLength(100).IsRequired();
+                entity.Property(e => e.Email).HasMaxLength(255).IsRequired();
                 entity.Property(e => e.PasswordHash).HasMaxLength(255).IsRequired();
                 entity.Property(e => e.IsSuspended).HasDefaultValue(false);
                 entity.Property(e => e.MustChangePassword).HasDefaultValue(false);
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                 entity.HasIndex(e => e.Pseudo).IsUnique();
                 entity.HasIndex(e => e.Email).IsUnique();
