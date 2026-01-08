@@ -7,13 +7,16 @@ namespace FantasyRealm.Tests.Unit.Email
         [Fact]
         public void GetWelcomeTemplate_ContainsPseudo()
         {
+            // Arrange
             var pseudo = "TestPlayer";
 
+            // Act
             var result = EmailTemplates.GetWelcomeTemplate(pseudo);
 
+            // Assert
             Assert.Contains(pseudo, result);
-            Assert.Contains("Welcome to FantasyRealm", result);
-            Assert.Contains("Create Your First Character", result);
+            Assert.Contains("Bienvenue", result);
+            Assert.Contains("Créer mon premier personnage", result);
         }
 
         [Fact]
@@ -38,7 +41,7 @@ namespace FantasyRealm.Tests.Unit.Email
             Assert.Contains(pseudo, result);
             Assert.Contains(resetToken, result);
             Assert.Contains("reset-password?token=", result);
-            Assert.Contains("24 hours", result);
+            Assert.Contains("24 heures", result);
         }
 
         [Fact]
@@ -63,7 +66,7 @@ namespace FantasyRealm.Tests.Unit.Email
 
             Assert.Contains(pseudo, result);
             Assert.Contains(characterName, result);
-            Assert.Contains("approved", result.ToLower());
+            Assert.Contains("approuvé", result.ToLower());
         }
 
         [Fact]
@@ -78,7 +81,7 @@ namespace FantasyRealm.Tests.Unit.Email
             Assert.Contains(pseudo, result);
             Assert.Contains(characterName, result);
             Assert.Contains(reason, result);
-            Assert.Contains("not approved", result.ToLower());
+            Assert.Contains("non approuvé", result.ToLower());
         }
 
         [Fact]
@@ -91,7 +94,7 @@ namespace FantasyRealm.Tests.Unit.Email
 
             Assert.Contains(pseudo, result);
             Assert.Contains(characterName, result);
-            Assert.Contains("Comment Published", result);
+            Assert.Contains("Commentaire publié", result);
         }
 
         [Fact]
@@ -118,7 +121,7 @@ namespace FantasyRealm.Tests.Unit.Email
 
             Assert.Contains(pseudo, result);
             Assert.Contains(reason, result);
-            Assert.Contains("suspended", result.ToLower());
+            Assert.Contains("suspendu", result.ToLower());
         }
 
         [Theory]

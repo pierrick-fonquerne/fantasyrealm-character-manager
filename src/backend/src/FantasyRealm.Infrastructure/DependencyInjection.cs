@@ -1,6 +1,9 @@
 using FantasyRealm.Application.Interfaces;
+using FantasyRealm.Application.Services;
 using FantasyRealm.Infrastructure.Email;
 using FantasyRealm.Infrastructure.Persistence;
+using FantasyRealm.Infrastructure.Repositories;
+using FantasyRealm.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -44,6 +47,10 @@ namespace FantasyRealm.Infrastructure
             services.Configure<EmailSettings>(configuration.GetSection(EmailSettings.SectionName));
             services.AddSingleton<ISmtpClientFactory, SmtpClientFactory>();
             services.AddScoped<IEmailService, SmtpEmailService>();
+
+            services.AddScoped<IUserRepository, UserRepository>();
+            services.AddSingleton<IPasswordHasher, Argon2PasswordHasher>();
+            services.AddScoped<IAuthService, AuthService>();
 
             return services;
         }

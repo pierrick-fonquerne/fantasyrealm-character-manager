@@ -1,34 +1,43 @@
 import { render, screen, fireEvent } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect } from 'vitest';
 import Header from './Header';
 
+const renderWithRouter = (initialRoute = '/') => {
+  return render(
+    <MemoryRouter initialEntries={[initialRoute]}>
+      <Header />
+    </MemoryRouter>
+  );
+};
+
 describe('Header', () => {
   it('renders the logo with correct text', () => {
-    render(<Header />);
+    renderWithRouter();
     expect(screen.getByText('FantasyRealm')).toBeInTheDocument();
   });
 
   it('renders navigation links on desktop', () => {
-    render(<Header />);
+    renderWithRouter();
     expect(screen.getByText('Accueil')).toBeInTheDocument();
     expect(screen.getByText('Galerie')).toBeInTheDocument();
     expect(screen.getByText('Contact')).toBeInTheDocument();
   });
 
   it('renders the login button', () => {
-    render(<Header />);
+    renderWithRouter();
     const loginButtons = screen.getAllByText('Connexion');
     expect(loginButtons.length).toBeGreaterThan(0);
   });
 
   it('renders burger menu button for mobile', () => {
-    render(<Header />);
+    renderWithRouter();
     const burgerButton = screen.getByLabelText('Ouvrir le menu');
     expect(burgerButton).toBeInTheDocument();
   });
 
   it('toggles mobile menu when burger button is clicked', () => {
-    render(<Header />);
+    renderWithRouter();
     const burgerButton = screen.getByLabelText('Ouvrir le menu');
 
     fireEvent.click(burgerButton);
@@ -37,13 +46,13 @@ describe('Header', () => {
   });
 
   it('has correct href for logo', () => {
-    render(<Header />);
+    renderWithRouter();
     const logo = screen.getByText('FantasyRealm');
     expect(logo).toHaveAttribute('href', '/');
   });
 
   it('has correct hrefs for navigation links', () => {
-    render(<Header />);
+    renderWithRouter();
     const accueilLinks = screen.getAllByText('Accueil');
     const galerieLinks = screen.getAllByText('Galerie');
     const contactLinks = screen.getAllByText('Contact');
@@ -54,7 +63,7 @@ describe('Header', () => {
   });
 
   it('closes mobile menu when a link is clicked', () => {
-    render(<Header />);
+    renderWithRouter();
     const burgerButton = screen.getByLabelText('Ouvrir le menu');
 
     fireEvent.click(burgerButton);
