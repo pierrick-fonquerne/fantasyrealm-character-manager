@@ -41,7 +41,7 @@ const defaultIcons: Record<AlertVariant, ReactNode> = {
   ),
   error: (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
     </svg>
   ),
   info: (
@@ -75,7 +75,7 @@ const Alert = forwardRef<HTMLDivElement, AlertProps>(
           <button
             type="button"
             onClick={onClose}
-            className="flex-shrink-0 p-1 rounded hover:bg-dark-600 transition-colors"
+            className="flex-shrink-0 p-1.5 cursor-pointer opacity-60 hover:opacity-100 transition-opacity"
             aria-label="Fermer"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

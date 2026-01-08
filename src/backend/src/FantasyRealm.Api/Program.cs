@@ -2,7 +2,10 @@ using FantasyRealm.Infrastructure;
 
 namespace FantasyRealm.Api
 {
-    public static class Program
+    /// <summary>
+    /// Application entry point.
+    /// </summary>
+    public partial class Program
     {
         private static void Main(string[] args)
         {

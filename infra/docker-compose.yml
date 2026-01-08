@@ -10,6 +10,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-fantasyrealm}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ../database/sql:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-fantasyrealm}"]
       interval: 5s
@@ -61,6 +62,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__PostgreSQL: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-fantasyrealm};Username=${POSTGRES_USER:-fantasyrealm};Password=${POSTGRES_PASSWORD}"
       ConnectionStrings__MongoDB: "mongodb://${MONGO_USER:-fantasyrealm}:${MONGO_PASSWORD}@mongodb:27017/${MONGO_DB:-fantasyrealm_logs}?authSource=admin"
+      Email__Password: ${EMAIL_PASSWORD}
     depends_on:
       postgres:
         condition: service_healthy

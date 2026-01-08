@@ -7,13 +7,16 @@ namespace FantasyRealm.Tests.Unit.Email
         [Fact]
         public void GetWelcomeTemplate_ContainsPseudo()
         {
+            // Arrange
             var pseudo = "TestPlayer";
 
+            // Act
             var result = EmailTemplates.GetWelcomeTemplate(pseudo);
 
+            // Assert
             Assert.Contains(pseudo, result);
-            Assert.Contains("Welcome to FantasyRealm", result);
-            Assert.Contains("Create Your First Character", result);
+            Assert.Contains("Bienvenue", result);
+            Assert.Contains("Créer mon premier personnage", result);
         }
 
         [Fact]

@@ -3,6 +3,7 @@ using FantasyRealm.Application.DTOs;
 using FantasyRealm.Application.Interfaces;
 using FantasyRealm.Application.Validators;
 using FantasyRealm.Domain.Entities;
+using Microsoft.Extensions.Logging;
 
 namespace FantasyRealm.Application.Services
 {
@@ -16,15 +17,18 @@ namespace FantasyRealm.Application.Services
         private readonly IUserRepository _userRepository;
         private readonly IPasswordHasher _passwordHasher;
         private readonly IEmailService _emailService;
+        private readonly ILogger<AuthService> _logger;
 
         public AuthService(
             IUserRepository userRepository,
             IPasswordHasher passwordHasher,
-            IEmailService emailService)
+            IEmailService emailService,
+            ILogger<AuthService> logger)
         {
             _userRepository = userRepository;
             _passwordHasher = passwordHasher;
             _emailService = emailService;
+            _logger = logger;
         }
 
         /// <inheritdoc />
@@ -72,7 +76,18 @@ namespace FantasyRealm.Application.Services
 
             var createdUser = await _userRepository.CreateAsync(user, cancellationToken);
 
-            await _emailService.SendWelcomeEmailAsync(createdUser.Email, createdUser.Pseudo, cancellationToken);
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await _emailService.SendWelcomeEmailAsync(createdUser.Email, createdUser.Pseudo, CancellationToken.None);
+                    _logger.LogInformation("Welcome email sent to {Email}", createdUser.Email);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to send welcome email to {Email}", createdUser.Email);
+                }
+            }, CancellationToken.None);
 
             return Result<RegisterResponse>.Success(new RegisterResponse(
                 createdUser.Id,

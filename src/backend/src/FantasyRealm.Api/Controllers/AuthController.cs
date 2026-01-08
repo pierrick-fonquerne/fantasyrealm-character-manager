@@ -37,7 +37,7 @@ namespace FantasyRealm.Api.Controllers
 
             if (result.IsFailure)
             {
-                return StatusCode(result.ErrorCode ?? 400, new { error = result.Error });
+                return StatusCode(result.ErrorCode ?? 400, new { message = result.Error });
             }
 
             return CreatedAtAction(nameof(Register), new { id = result.Value!.Id }, result.Value);

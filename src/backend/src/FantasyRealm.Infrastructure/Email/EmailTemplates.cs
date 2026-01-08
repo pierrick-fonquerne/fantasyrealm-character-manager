@@ -17,17 +17,17 @@ namespace FantasyRealm.Infrastructure.Email
         public static string GetWelcomeTemplate(string pseudo)
         {
             return WrapInLayout($@"
-                <h1>Welcome to FantasyRealm, {Encode(pseudo)}!</h1>
-                <p>Thank you for joining our community of adventurers.</p>
-                <p>You can now:</p>
+                <h1>Bienvenue, {Encode(pseudo)} !</h1>
+                <p>Merci d'avoir rejoint la communauté des aventuriers de FantasyRealm Online.</p>
+                <p>Vous pouvez maintenant :</p>
                 <ul>
-                    <li>Create and customize your characters</li>
-                    <li>Equip them with weapons, armor, and accessories</li>
-                    <li>Share your creations with the community</li>
-                    <li>Comment and rate other players' characters</li>
+                    <li>Créer et personnaliser vos personnages</li>
+                    <li>Les équiper d'armes, armures et accessoires</li>
+                    <li>Partager vos créations avec la communauté</li>
+                    <li>Commenter et noter les personnages des autres joueurs</li>
                 </ul>
-                <p>Start your adventure now!</p>
-                <a href=""{BaseUrl}/characters/create"" class=""button"">Create Your First Character</a>
+                <p>Votre aventure commence maintenant !</p>
+                <a href=""{BaseUrl}/characters/create"" class=""button"">Créer mon premier personnage</a>
             ");
         }
 
@@ -173,23 +173,23 @@ namespace FantasyRealm.Infrastructure.Email
             text-align: center;
             margin-bottom: 30px;
             padding-bottom: 20px;
-            border-bottom: 2px solid #7c3aed;
+            border-bottom: 2px solid #F59E0B;
         }}
         .header img {{
             max-width: 150px;
         }}
         .header h2 {{
-            color: #7c3aed;
+            color: #F59E0B;
             margin: 10px 0 0 0;
         }}
         h1 {{
-            color: #7c3aed;
+            color: #F59E0B;
             margin-top: 0;
         }}
         .button {{
             display: inline-block;
-            background-color: #7c3aed;
-            color: #ffffff !important;
+            background-color: #F59E0B;
+            color: #0D0D0F !important;
             text-decoration: none;
             padding: 12px 30px;
             border-radius: 6px;
@@ -197,7 +197,7 @@ namespace FantasyRealm.Infrastructure.Email
             margin: 20px 0;
         }}
         .button:hover {{
-            background-color: #6d28d9;
+            background-color: #D97706;
         }}
         .note {{
             color: #666;

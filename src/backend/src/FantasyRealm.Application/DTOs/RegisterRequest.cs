@@ -13,7 +13,7 @@ namespace FantasyRealm.Application.DTOs
 
         [Required(ErrorMessage = "Le pseudo est requis.")]
         [MinLength(3, ErrorMessage = "Le pseudo doit contenir au moins 3 caractères.")]
-        [MaxLength(50, ErrorMessage = "Le pseudo ne peut pas dépasser 50 caractères.")]
+        [MaxLength(30, ErrorMessage = "Le pseudo ne peut pas dépasser 30 caractères.")]
         string Pseudo,
 
         [Required(ErrorMessage = "Le mot de passe est requis.")]
