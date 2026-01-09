@@ -13,7 +13,7 @@ namespace FantasyRealm.Domain.Entities
 
         public ArticleType Type { get; set; }
 
-        public string? Image { get; set; }
+        public byte[]? Image { get; set; }
 
         public bool IsActive { get; set; } = true;
 

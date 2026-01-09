@@ -7,12 +7,14 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using Npgsql;
 using Testcontainers.PostgreSql;
 
 namespace FantasyRealm.Tests.Integration
 {
     /// <summary>
     /// Custom WebApplicationFactory for integration testing with Testcontainers.
+    /// Executes real SQL scripts from database/sql/ for production parity.
     /// </summary>
     public class FantasyRealmWebApplicationFactory : WebApplicationFactory<Program>, IAsyncLifetime
     {
@@ -28,6 +30,51 @@ namespace FantasyRealm.Tests.Integration
         public async Task InitializeAsync()
         {
             await _postgresContainer.StartAsync();
+            await ExecuteSqlScriptsAsync();
+        }
+
+        private async Task ExecuteSqlScriptsAsync()
+        {
+            var sqlDirectory = FindSqlDirectory();
+            var sqlFiles = Directory.GetFiles(sqlDirectory, "*.sql")
+                .OrderBy(f => f)
+                .ToList();
+
+            await using var connection = new NpgsqlConnection(_postgresContainer.GetConnectionString());
+            await connection.OpenAsync();
+
+            foreach (var sqlFile in sqlFiles)
+            {
+                var sql = await File.ReadAllTextAsync(sqlFile);
+                await using var command = new NpgsqlCommand(sql, connection);
+                await command.ExecuteNonQueryAsync();
+            }
+        }
+
+        private static string FindSqlDirectory()
+        {
+            var currentDir = Directory.GetCurrentDirectory();
+            var searchDir = currentDir;
+
+            while (searchDir != null)
+            {
+                var sqlPath = Path.Combine(searchDir, "database", "sql");
+                if (Directory.Exists(sqlPath))
+                {
+                    return sqlPath;
+                }
+
+                var parentSqlPath = Path.Combine(searchDir, "..", "..", "..", "..", "..", "database", "sql");
+                if (Directory.Exists(parentSqlPath))
+                {
+                    return Path.GetFullPath(parentSqlPath);
+                }
+
+                searchDir = Directory.GetParent(searchDir)?.FullName;
+            }
+
+            throw new DirectoryNotFoundException(
+                $"Could not find database/sql directory. Current directory: {currentDir}");
         }
 
         public new async Task DisposeAsync()
@@ -60,26 +107,7 @@ namespace FantasyRealm.Tests.Integration
                 }
 
                 services.AddScoped(_ => EmailServiceMock.Object);
-
-                var sp = services.BuildServiceProvider();
-                using var scope = sp.CreateScope();
-                var db = scope.ServiceProvider.GetRequiredService<FantasyRealmDbContext>();
-                db.Database.EnsureCreated();
-                SeedDatabase(db);
             });
-        }
-
-        private static void SeedDatabase(FantasyRealmDbContext context)
-        {
-            if (!context.Roles.Any())
-            {
-                context.Roles.AddRange(
-                    new Domain.Entities.Role { Id = 1, Label = "User" },
-                    new Domain.Entities.Role { Id = 2, Label = "Employee" },
-                    new Domain.Entities.Role { Id = 3, Label = "Admin" }
-                );
-                context.SaveChanges();
-            }
         }
     }
 }

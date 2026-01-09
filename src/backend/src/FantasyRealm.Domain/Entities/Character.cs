@@ -25,7 +25,7 @@ namespace FantasyRealm.Domain.Entities
 
         public string MouthShape { get; set; } = string.Empty;
 
-        public string? Image { get; set; }
+        public byte[]? Image { get; set; }
 
         public bool IsShared { get; set; }
 
