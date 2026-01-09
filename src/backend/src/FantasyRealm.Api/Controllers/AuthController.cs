@@ -42,5 +42,30 @@ namespace FantasyRealm.Api.Controllers
 
             return CreatedAtAction(nameof(Register), new { id = result.Value!.Id }, result.Value);
         }
+
+        /// <summary>
+        /// Authenticates a user and returns a JWT token.
+        /// </summary>
+        /// <param name="request">The login credentials.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>The JWT token and user information.</returns>
+        /// <response code="200">Login successful.</response>
+        /// <response code="401">Invalid credentials.</response>
+        /// <response code="403">Account suspended.</response>
+        [HttpPost("login")]
+        [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
+        {
+            var result = await _authService.LoginAsync(request, cancellationToken);
+
+            if (result.IsFailure)
+            {
+                return StatusCode(result.ErrorCode ?? 401, new { message = result.Error });
+            }
+
+            return Ok(result.Value);
+        }
     }
 }

@@ -27,5 +27,13 @@ namespace FantasyRealm.Application.Interfaces
         /// Retrieves a role by its label.
         /// </summary>
         Task<Role?> GetRoleByLabelAsync(string label, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Retrieves a user by email address, including their role.
+        /// </summary>
+        /// <param name="email">The email address to search for (case-insensitive).</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>The user with their role, or null if not found.</returns>
+        Task<User?> GetByEmailWithRoleAsync(string email, CancellationToken cancellationToken = default);
     }
 }
