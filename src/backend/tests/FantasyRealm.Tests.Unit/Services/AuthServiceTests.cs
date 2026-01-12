@@ -13,6 +13,7 @@ namespace FantasyRealm.Tests.Unit.Services
         private readonly Mock<IUserRepository> _userRepositoryMock;
         private readonly Mock<IPasswordHasher> _passwordHasherMock;
         private readonly Mock<IEmailService> _emailServiceMock;
+        private readonly Mock<IJwtService> _jwtServiceMock;
         private readonly Mock<ILogger<AuthService>> _loggerMock;
         private readonly AuthService _authService;
 
@@ -21,12 +22,14 @@ namespace FantasyRealm.Tests.Unit.Services
             _userRepositoryMock = new Mock<IUserRepository>();
             _passwordHasherMock = new Mock<IPasswordHasher>();
             _emailServiceMock = new Mock<IEmailService>();
+            _jwtServiceMock = new Mock<IJwtService>();
             _loggerMock = new Mock<ILogger<AuthService>>();
 
             _authService = new AuthService(
                 _userRepositoryMock.Object,
                 _passwordHasherMock.Object,
                 _emailServiceMock.Object,
+                _jwtServiceMock.Object,
                 _loggerMock.Object);
         }
 
@@ -265,5 +268,199 @@ namespace FantasyRealm.Tests.Unit.Services
                 It.Is<User>(u => u.Email == "test@example.com"),
                 It.IsAny<CancellationToken>()));
         }
+
+        #region Login Tests
+
+        [Fact]
+        public async Task Given_ValidCredentials_When_Login_Should_ReturnTokenAndUserInfo()
+        {
+            // Arrange
+            var request = new LoginRequest("test@example.com", "SecurePass@123!");
+            var role = new Role { Id = 1, Label = "User" };
+            var user = new User
+            {
+                Id = 1,
+                Email = "test@example.com",
+                Pseudo = "TestUser",
+                PasswordHash = "hashed",
+                RoleId = 1,
+                Role = role,
+                IsSuspended = false,
+                MustChangePassword = false
+            };
+
+            _userRepositoryMock.Setup(r => r.GetByEmailWithRoleAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(user);
+            _passwordHasherMock.Setup(h => h.Verify(It.IsAny<string>(), It.IsAny<string>()))
+                .Returns(true);
+            _jwtServiceMock.Setup(j => j.GenerateToken(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+                .Returns("jwt-token");
+            _jwtServiceMock.Setup(j => j.GetExpirationDate())
+                .Returns(DateTime.UtcNow.AddHours(24));
+
+            // Act
+            var result = await _authService.LoginAsync(request);
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            result.Value.Should().NotBeNull();
+            result.Value!.Token.Should().Be("jwt-token");
+            result.Value.User.Id.Should().Be(1);
+            result.Value.User.Email.Should().Be("test@example.com");
+            result.Value.User.Pseudo.Should().Be("TestUser");
+            result.Value.User.Role.Should().Be("User");
+            result.Value.MustChangePassword.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task Given_NonExistentUser_When_Login_Should_ReturnUnauthorized()
+        {
+            // Arrange
+            var request = new LoginRequest("notfound@example.com", "SecurePass@123!");
+
+            _userRepositoryMock.Setup(r => r.GetByEmailWithRoleAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((User?)null);
+
+            // Act
+            var result = await _authService.LoginAsync(request);
+
+            // Assert
+            result.IsFailure.Should().BeTrue();
+            result.Error.Should().Be("Identifiants incorrects.");
+            result.ErrorCode.Should().Be(401);
+        }
+
+        [Fact]
+        public async Task Given_WrongPassword_When_Login_Should_ReturnUnauthorized()
+        {
+            // Arrange
+            var request = new LoginRequest("test@example.com", "WrongPassword!");
+            var role = new Role { Id = 1, Label = "User" };
+            var user = new User
+            {
+                Id = 1,
+                Email = "test@example.com",
+                Pseudo = "TestUser",
+                PasswordHash = "hashed",
+                RoleId = 1,
+                Role = role
+            };
+
+            _userRepositoryMock.Setup(r => r.GetByEmailWithRoleAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(user);
+            _passwordHasherMock.Setup(h => h.Verify(It.IsAny<string>(), It.IsAny<string>()))
+                .Returns(false);
+
+            // Act
+            var result = await _authService.LoginAsync(request);
+
+            // Assert
+            result.IsFailure.Should().BeTrue();
+            result.Error.Should().Be("Identifiants incorrects.");
+            result.ErrorCode.Should().Be(401);
+        }
+
+        [Fact]
+        public async Task Given_SuspendedAccount_When_Login_Should_ReturnForbidden()
+        {
+            // Arrange
+            var request = new LoginRequest("suspended@example.com", "SecurePass@123!");
+            var role = new Role { Id = 1, Label = "User" };
+            var user = new User
+            {
+                Id = 1,
+                Email = "suspended@example.com",
+                Pseudo = "SuspendedUser",
+                PasswordHash = "hashed",
+                RoleId = 1,
+                Role = role,
+                IsSuspended = true
+            };
+
+            _userRepositoryMock.Setup(r => r.GetByEmailWithRoleAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(user);
+            _passwordHasherMock.Setup(h => h.Verify(It.IsAny<string>(), It.IsAny<string>()))
+                .Returns(true);
+
+            // Act
+            var result = await _authService.LoginAsync(request);
+
+            // Assert
+            result.IsFailure.Should().BeTrue();
+            result.Error.Should().Be("Votre compte a été suspendu.");
+            result.ErrorCode.Should().Be(403);
+        }
+
+        [Fact]
+        public async Task Given_UserMustChangePassword_When_Login_Should_ReturnFlagTrue()
+        {
+            // Arrange
+            var request = new LoginRequest("test@example.com", "SecurePass@123!");
+            var role = new Role { Id = 1, Label = "User" };
+            var user = new User
+            {
+                Id = 1,
+                Email = "test@example.com",
+                Pseudo = "TestUser",
+                PasswordHash = "hashed",
+                RoleId = 1,
+                Role = role,
+                IsSuspended = false,
+                MustChangePassword = true
+            };
+
+            _userRepositoryMock.Setup(r => r.GetByEmailWithRoleAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(user);
+            _passwordHasherMock.Setup(h => h.Verify(It.IsAny<string>(), It.IsAny<string>()))
+                .Returns(true);
+            _jwtServiceMock.Setup(j => j.GenerateToken(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+                .Returns("jwt-token");
+            _jwtServiceMock.Setup(j => j.GetExpirationDate())
+                .Returns(DateTime.UtcNow.AddHours(24));
+
+            // Act
+            var result = await _authService.LoginAsync(request);
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            result.Value!.MustChangePassword.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task Given_EmailWithUppercaseAndSpaces_When_Login_Should_NormalizeEmail()
+        {
+            // Arrange
+            var request = new LoginRequest("  TEST@EXAMPLE.COM  ", "SecurePass@123!");
+            var role = new Role { Id = 1, Label = "User" };
+            var user = new User
+            {
+                Id = 1,
+                Email = "test@example.com",
+                Pseudo = "TestUser",
+                PasswordHash = "hashed",
+                RoleId = 1,
+                Role = role,
+                IsSuspended = false,
+                MustChangePassword = false
+            };
+
+            _userRepositoryMock.Setup(r => r.GetByEmailWithRoleAsync("test@example.com", It.IsAny<CancellationToken>()))
+                .ReturnsAsync(user);
+            _passwordHasherMock.Setup(h => h.Verify(It.IsAny<string>(), It.IsAny<string>()))
+                .Returns(true);
+            _jwtServiceMock.Setup(j => j.GenerateToken(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+                .Returns("jwt-token");
+            _jwtServiceMock.Setup(j => j.GetExpirationDate())
+                .Returns(DateTime.UtcNow.AddHours(24));
+
+            // Act
+            var result = await _authService.LoginAsync(request);
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            _userRepositoryMock.Verify(r => r.GetByEmailWithRoleAsync("test@example.com", It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        #endregion
     }
 }

@@ -1,4 +1,8 @@
+using System.Text;
 using FantasyRealm.Infrastructure;
+using FantasyRealm.Infrastructure.Security;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 namespace FantasyRealm.Api
 {
@@ -31,6 +35,27 @@ namespace FantasyRealm.Api
             // Infrastructure services (Database, Email, Auth)
             builder.Services.AddInfrastructure(builder.Configuration);
 
+            // JWT Authentication configuration
+            var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()!;
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = jwtSettings.Issuer,
+                    ValidAudience = jwtSettings.Audience,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret))
+                };
+            });
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline
@@ -45,6 +70,7 @@ namespace FantasyRealm.Api
 
             app.UseHttpsRedirection();
             app.UseCors("AllowFrontend");
+            app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllers();
 

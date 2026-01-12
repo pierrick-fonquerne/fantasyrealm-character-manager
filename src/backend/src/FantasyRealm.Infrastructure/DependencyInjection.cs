@@ -48,6 +48,9 @@ namespace FantasyRealm.Infrastructure
             services.AddSingleton<ISmtpClientFactory, SmtpClientFactory>();
             services.AddScoped<IEmailService, SmtpEmailService>();
 
+            services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
+            services.AddSingleton<IJwtService, JwtService>();
+
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddSingleton<IPasswordHasher, Argon2PasswordHasher>();
             services.AddScoped<IAuthService, AuthService>();

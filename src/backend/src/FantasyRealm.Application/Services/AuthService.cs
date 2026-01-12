@@ -13,21 +13,26 @@ namespace FantasyRealm.Application.Services
     public sealed class AuthService : IAuthService
     {
         private const string DefaultRole = "User";
+        private const string InvalidCredentialsMessage = "Identifiants incorrects.";
+        private const string AccountSuspendedMessage = "Votre compte a été suspendu.";
 
         private readonly IUserRepository _userRepository;
         private readonly IPasswordHasher _passwordHasher;
         private readonly IEmailService _emailService;
+        private readonly IJwtService _jwtService;
         private readonly ILogger<AuthService> _logger;
 
         public AuthService(
             IUserRepository userRepository,
             IPasswordHasher passwordHasher,
             IEmailService emailService,
+            IJwtService jwtService,
             ILogger<AuthService> logger)
         {
             _userRepository = userRepository;
             _passwordHasher = passwordHasher;
             _emailService = emailService;
+            _jwtService = jwtService;
             _logger = logger;
         }
 
@@ -95,6 +100,46 @@ namespace FantasyRealm.Application.Services
                 createdUser.Pseudo,
                 DefaultRole,
                 createdUser.CreatedAt
+            ));
+        }
+
+        /// <inheritdoc />
+        public async Task<Result<LoginResponse>> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
+        {
+            var normalizedEmail = request.Email.ToLowerInvariant().Trim();
+
+            var user = await _userRepository.GetByEmailWithRoleAsync(normalizedEmail, cancellationToken);
+
+            if (user is null)
+            {
+                _logger.LogWarning("Login failed: user not found for email {Email}", normalizedEmail);
+                return Result<LoginResponse>.Failure(InvalidCredentialsMessage, 401);
+            }
+
+            if (!_passwordHasher.Verify(request.Password, user.PasswordHash))
+            {
+                _logger.LogWarning("Login failed: invalid password for user {UserId}", user.Id);
+                return Result<LoginResponse>.Failure(InvalidCredentialsMessage, 401);
+            }
+
+            if (user.IsSuspended)
+            {
+                _logger.LogWarning("Login failed: account suspended for user {UserId}", user.Id);
+                return Result<LoginResponse>.Failure(AccountSuspendedMessage, 403);
+            }
+
+            var token = _jwtService.GenerateToken(user.Id, user.Email, user.Pseudo, user.Role.Label);
+            var expiresAt = _jwtService.GetExpirationDate();
+
+            _logger.LogInformation("Login successful for user {UserId} ({Email})", user.Id, user.Email);
+
+            var userInfo = new UserInfo(user.Id, user.Email, user.Pseudo, user.Role.Label);
+
+            return Result<LoginResponse>.Success(new LoginResponse(
+                token,
+                expiresAt,
+                userInfo,
+                user.MustChangePassword
             ));
         }
     }

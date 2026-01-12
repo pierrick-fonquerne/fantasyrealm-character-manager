@@ -14,6 +14,14 @@ vi.mock('../services/authService', () => ({
   },
 }));
 
+vi.mock('../context/AuthContext', () => ({
+  useAuth: () => ({
+    isAuthenticated: false,
+    user: null,
+    logout: vi.fn(),
+  }),
+}));
+
 const mockRegister = vi.mocked(authService.register);
 
 const renderWithRouter = (component: React.ReactNode) => {

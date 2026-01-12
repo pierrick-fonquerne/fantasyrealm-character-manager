@@ -1,7 +1,12 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Net.Http.Json;
 using FantasyRealm.Application.DTOs;
+using FantasyRealm.Domain.Entities;
+using FantasyRealm.Infrastructure.Persistence;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
 namespace FantasyRealm.Tests.Integration.Controllers
@@ -215,6 +220,193 @@ namespace FantasyRealm.Tests.Integration.Controllers
             var result = await response.Content.ReadFromJsonAsync<RegisterResponse>();
             result!.Email.Should().Be(email.ToLowerInvariant());
         }
+
+        #region Login Tests
+
+        [Fact]
+        public async Task Login_WithValidCredentials_ReturnsOkAndToken()
+        {
+            // Arrange - Register a user first
+            var email = $"login_{Guid.NewGuid():N}@example.com";
+            var password = "MySecure@Pass123";
+            var pseudo = $"Login{Guid.NewGuid():N}"[..20];
+
+            await _client.PostAsJsonAsync("/api/auth/register", new
+            {
+                Email = email,
+                Pseudo = pseudo,
+                Password = password,
+                ConfirmPassword = password
+            });
+
+            var loginRequest = new { Email = email, Password = password };
+
+            // Act
+            var response = await _client.PostAsJsonAsync("/api/auth/login", loginRequest);
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            var result = await response.Content.ReadFromJsonAsync<LoginResponse>();
+            result.Should().NotBeNull();
+            result!.Token.Should().NotBeNullOrEmpty();
+            result.ExpiresAt.Should().BeAfter(DateTime.UtcNow);
+            result.User.Email.Should().Be(email.ToLowerInvariant());
+            result.User.Pseudo.Should().Be(pseudo);
+            result.User.Role.Should().Be("User");
+            result.MustChangePassword.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task Login_WithValidCredentials_ReturnsValidJwtToken()
+        {
+            // Arrange
+            var email = $"jwt_{Guid.NewGuid():N}@example.com";
+            var password = "MySecure@Pass123";
+            var pseudo = $"Jwt{Guid.NewGuid():N}"[..20];
+
+            var registerResponse = await _client.PostAsJsonAsync("/api/auth/register", new
+            {
+                Email = email,
+                Pseudo = pseudo,
+                Password = password,
+                ConfirmPassword = password
+            });
+            var registeredUser = await registerResponse.Content.ReadFromJsonAsync<RegisterResponse>();
+
+            var loginRequest = new { Email = email, Password = password };
+
+            // Act
+            var response = await _client.PostAsJsonAsync("/api/auth/login", loginRequest);
+            var result = await response.Content.ReadFromJsonAsync<LoginResponse>();
+
+            // Assert - Decode and validate JWT claims
+            var handler = new JwtSecurityTokenHandler();
+            var token = handler.ReadJwtToken(result!.Token);
+
+            token.Claims.Should().Contain(c => c.Type == "sub" && c.Value == registeredUser!.Id.ToString());
+            token.Claims.Should().Contain(c => c.Type == "email" && c.Value == email.ToLowerInvariant());
+            token.Claims.Should().Contain(c => c.Type == "pseudo" && c.Value == pseudo);
+            token.Claims.Should().Contain(c => c.Type.Contains("role") && c.Value == "User");
+        }
+
+        [Fact]
+        public async Task Login_WithNonExistentEmail_ReturnsUnauthorized()
+        {
+            // Arrange
+            var loginRequest = new
+            {
+                Email = $"nonexistent_{Guid.NewGuid():N}@example.com",
+                Password = "SomePassword@123"
+            };
+
+            // Act
+            var response = await _client.PostAsJsonAsync("/api/auth/login", loginRequest);
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+            error?.Message.Should().Be("Identifiants incorrects.");
+        }
+
+        [Fact]
+        public async Task Login_WithWrongPassword_ReturnsUnauthorized()
+        {
+            // Arrange - Register a user first
+            var email = $"wrongpwd_{Guid.NewGuid():N}@example.com";
+
+            await _client.PostAsJsonAsync("/api/auth/register", new
+            {
+                Email = email,
+                Pseudo = $"Wrong{Guid.NewGuid():N}"[..20],
+                Password = "MySecure@Pass123",
+                ConfirmPassword = "MySecure@Pass123"
+            });
+
+            var loginRequest = new { Email = email, Password = "WrongPassword@123" };
+
+            // Act
+            var response = await _client.PostAsJsonAsync("/api/auth/login", loginRequest);
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+            error?.Message.Should().Be("Identifiants incorrects.");
+        }
+
+        [Fact]
+        public async Task Login_WithSuspendedAccount_ReturnsForbidden()
+        {
+            // Arrange - Register a user first, then suspend them
+            var email = $"tosuspend_{Guid.NewGuid():N}@example.com";
+            var password = "MySecure@Pass123";
+
+            await _client.PostAsJsonAsync("/api/auth/register", new
+            {
+                Email = email,
+                Pseudo = $"ToSusp{Guid.NewGuid():N}"[..20],
+                Password = password,
+                ConfirmPassword = password
+            });
+
+            // Suspend the user directly in DB
+            using var scope = _factory.Services.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<FantasyRealmDbContext>();
+            var user = await context.Users.FirstAsync(u => u.Email == email.ToLowerInvariant());
+            user.IsSuspended = true;
+            await context.SaveChangesAsync();
+
+            var loginRequest = new { Email = email, Password = password };
+
+            // Act
+            var response = await _client.PostAsJsonAsync("/api/auth/login", loginRequest);
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+            var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+            error?.Message.Should().Be("Votre compte a été suspendu.");
+        }
+
+        [Fact]
+        public async Task Login_WithUppercaseEmail_NormalizesAndSucceeds()
+        {
+            // Arrange
+            var email = $"normalize_{Guid.NewGuid():N}@example.com";
+            var password = "MySecure@Pass123";
+
+            await _client.PostAsJsonAsync("/api/auth/register", new
+            {
+                Email = email,
+                Pseudo = $"Norm{Guid.NewGuid():N}"[..20],
+                Password = password,
+                ConfirmPassword = password
+            });
+
+            var loginRequest = new { Email = email.ToUpperInvariant(), Password = password };
+
+            // Act
+            var response = await _client.PostAsJsonAsync("/api/auth/login", loginRequest);
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+        }
+
+        [Theory]
+        [InlineData("", "password")]
+        [InlineData("test@example.com", "")]
+        public async Task Login_WithEmptyFields_ReturnsBadRequest(string email, string password)
+        {
+            // Arrange
+            var loginRequest = new { Email = email, Password = password };
+
+            // Act
+            var response = await _client.PostAsJsonAsync("/api/auth/login", loginRequest);
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        }
+
+        #endregion
 
         private record ErrorResponse(string Message);
     }
