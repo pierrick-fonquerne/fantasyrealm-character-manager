@@ -3,6 +3,14 @@ import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import HomePage from './HomePage';
 
+vi.mock('../context/AuthContext', () => ({
+  useAuth: () => ({
+    isAuthenticated: false,
+    user: null,
+    logout: vi.fn(),
+  }),
+}));
+
 const renderWithRouter = () => {
   return render(
     <MemoryRouter>

@@ -100,7 +100,7 @@ describe('LoginPage', () => {
       mustChangePassword: false,
     };
 
-    it('should navigate to home after successful login', async () => {
+    it('should navigate to dashboard after successful login', async () => {
       mockAuthLogin.mockResolvedValueOnce(mockLoginResponse);
 
       renderWithRouter(<LoginPage />);
@@ -110,7 +110,7 @@ describe('LoginPage', () => {
       await userEvent.click(screen.getByRole('button', { name: /se connecter/i }));
 
       await waitFor(() => {
-        expect(mockNavigate).toHaveBeenCalledWith('/');
+        expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
       });
     });
 
