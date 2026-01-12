@@ -53,6 +53,7 @@ namespace FantasyRealm.Infrastructure
 
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddSingleton<IPasswordHasher, Argon2PasswordHasher>();
+            services.AddSingleton<IPasswordGenerator, SecurePasswordGenerator>();
             services.AddScoped<IAuthService, AuthService>();
 
             return services;

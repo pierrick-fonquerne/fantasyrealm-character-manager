@@ -12,6 +12,7 @@ namespace FantasyRealm.Tests.Unit.Services
     {
         private readonly Mock<IUserRepository> _userRepositoryMock;
         private readonly Mock<IPasswordHasher> _passwordHasherMock;
+        private readonly Mock<IPasswordGenerator> _passwordGeneratorMock;
         private readonly Mock<IEmailService> _emailServiceMock;
         private readonly Mock<IJwtService> _jwtServiceMock;
         private readonly Mock<ILogger<AuthService>> _loggerMock;
@@ -21,6 +22,7 @@ namespace FantasyRealm.Tests.Unit.Services
         {
             _userRepositoryMock = new Mock<IUserRepository>();
             _passwordHasherMock = new Mock<IPasswordHasher>();
+            _passwordGeneratorMock = new Mock<IPasswordGenerator>();
             _emailServiceMock = new Mock<IEmailService>();
             _jwtServiceMock = new Mock<IJwtService>();
             _loggerMock = new Mock<ILogger<AuthService>>();
@@ -28,6 +30,7 @@ namespace FantasyRealm.Tests.Unit.Services
             _authService = new AuthService(
                 _userRepositoryMock.Object,
                 _passwordHasherMock.Object,
+                _passwordGeneratorMock.Object,
                 _emailServiceMock.Object,
                 _jwtServiceMock.Object,
                 _loggerMock.Object);
@@ -459,6 +462,220 @@ namespace FantasyRealm.Tests.Unit.Services
             // Assert
             result.IsSuccess.Should().BeTrue();
             _userRepositoryMock.Verify(r => r.GetByEmailWithRoleAsync("test@example.com", It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        #endregion
+
+        #region ForgotPassword Tests
+
+        [Fact]
+        public async Task Given_ValidEmailAndPseudo_When_ForgotPassword_Should_ReturnSuccess()
+        {
+            // Arrange
+            var request = new ForgotPasswordRequest("test@example.com", "TestUser");
+            var role = new Role { Id = 1, Label = "User" };
+            var user = new User
+            {
+                Id = 1,
+                Email = "test@example.com",
+                Pseudo = "TestUser",
+                PasswordHash = "oldHash",
+                RoleId = 1,
+                Role = role,
+                IsSuspended = false,
+                MustChangePassword = false
+            };
+
+            _userRepositoryMock.Setup(r => r.GetByEmailAndPseudoAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(user);
+            _passwordGeneratorMock.Setup(g => g.GenerateSecurePassword(It.IsAny<int>()))
+                .Returns("TempPass@123!");
+            _passwordHasherMock.Setup(h => h.Hash(It.IsAny<string>()))
+                .Returns("newHash");
+            _userRepositoryMock.Setup(r => r.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(user);
+
+            // Act
+            var result = await _authService.ForgotPasswordAsync(request);
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            _userRepositoryMock.Verify(r => r.UpdateAsync(It.Is<User>(u => u.MustChangePassword == true), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task Given_NonExistentUser_When_ForgotPassword_Should_ReturnNotFound()
+        {
+            // Arrange
+            var request = new ForgotPasswordRequest("notfound@example.com", "UnknownUser");
+
+            _userRepositoryMock.Setup(r => r.GetByEmailAndPseudoAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((User?)null);
+
+            // Act
+            var result = await _authService.ForgotPasswordAsync(request);
+
+            // Assert
+            result.IsFailure.Should().BeTrue();
+            result.Error.Should().Be("Aucun compte ne correspond à ces informations.");
+            result.ErrorCode.Should().Be(404);
+        }
+
+        [Fact]
+        public async Task Given_SuspendedAccount_When_ForgotPassword_Should_ReturnForbidden()
+        {
+            // Arrange
+            var request = new ForgotPasswordRequest("suspended@example.com", "SuspendedUser");
+            var role = new Role { Id = 1, Label = "User" };
+            var user = new User
+            {
+                Id = 1,
+                Email = "suspended@example.com",
+                Pseudo = "SuspendedUser",
+                PasswordHash = "hashed",
+                RoleId = 1,
+                Role = role,
+                IsSuspended = true
+            };
+
+            _userRepositoryMock.Setup(r => r.GetByEmailAndPseudoAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(user);
+
+            // Act
+            var result = await _authService.ForgotPasswordAsync(request);
+
+            // Assert
+            result.IsFailure.Should().BeTrue();
+            result.Error.Should().Be("Votre compte a été suspendu.");
+            result.ErrorCode.Should().Be(403);
+        }
+
+        [Fact]
+        public async Task Given_ValidRequest_When_ForgotPassword_Should_GenerateAndHashNewPassword()
+        {
+            // Arrange
+            var request = new ForgotPasswordRequest("test@example.com", "TestUser");
+            var role = new Role { Id = 1, Label = "User" };
+            var user = new User
+            {
+                Id = 1,
+                Email = "test@example.com",
+                Pseudo = "TestUser",
+                PasswordHash = "oldHash",
+                RoleId = 1,
+                Role = role,
+                IsSuspended = false
+            };
+
+            _userRepositoryMock.Setup(r => r.GetByEmailAndPseudoAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(user);
+            _passwordGeneratorMock.Setup(g => g.GenerateSecurePassword(It.IsAny<int>()))
+                .Returns("TempPass@123!");
+            _passwordHasherMock.Setup(h => h.Hash("TempPass@123!"))
+                .Returns("newHash");
+            _userRepositoryMock.Setup(r => r.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(user);
+
+            // Act
+            await _authService.ForgotPasswordAsync(request);
+
+            // Assert
+            _passwordGeneratorMock.Verify(g => g.GenerateSecurePassword(It.IsAny<int>()), Times.Once);
+            _passwordHasherMock.Verify(h => h.Hash("TempPass@123!"), Times.Once);
+            _userRepositoryMock.Verify(r => r.UpdateAsync(It.Is<User>(u => u.PasswordHash == "newHash"), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task Given_ValidRequest_When_ForgotPassword_Should_SendTemporaryPasswordEmail()
+        {
+            // Arrange
+            var request = new ForgotPasswordRequest("test@example.com", "TestUser");
+            var role = new Role { Id = 1, Label = "User" };
+            var user = new User
+            {
+                Id = 1,
+                Email = "test@example.com",
+                Pseudo = "TestUser",
+                PasswordHash = "oldHash",
+                RoleId = 1,
+                Role = role,
+                IsSuspended = false
+            };
+
+            var emailSentSignal = new TaskCompletionSource<bool>();
+
+            _userRepositoryMock.Setup(r => r.GetByEmailAndPseudoAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(user);
+            _passwordGeneratorMock.Setup(g => g.GenerateSecurePassword(It.IsAny<int>()))
+                .Returns("TempPass@123!");
+            _passwordHasherMock.Setup(h => h.Hash(It.IsAny<string>()))
+                .Returns("newHash");
+            _userRepositoryMock.Setup(r => r.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(user);
+            _emailServiceMock.Setup(e => e.SendTemporaryPasswordEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback(() => emailSentSignal.SetResult(true))
+                .Returns(Task.CompletedTask);
+
+            // Act
+            await _authService.ForgotPasswordAsync(request);
+
+            // Assert
+            var emailSent = await Task.WhenAny(emailSentSignal.Task, Task.Delay(1000)) == emailSentSignal.Task;
+            emailSent.Should().BeTrue("the temporary password email should be sent after successful password reset");
+            _emailServiceMock.Verify(
+                e => e.SendTemporaryPasswordEmailAsync("test@example.com", "TestUser", "TempPass@123!", It.IsAny<CancellationToken>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task Given_EmailWithUppercaseAndSpaces_When_ForgotPassword_Should_NormalizeEmailAndPseudo()
+        {
+            // Arrange
+            var request = new ForgotPasswordRequest("  TEST@EXAMPLE.COM  ", "  TestUser  ");
+            var role = new Role { Id = 1, Label = "User" };
+            var user = new User
+            {
+                Id = 1,
+                Email = "test@example.com",
+                Pseudo = "TestUser",
+                PasswordHash = "oldHash",
+                RoleId = 1,
+                Role = role,
+                IsSuspended = false
+            };
+
+            _userRepositoryMock.Setup(r => r.GetByEmailAndPseudoAsync("test@example.com", "TestUser", It.IsAny<CancellationToken>()))
+                .ReturnsAsync(user);
+            _passwordGeneratorMock.Setup(g => g.GenerateSecurePassword(It.IsAny<int>()))
+                .Returns("TempPass@123!");
+            _passwordHasherMock.Setup(h => h.Hash(It.IsAny<string>()))
+                .Returns("newHash");
+            _userRepositoryMock.Setup(r => r.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(user);
+
+            // Act
+            var result = await _authService.ForgotPasswordAsync(request);
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            _userRepositoryMock.Verify(r => r.GetByEmailAndPseudoAsync("test@example.com", "TestUser", It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task Given_WrongEmailForPseudo_When_ForgotPassword_Should_ReturnNotFound()
+        {
+            // Arrange
+            var request = new ForgotPasswordRequest("wrong@example.com", "TestUser");
+
+            _userRepositoryMock.Setup(r => r.GetByEmailAndPseudoAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((User?)null);
+
+            // Act
+            var result = await _authService.ForgotPasswordAsync(request);
+
+            // Assert
+            result.IsFailure.Should().BeTrue();
+            result.ErrorCode.Should().Be(404);
         }
 
         #endregion

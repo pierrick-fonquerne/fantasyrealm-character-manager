@@ -10,15 +10,15 @@ namespace FantasyRealm.Infrastructure.Email
     {
         private const string BaseUrl = "https://fantasy-realm.com";
 
-        // Dark fantasy color palette
-        private const string DarkBg = "#0D0D0F";
-        private const string CardBg = "#1A1A2E";
-        private const string CardBorder = "#2D2D44";
-        private const string GoldPrimary = "#D4AF37";
-        private const string GoldLight = "#F4D03F";
-        private const string GoldDark = "#B8860B";
-        private const string TextLight = "#E8E6E3";
-        private const string TextMuted = "#9CA3AF";
+        // Dark fantasy color palette - aligned with official style guide v3.0
+        private const string DarkBg = "#0D0D0F";      // --dark-900
+        private const string CardBg = "#121110";      // --dark-800
+        private const string CardBorder = "#18181B";  // --dark-700
+        private const string GoldPrimary = "#F59E0B"; // --gold-500
+        private const string GoldLight = "#FBBF24";   // --gold-400
+        private const string GoldDark = "#D97706";    // --gold-600
+        private const string TextLight = "#E8E4DE";   // --cream-200 (text-primary)
+        private const string TextMuted = "#A8A29E";   // --cream-400 (text-muted)
 
         /// <summary>
         /// Generates a welcome email template for new users.
@@ -120,6 +120,64 @@ namespace FantasyRealm.Infrastructure.Email
                     <p style=""color: {TextMuted}; margin: 0; font-size: 13px; line-height: 1.6;"">
                         ⏱️ Ce lien expirera dans <strong>24 heures</strong>.<br>
                         🛡️ Si vous n'êtes pas à l'origine de cette demande, ignorez simplement cet email.
+                    </p>
+                </div>
+            ");
+        }
+
+        /// <summary>
+        /// Generates a temporary password email template.
+        /// </summary>
+        /// <param name="pseudo">The user's display name.</param>
+        /// <param name="temporaryPassword">The generated temporary password.</param>
+        /// <returns>The HTML email body.</returns>
+        public static string GetTemporaryPasswordTemplate(string pseudo, string temporaryPassword)
+        {
+            return WrapInLayout(
+                "Nouveau mot de passe temporaire",
+                $@"
+                <div style=""text-align: center; margin-bottom: 30px;"">
+                    <div style=""font-size: 48px; margin-bottom: 10px;"">🔐</div>
+                    <h1 style=""color: {GoldPrimary}; font-size: 24px; margin: 0; font-weight: 700;"">
+                        Nouveau mot de passe temporaire
+                    </h1>
+                </div>
+
+                <div style=""background: {CardBg}; border: 1px solid {CardBorder}; border-radius: 12px; padding: 25px; margin-bottom: 25px;"">
+                    <p style=""color: {TextLight}; margin: 0 0 15px 0; font-size: 16px;"">
+                        Bonjour <strong style=""color: {GoldPrimary};"">{Encode(pseudo)}</strong>,
+                    </p>
+                    <p style=""color: {TextLight}; margin: 0 0 20px 0; font-size: 16px; line-height: 1.7;"">
+                        Suite à votre demande, voici votre nouveau mot de passe temporaire :
+                    </p>
+                </div>
+
+                <div style=""background: rgba(212, 175, 55, 0.15); border: 2px solid {GoldPrimary}; border-radius: 12px; padding: 20px; margin-bottom: 25px; text-align: center;"">
+                    <p style=""color: {TextMuted}; margin: 0 0 10px 0; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;"">
+                        Votre mot de passe temporaire
+                    </p>
+                    <p style=""color: {GoldLight}; margin: 0; font-size: 24px; font-family: monospace; font-weight: 700; letter-spacing: 2px;"">
+                        {Encode(temporaryPassword)}
+                    </p>
+                </div>
+
+                <div style=""background: rgba(239, 68, 68, 0.1); border: 1px solid #7F1D1D; border-radius: 8px; padding: 20px; margin-bottom: 25px;"">
+                    <p style=""color: #FCA5A5; margin: 0 0 8px 0; font-weight: 600; font-size: 14px;"">
+                        ⚠️ Important
+                    </p>
+                    <p style=""color: {TextLight}; margin: 0; font-size: 14px; line-height: 1.6;"">
+                        Vous devrez <strong>changer ce mot de passe</strong> lors de votre prochaine connexion.
+                        Ce mot de passe est temporaire et ne devrait pas être réutilisé.
+                    </p>
+                </div>
+
+                <div style=""text-align: center; margin: 30px 0;"">
+                    {GetPrimaryButton("Se connecter", $"{BaseUrl}/login", "🔑")}
+                </div>
+
+                <div style=""background: rgba(212, 175, 55, 0.1); border: 1px solid {GoldDark}; border-radius: 8px; padding: 15px; margin-top: 25px;"">
+                    <p style=""color: {TextMuted}; margin: 0; font-size: 13px; line-height: 1.6;"">
+                        🛡️ Si vous n'êtes pas à l'origine de cette demande, veuillez contacter notre support immédiatement.
                     </p>
                 </div>
             ");

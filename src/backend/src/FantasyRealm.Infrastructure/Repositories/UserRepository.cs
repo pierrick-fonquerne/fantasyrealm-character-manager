@@ -56,5 +56,24 @@ namespace FantasyRealm.Infrastructure.Repositories
                 .Include(u => u.Role)
                 .FirstOrDefaultAsync(u => u.Email == normalizedEmail, cancellationToken);
         }
+
+        /// <inheritdoc />
+        public async Task<User?> GetByEmailAndPseudoAsync(string email, string pseudo, CancellationToken cancellationToken = default)
+        {
+            var normalizedEmail = email.ToLowerInvariant().Trim();
+            var normalizedPseudo = pseudo.Trim();
+            return await _context.Users
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.Email == normalizedEmail && u.Pseudo == normalizedPseudo, cancellationToken);
+        }
+
+        /// <inheritdoc />
+        public async Task<User> UpdateAsync(User user, CancellationToken cancellationToken = default)
+        {
+            user.UpdatedAt = DateTime.UtcNow;
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync(cancellationToken);
+            return user;
+        }
     }
 }

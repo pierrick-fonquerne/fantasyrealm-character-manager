@@ -35,5 +35,23 @@ namespace FantasyRealm.Application.Interfaces
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>The user with their role, or null if not found.</returns>
         Task<User?> GetByEmailWithRoleAsync(string email, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Retrieves a user by email and pseudo combination, including their role.
+        /// Used for password reset verification.
+        /// </summary>
+        /// <param name="email">The email address to search for (case-insensitive).</param>
+        /// <param name="pseudo">The pseudo to match.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>The user with their role, or null if not found.</returns>
+        Task<User?> GetByEmailAndPseudoAsync(string email, string pseudo, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Updates an existing user in the database.
+        /// </summary>
+        /// <param name="user">The user entity with updated values.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>The updated user entity.</returns>
+        Task<User> UpdateAsync(User user, CancellationToken cancellationToken = default);
     }
 }
