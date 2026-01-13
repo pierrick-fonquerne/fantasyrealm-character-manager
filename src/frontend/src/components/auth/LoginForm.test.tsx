@@ -1,6 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { BrowserRouter } from 'react-router-dom';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { LoginForm } from './LoginForm';
 import { authService } from '../../services/authService';
@@ -21,6 +22,10 @@ vi.mock('../../context/AuthContext', () => ({
 }));
 
 const mockAuthLogin = vi.mocked(authService.login);
+
+const renderWithRouter = (ui: React.ReactElement) => {
+  return render(<BrowserRouter>{ui}</BrowserRouter>);
+};
 
 describe('LoginForm', () => {
   const mockOnSuccess = vi.fn();
@@ -47,26 +52,26 @@ describe('LoginForm', () => {
 
   describe('rendering', () => {
     it('should render all form fields', () => {
-      render(<LoginForm onSuccess={mockOnSuccess} />);
+      renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       expect(screen.getByLabelText(/adresse email/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/^mot de passe$/i)).toBeInTheDocument();
     });
 
     it('should render submit button', () => {
-      render(<LoginForm onSuccess={mockOnSuccess} />);
+      renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       expect(screen.getByRole('button', { name: /se connecter/i })).toBeInTheDocument();
     });
 
     it('should render forgot password link', () => {
-      render(<LoginForm onSuccess={mockOnSuccess} />);
+      renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
-      expect(screen.getByRole('button', { name: /mot de passe oublié/i })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /mot de passe oublié/i })).toHaveAttribute('href', '/forgot-password');
     });
 
     it('should have noValidate attribute on form', () => {
-      render(<LoginForm onSuccess={mockOnSuccess} />);
+      renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       const form = screen.getByRole('button', { name: /se connecter/i }).closest('form');
       expect(form).toHaveAttribute('noValidate');
@@ -75,7 +80,7 @@ describe('LoginForm', () => {
 
   describe('validation', () => {
     it('should show error when email is empty', async () => {
-      render(<LoginForm onSuccess={mockOnSuccess} />);
+      renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       await userEvent.click(screen.getByRole('button', { name: /se connecter/i }));
 
@@ -83,7 +88,7 @@ describe('LoginForm', () => {
     });
 
     it('should show error when email format is invalid', async () => {
-      render(<LoginForm onSuccess={mockOnSuccess} />);
+      renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), 'invalid-email');
       await userEvent.click(screen.getByRole('button', { name: /se connecter/i }));
@@ -92,7 +97,7 @@ describe('LoginForm', () => {
     });
 
     it('should show error when password is empty', async () => {
-      render(<LoginForm onSuccess={mockOnSuccess} />);
+      renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), validFormData.email);
       await userEvent.click(screen.getByRole('button', { name: /se connecter/i }));
@@ -101,7 +106,7 @@ describe('LoginForm', () => {
     });
 
     it('should clear password error when user starts typing', async () => {
-      render(<LoginForm onSuccess={mockOnSuccess} />);
+      renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), validFormData.email);
       await userEvent.click(screen.getByRole('button', { name: /se connecter/i }));
@@ -113,7 +118,7 @@ describe('LoginForm', () => {
     });
 
     it('should clear field error when user starts typing', async () => {
-      render(<LoginForm onSuccess={mockOnSuccess} />);
+      renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       await userEvent.click(screen.getByRole('button', { name: /se connecter/i }));
       expect(screen.getByText(/l'email est requis/i)).toBeInTheDocument();
@@ -126,7 +131,7 @@ describe('LoginForm', () => {
 
   describe('form submission', () => {
     it('should not submit form if validation fails', async () => {
-      render(<LoginForm onSuccess={mockOnSuccess} />);
+      renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       await userEvent.click(screen.getByRole('button', { name: /se connecter/i }));
 
@@ -136,7 +141,7 @@ describe('LoginForm', () => {
     it('should call authService.login with form data on valid submission', async () => {
       mockAuthLogin.mockResolvedValueOnce(mockLoginResponse);
 
-      render(<LoginForm onSuccess={mockOnSuccess} />);
+      renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), validFormData.email);
       await userEvent.type(screen.getByLabelText(/^mot de passe$/i), validFormData.password);
@@ -153,7 +158,7 @@ describe('LoginForm', () => {
     it('should call login from auth context after successful login', async () => {
       mockAuthLogin.mockResolvedValueOnce(mockLoginResponse);
 
-      render(<LoginForm onSuccess={mockOnSuccess} />);
+      renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), validFormData.email);
       await userEvent.type(screen.getByLabelText(/^mot de passe$/i), validFormData.password);
@@ -167,7 +172,7 @@ describe('LoginForm', () => {
     it('should call onSuccess callback after successful login', async () => {
       mockAuthLogin.mockResolvedValueOnce(mockLoginResponse);
 
-      render(<LoginForm onSuccess={mockOnSuccess} />);
+      renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), validFormData.email);
       await userEvent.type(screen.getByLabelText(/^mot de passe$/i), validFormData.password);
@@ -181,7 +186,7 @@ describe('LoginForm', () => {
     it('should show loading state while submitting', async () => {
       mockAuthLogin.mockImplementation(() => new Promise(() => {}));
 
-      render(<LoginForm onSuccess={mockOnSuccess} />);
+      renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), validFormData.email);
       await userEvent.type(screen.getByLabelText(/^mot de passe$/i), validFormData.password);
@@ -201,7 +206,7 @@ describe('LoginForm', () => {
         status: 401,
       });
 
-      render(<LoginForm onSuccess={mockOnSuccess} />);
+      renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), validFormData.email);
       await userEvent.type(screen.getByLabelText(/^mot de passe$/i), validFormData.password);
@@ -218,7 +223,7 @@ describe('LoginForm', () => {
         status: 403,
       });
 
-      render(<LoginForm onSuccess={mockOnSuccess} />);
+      renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), validFormData.email);
       await userEvent.type(screen.getByLabelText(/^mot de passe$/i), validFormData.password);
@@ -234,7 +239,7 @@ describe('LoginForm', () => {
         status: 500,
       });
 
-      render(<LoginForm onSuccess={mockOnSuccess} />);
+      renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), validFormData.email);
       await userEvent.type(screen.getByLabelText(/^mot de passe$/i), validFormData.password);
@@ -251,7 +256,7 @@ describe('LoginForm', () => {
         status: 401,
       });
 
-      render(<LoginForm onSuccess={mockOnSuccess} />);
+      renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), validFormData.email);
       await userEvent.type(screen.getByLabelText(/^mot de passe$/i), validFormData.password);
@@ -272,7 +277,7 @@ describe('LoginForm', () => {
         status: 401,
       });
 
-      render(<LoginForm onSuccess={mockOnSuccess} />);
+      renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), validFormData.email);
       await userEvent.type(screen.getByLabelText(/^mot de passe$/i), validFormData.password);
@@ -296,7 +301,7 @@ describe('LoginForm', () => {
         mustChangePassword: true,
       });
 
-      render(<LoginForm onSuccess={mockOnSuccess} />);
+      renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), validFormData.email);
       await userEvent.type(screen.getByLabelText(/^mot de passe$/i), validFormData.password);
@@ -313,7 +318,7 @@ describe('LoginForm', () => {
         mustChangePassword: true,
       });
 
-      render(<LoginForm onSuccess={mockOnSuccess} />);
+      renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), validFormData.email);
       await userEvent.type(screen.getByLabelText(/^mot de passe$/i), validFormData.password);
@@ -332,7 +337,7 @@ describe('LoginForm', () => {
         mustChangePassword: true,
       });
 
-      render(<LoginForm onSuccess={mockOnSuccess} />);
+      renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), validFormData.email);
       await userEvent.type(screen.getByLabelText(/^mot de passe$/i), validFormData.password);
@@ -348,14 +353,14 @@ describe('LoginForm', () => {
 
   describe('accessibility (RGAA/WCAG)', () => {
     it('should have no accessibility violations on initial render', async () => {
-      const { container } = render(<LoginForm onSuccess={mockOnSuccess} />);
+      const { container } = renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       const results = await axe(container);
       expect(results).toHaveNoViolations();
     });
 
     it('should have no accessibility violations with validation errors', async () => {
-      const { container } = render(<LoginForm onSuccess={mockOnSuccess} />);
+      const { container } = renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       await userEvent.click(screen.getByRole('button', { name: /se connecter/i }));
 
@@ -369,7 +374,7 @@ describe('LoginForm', () => {
         status: 401,
       });
 
-      const { container } = render(<LoginForm onSuccess={mockOnSuccess} />);
+      const { container } = renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), 'test@example.com');
       await userEvent.type(screen.getByLabelText(/^mot de passe$/i), 'SomePassword1!');
