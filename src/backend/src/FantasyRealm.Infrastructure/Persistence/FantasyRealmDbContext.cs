@@ -1,6 +1,7 @@
 using FantasyRealm.Domain.Entities;
 using FantasyRealm.Domain.Enums;
 using FantasyRealm.Infrastructure.Persistence.Conventions;
+using FantasyRealm.Infrastructure.Persistence.Converters;
 using Microsoft.EntityFrameworkCore;
 
 namespace FantasyRealm.Infrastructure.Persistence
@@ -21,6 +22,14 @@ namespace FantasyRealm.Infrastructure.Persistence
         public DbSet<CharacterArticle> CharacterArticles { get; set; } = null!;
 
         public DbSet<Comment> Comments { get; set; } = null!;
+
+        protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+        {
+            base.ConfigureConventions(configurationBuilder);
+
+            configurationBuilder.Properties<DateTime>()
+                .HaveConversion<UtcDateTimeConverter>();
+        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
