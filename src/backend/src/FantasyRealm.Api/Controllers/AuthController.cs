@@ -1,5 +1,7 @@
+using System.IdentityModel.Tokens.Jwt;
 using FantasyRealm.Application.DTOs;
 using FantasyRealm.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FantasyRealm.Api.Controllers
@@ -93,6 +95,41 @@ namespace FantasyRealm.Api.Controllers
             }
 
             return Ok(new { message = "Un nouveau mot de passe a été envoyé à votre adresse email." });
+        }
+
+        /// <summary>
+        /// Changes the password for the authenticated user.
+        /// </summary>
+        /// <param name="request">The current and new password details.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>A new JWT token upon successful password change.</returns>
+        /// <response code="200">Password changed successfully.</response>
+        /// <response code="400">Invalid request data or password validation failed.</response>
+        /// <response code="401">Not authenticated or current password is incorrect.</response>
+        /// <response code="403">Account suspended.</response>
+        [HttpPost("change-password")]
+        [Authorize]
+        [ProducesResponseType(typeof(ChangePasswordResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request, CancellationToken cancellationToken)
+        {
+            var userIdClaim = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+            {
+                return Unauthorized(new { message = "Token invalide." });
+            }
+
+            var result = await _authService.ChangePasswordAsync(userId, request, cancellationToken);
+
+            if (result.IsFailure)
+            {
+                return StatusCode(result.ErrorCode ?? 400, new { message = result.Error });
+            }
+
+            return Ok(result.Value);
         }
     }
 }

@@ -190,5 +190,64 @@ namespace FantasyRealm.Application.Services
 
             return Result<Unit>.Success(Unit.Value);
         }
+
+        /// <inheritdoc />
+        public async Task<Result<ChangePasswordResponse>> ChangePasswordAsync(int userId, ChangePasswordRequest request, CancellationToken cancellationToken = default)
+        {
+            var user = await _userRepository.GetByIdWithRoleAsync(userId, cancellationToken);
+
+            if (user is null)
+            {
+                _logger.LogWarning("Change password failed: user not found for ID {UserId}", userId);
+                return Result<ChangePasswordResponse>.Failure(InvalidCredentialsMessage, 401);
+            }
+
+            if (user.IsSuspended)
+            {
+                _logger.LogWarning("Change password failed: account suspended for user {UserId}", userId);
+                return Result<ChangePasswordResponse>.Failure(AccountSuspendedMessage, 403);
+            }
+
+            if (!_passwordHasher.Verify(request.CurrentPassword, user.PasswordHash))
+            {
+                _logger.LogWarning("Change password failed: invalid current password for user {UserId}", userId);
+                return Result<ChangePasswordResponse>.Failure("Le mot de passe actuel est incorrect.", 401);
+            }
+
+            if (request.NewPassword != request.ConfirmNewPassword)
+            {
+                return Result<ChangePasswordResponse>.Failure("Les nouveaux mots de passe ne correspondent pas.", 400);
+            }
+
+            var passwordValidation = PasswordValidator.Validate(request.NewPassword);
+            if (!passwordValidation.IsValid)
+            {
+                var errorMessage = string.Join(" ", passwordValidation.Errors);
+                return Result<ChangePasswordResponse>.Failure(errorMessage, 400);
+            }
+
+            if (_passwordHasher.Verify(request.NewPassword, user.PasswordHash))
+            {
+                return Result<ChangePasswordResponse>.Failure("Le nouveau mot de passe doit être différent de l'ancien.", 400);
+            }
+
+            user.PasswordHash = _passwordHasher.Hash(request.NewPassword);
+            user.MustChangePassword = false;
+
+            await _userRepository.UpdateAsync(user, cancellationToken);
+
+            var token = _jwtService.GenerateToken(user.Id, user.Email, user.Pseudo, user.Role.Label);
+            var expiresAt = _jwtService.GetExpirationDate();
+
+            _logger.LogInformation("Password changed successfully for user {UserId} ({Email})", user.Id, user.Email);
+
+            var userInfo = new UserInfo(user.Id, user.Email, user.Pseudo, user.Role.Label);
+
+            return Result<ChangePasswordResponse>.Success(new ChangePasswordResponse(
+                token,
+                expiresAt,
+                userInfo
+            ));
+        }
     }
 }

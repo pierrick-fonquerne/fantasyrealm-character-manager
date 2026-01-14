@@ -408,6 +408,383 @@ namespace FantasyRealm.Tests.Integration.Controllers
 
         #endregion
 
+        #region ChangePassword Tests
+
+        [Fact]
+        public async Task ChangePassword_WithValidData_ReturnsOkAndNewToken()
+        {
+            // Arrange - Register and login
+            var email = $"changepwd_{Guid.NewGuid():N}@example.com";
+            var oldPassword = "MySecure@Pass123";
+            var newPassword = "NewSecure@Pass456";
+            var pseudo = $"ChgPwd{Guid.NewGuid():N}"[..20];
+
+            await _client.PostAsJsonAsync("/api/auth/register", new
+            {
+                Email = email,
+                Pseudo = pseudo,
+                Password = oldPassword,
+                ConfirmPassword = oldPassword
+            });
+
+            var loginResponse = await _client.PostAsJsonAsync("/api/auth/login", new { Email = email, Password = oldPassword });
+            var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponse>();
+
+            var request = new
+            {
+                CurrentPassword = oldPassword,
+                NewPassword = newPassword,
+                ConfirmNewPassword = newPassword
+            };
+
+            using var requestMessage = new HttpRequestMessage(HttpMethod.Post, "/api/auth/change-password");
+            requestMessage.Headers.Add("Authorization", $"Bearer {loginResult!.Token}");
+            requestMessage.Content = JsonContent.Create(request);
+
+            // Act
+            var response = await _client.SendAsync(requestMessage);
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            var result = await response.Content.ReadFromJsonAsync<ChangePasswordResponse>();
+            result.Should().NotBeNull();
+            result!.Token.Should().NotBeNullOrEmpty();
+            result.Token.Should().NotBe(loginResult.Token);
+            result.ExpiresAt.Should().BeAfter(DateTime.UtcNow);
+            result.User.Email.Should().Be(email.ToLowerInvariant());
+        }
+
+        [Fact]
+        public async Task ChangePassword_WithNewToken_CanLoginWithNewPassword()
+        {
+            // Arrange - Register, login, and change password
+            var email = $"newlogin_{Guid.NewGuid():N}@example.com";
+            var oldPassword = "MySecure@Pass123";
+            var newPassword = "NewSecure@Pass456";
+            var pseudo = $"NewLog{Guid.NewGuid():N}"[..20];
+
+            await _client.PostAsJsonAsync("/api/auth/register", new
+            {
+                Email = email,
+                Pseudo = pseudo,
+                Password = oldPassword,
+                ConfirmPassword = oldPassword
+            });
+
+            var loginResponse = await _client.PostAsJsonAsync("/api/auth/login", new { Email = email, Password = oldPassword });
+            var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponse>();
+
+            using var changeRequest = new HttpRequestMessage(HttpMethod.Post, "/api/auth/change-password");
+            changeRequest.Headers.Add("Authorization", $"Bearer {loginResult!.Token}");
+            changeRequest.Content = JsonContent.Create(new
+            {
+                CurrentPassword = oldPassword,
+                NewPassword = newPassword,
+                ConfirmNewPassword = newPassword
+            });
+
+            await _client.SendAsync(changeRequest);
+
+            // Act - Try to login with new password
+            var newLoginResponse = await _client.PostAsJsonAsync("/api/auth/login", new { Email = email, Password = newPassword });
+
+            // Assert
+            newLoginResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        }
+
+        [Fact]
+        public async Task ChangePassword_WithoutAuthentication_ReturnsUnauthorized()
+        {
+            // Arrange
+            var request = new
+            {
+                CurrentPassword = "OldPassword@123",
+                NewPassword = "NewPassword@456",
+                ConfirmNewPassword = "NewPassword@456"
+            };
+
+            // Act
+            var response = await _client.PostAsJsonAsync("/api/auth/change-password", request);
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        }
+
+        [Fact]
+        public async Task ChangePassword_WithInvalidToken_ReturnsUnauthorized()
+        {
+            // Arrange
+            var request = new
+            {
+                CurrentPassword = "OldPassword@123",
+                NewPassword = "NewPassword@456",
+                ConfirmNewPassword = "NewPassword@456"
+            };
+
+            using var requestMessage = new HttpRequestMessage(HttpMethod.Post, "/api/auth/change-password");
+            requestMessage.Headers.Add("Authorization", "Bearer invalid.token.here");
+            requestMessage.Content = JsonContent.Create(request);
+
+            // Act
+            var response = await _client.SendAsync(requestMessage);
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        }
+
+        [Fact]
+        public async Task ChangePassword_WithWrongCurrentPassword_ReturnsUnauthorized()
+        {
+            // Arrange
+            var email = $"wrongcur_{Guid.NewGuid():N}@example.com";
+            var password = "MySecure@Pass123";
+            var pseudo = $"WrngCur{Guid.NewGuid():N}"[..20];
+
+            await _client.PostAsJsonAsync("/api/auth/register", new
+            {
+                Email = email,
+                Pseudo = pseudo,
+                Password = password,
+                ConfirmPassword = password
+            });
+
+            var loginResponse = await _client.PostAsJsonAsync("/api/auth/login", new { Email = email, Password = password });
+            var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponse>();
+
+            var request = new
+            {
+                CurrentPassword = "WrongPassword@123",
+                NewPassword = "NewSecure@Pass456",
+                ConfirmNewPassword = "NewSecure@Pass456"
+            };
+
+            using var requestMessage = new HttpRequestMessage(HttpMethod.Post, "/api/auth/change-password");
+            requestMessage.Headers.Add("Authorization", $"Bearer {loginResult!.Token}");
+            requestMessage.Content = JsonContent.Create(request);
+
+            // Act
+            var response = await _client.SendAsync(requestMessage);
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+            var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+            error?.Message.Should().Contain("mot de passe actuel");
+        }
+
+        [Fact]
+        public async Task ChangePassword_WithMismatchedNewPasswords_ReturnsBadRequest()
+        {
+            // Arrange
+            var email = $"mismatch_{Guid.NewGuid():N}@example.com";
+            var password = "MySecure@Pass123";
+            var pseudo = $"MisMat{Guid.NewGuid():N}"[..20];
+
+            await _client.PostAsJsonAsync("/api/auth/register", new
+            {
+                Email = email,
+                Pseudo = pseudo,
+                Password = password,
+                ConfirmPassword = password
+            });
+
+            var loginResponse = await _client.PostAsJsonAsync("/api/auth/login", new { Email = email, Password = password });
+            var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponse>();
+
+            var request = new
+            {
+                CurrentPassword = password,
+                NewPassword = "NewSecure@Pass456",
+                ConfirmNewPassword = "DifferentPass@789"
+            };
+
+            using var requestMessage = new HttpRequestMessage(HttpMethod.Post, "/api/auth/change-password");
+            requestMessage.Headers.Add("Authorization", $"Bearer {loginResult!.Token}");
+            requestMessage.Content = JsonContent.Create(request);
+
+            // Act
+            var response = await _client.SendAsync(requestMessage);
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+            error?.Message.Should().Contain("correspondent");
+        }
+
+        [Fact]
+        public async Task ChangePassword_WithWeakNewPassword_ReturnsBadRequest()
+        {
+            // Arrange
+            var email = $"weaknew_{Guid.NewGuid():N}@example.com";
+            var password = "MySecure@Pass123";
+            var pseudo = $"WeakNw{Guid.NewGuid():N}"[..20];
+
+            await _client.PostAsJsonAsync("/api/auth/register", new
+            {
+                Email = email,
+                Pseudo = pseudo,
+                Password = password,
+                ConfirmPassword = password
+            });
+
+            var loginResponse = await _client.PostAsJsonAsync("/api/auth/login", new { Email = email, Password = password });
+            var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponse>();
+
+            var request = new
+            {
+                CurrentPassword = password,
+                NewPassword = "weak",
+                ConfirmNewPassword = "weak"
+            };
+
+            using var requestMessage = new HttpRequestMessage(HttpMethod.Post, "/api/auth/change-password");
+            requestMessage.Headers.Add("Authorization", $"Bearer {loginResult!.Token}");
+            requestMessage.Content = JsonContent.Create(request);
+
+            // Act
+            var response = await _client.SendAsync(requestMessage);
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        }
+
+        [Fact]
+        public async Task ChangePassword_WithSameAsOldPassword_ReturnsBadRequest()
+        {
+            // Arrange
+            var email = $"sameold_{Guid.NewGuid():N}@example.com";
+            var password = "MySecure@Pass123";
+            var pseudo = $"SameOl{Guid.NewGuid():N}"[..20];
+
+            await _client.PostAsJsonAsync("/api/auth/register", new
+            {
+                Email = email,
+                Pseudo = pseudo,
+                Password = password,
+                ConfirmPassword = password
+            });
+
+            var loginResponse = await _client.PostAsJsonAsync("/api/auth/login", new { Email = email, Password = password });
+            var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponse>();
+
+            var request = new
+            {
+                CurrentPassword = password,
+                NewPassword = password,
+                ConfirmNewPassword = password
+            };
+
+            using var requestMessage = new HttpRequestMessage(HttpMethod.Post, "/api/auth/change-password");
+            requestMessage.Headers.Add("Authorization", $"Bearer {loginResult!.Token}");
+            requestMessage.Content = JsonContent.Create(request);
+
+            // Act
+            var response = await _client.SendAsync(requestMessage);
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+            error?.Message.Should().Contain("différent");
+        }
+
+        [Fact]
+        public async Task ChangePassword_WithSuspendedAccount_ReturnsForbidden()
+        {
+            // Arrange
+            var email = $"suspchg_{Guid.NewGuid():N}@example.com";
+            var password = "MySecure@Pass123";
+            var pseudo = $"SusChg{Guid.NewGuid():N}"[..20];
+
+            await _client.PostAsJsonAsync("/api/auth/register", new
+            {
+                Email = email,
+                Pseudo = pseudo,
+                Password = password,
+                ConfirmPassword = password
+            });
+
+            var loginResponse = await _client.PostAsJsonAsync("/api/auth/login", new { Email = email, Password = password });
+            var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponse>();
+
+            // Suspend the user directly in DB
+            using var scope = _factory.Services.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<FantasyRealmDbContext>();
+            var user = await context.Users.FirstAsync(u => u.Email == email.ToLowerInvariant());
+            user.IsSuspended = true;
+            await context.SaveChangesAsync();
+
+            var request = new
+            {
+                CurrentPassword = password,
+                NewPassword = "NewSecure@Pass456",
+                ConfirmNewPassword = "NewSecure@Pass456"
+            };
+
+            using var requestMessage = new HttpRequestMessage(HttpMethod.Post, "/api/auth/change-password");
+            requestMessage.Headers.Add("Authorization", $"Bearer {loginResult!.Token}");
+            requestMessage.Content = JsonContent.Create(request);
+
+            // Act
+            var response = await _client.SendAsync(requestMessage);
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+            var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
+            error?.Message.Should().Contain("suspendu");
+        }
+
+        [Fact]
+        public async Task ChangePassword_SetsMustChangePasswordToFalse()
+        {
+            // Arrange
+            var email = $"mustchg_{Guid.NewGuid():N}@example.com";
+            var password = "MySecure@Pass123";
+            var pseudo = $"MustCh{Guid.NewGuid():N}"[..20];
+
+            await _client.PostAsJsonAsync("/api/auth/register", new
+            {
+                Email = email,
+                Pseudo = pseudo,
+                Password = password,
+                ConfirmPassword = password
+            });
+
+            // Set MustChangePassword to true in DB
+            using (var scope = _factory.Services.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<FantasyRealmDbContext>();
+                var user = await context.Users.FirstAsync(u => u.Email == email.ToLowerInvariant());
+                user.MustChangePassword = true;
+                await context.SaveChangesAsync();
+            }
+
+            var loginResponse = await _client.PostAsJsonAsync("/api/auth/login", new { Email = email, Password = password });
+            var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponse>();
+            loginResult!.MustChangePassword.Should().BeTrue();
+
+            var request = new
+            {
+                CurrentPassword = password,
+                NewPassword = "NewSecure@Pass456",
+                ConfirmNewPassword = "NewSecure@Pass456"
+            };
+
+            using var requestMessage = new HttpRequestMessage(HttpMethod.Post, "/api/auth/change-password");
+            requestMessage.Headers.Add("Authorization", $"Bearer {loginResult.Token}");
+            requestMessage.Content = JsonContent.Create(request);
+
+            // Act
+            await _client.SendAsync(requestMessage);
+
+            // Assert - Check DB
+            using var verifyScope = _factory.Services.CreateScope();
+            var verifyContext = verifyScope.ServiceProvider.GetRequiredService<FantasyRealmDbContext>();
+            var updatedUser = await verifyContext.Users.FirstAsync(u => u.Email == email.ToLowerInvariant());
+            updatedUser.MustChangePassword.Should().BeFalse();
+        }
+
+        #endregion
+
         private record ErrorResponse(string Message);
     }
 }

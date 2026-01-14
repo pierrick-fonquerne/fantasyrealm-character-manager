@@ -31,5 +31,14 @@ namespace FantasyRealm.Application.Interfaces
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>A result indicating success or an error.</returns>
         Task<Result<Unit>> ForgotPasswordAsync(ForgotPasswordRequest request, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Changes the password for an authenticated user.
+        /// </summary>
+        /// <param name="userId">The ID of the authenticated user.</param>
+        /// <param name="request">The change password request containing current and new passwords.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>A result containing the new token or an error.</returns>
+        Task<Result<ChangePasswordResponse>> ChangePasswordAsync(int userId, ChangePasswordRequest request, CancellationToken cancellationToken = default);
     }
 }

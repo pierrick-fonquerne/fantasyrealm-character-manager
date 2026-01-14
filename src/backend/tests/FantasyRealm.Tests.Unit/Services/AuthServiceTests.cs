@@ -679,5 +679,273 @@ namespace FantasyRealm.Tests.Unit.Services
         }
 
         #endregion
+
+        #region ChangePassword Tests
+
+        [Fact]
+        public async Task Given_ValidRequest_When_ChangePassword_Should_ReturnSuccessWithNewToken()
+        {
+            // Arrange
+            var userId = 1;
+            var request = new ChangePasswordRequest("OldPassword@123!", "NewPassword@456!", "NewPassword@456!");
+            var role = new Role { Id = 1, Label = "User" };
+            var user = new User
+            {
+                Id = userId,
+                Email = "test@example.com",
+                Pseudo = "TestUser",
+                PasswordHash = "oldHash",
+                RoleId = 1,
+                Role = role,
+                IsSuspended = false,
+                MustChangePassword = true
+            };
+
+            _userRepositoryMock.Setup(r => r.GetByIdWithRoleAsync(userId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(user);
+            _passwordHasherMock.Setup(h => h.Verify("OldPassword@123!", "oldHash"))
+                .Returns(true);
+            _passwordHasherMock.Setup(h => h.Verify("NewPassword@456!", "oldHash"))
+                .Returns(false);
+            _passwordHasherMock.Setup(h => h.Hash("NewPassword@456!"))
+                .Returns("newHash");
+            _userRepositoryMock.Setup(r => r.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(user);
+            _jwtServiceMock.Setup(j => j.GenerateToken(userId, "test@example.com", "TestUser", "User"))
+                .Returns("new-jwt-token");
+            _jwtServiceMock.Setup(j => j.GetExpirationDate())
+                .Returns(DateTime.UtcNow.AddHours(24));
+
+            // Act
+            var result = await _authService.ChangePasswordAsync(userId, request);
+
+            // Assert
+            result.IsSuccess.Should().BeTrue();
+            result.Value.Should().NotBeNull();
+            result.Value!.Token.Should().Be("new-jwt-token");
+            result.Value.User.Id.Should().Be(userId);
+            _userRepositoryMock.Verify(r => r.UpdateAsync(It.Is<User>(u => u.MustChangePassword == false && u.PasswordHash == "newHash"), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task Given_NonExistentUser_When_ChangePassword_Should_ReturnUnauthorized()
+        {
+            // Arrange
+            var userId = 999;
+            var request = new ChangePasswordRequest("OldPassword@123!", "NewPassword@456!", "NewPassword@456!");
+
+            _userRepositoryMock.Setup(r => r.GetByIdWithRoleAsync(userId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync((User?)null);
+
+            // Act
+            var result = await _authService.ChangePasswordAsync(userId, request);
+
+            // Assert
+            result.IsFailure.Should().BeTrue();
+            result.Error.Should().Be("Identifiants incorrects.");
+            result.ErrorCode.Should().Be(401);
+        }
+
+        [Fact]
+        public async Task Given_SuspendedAccount_When_ChangePassword_Should_ReturnForbidden()
+        {
+            // Arrange
+            var userId = 1;
+            var request = new ChangePasswordRequest("OldPassword@123!", "NewPassword@456!", "NewPassword@456!");
+            var role = new Role { Id = 1, Label = "User" };
+            var user = new User
+            {
+                Id = userId,
+                Email = "test@example.com",
+                Pseudo = "TestUser",
+                PasswordHash = "oldHash",
+                RoleId = 1,
+                Role = role,
+                IsSuspended = true
+            };
+
+            _userRepositoryMock.Setup(r => r.GetByIdWithRoleAsync(userId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(user);
+
+            // Act
+            var result = await _authService.ChangePasswordAsync(userId, request);
+
+            // Assert
+            result.IsFailure.Should().BeTrue();
+            result.Error.Should().Be("Votre compte a été suspendu.");
+            result.ErrorCode.Should().Be(403);
+        }
+
+        [Fact]
+        public async Task Given_WrongCurrentPassword_When_ChangePassword_Should_ReturnUnauthorized()
+        {
+            // Arrange
+            var userId = 1;
+            var request = new ChangePasswordRequest("WrongPassword!", "NewPassword@456!", "NewPassword@456!");
+            var role = new Role { Id = 1, Label = "User" };
+            var user = new User
+            {
+                Id = userId,
+                Email = "test@example.com",
+                Pseudo = "TestUser",
+                PasswordHash = "oldHash",
+                RoleId = 1,
+                Role = role,
+                IsSuspended = false
+            };
+
+            _userRepositoryMock.Setup(r => r.GetByIdWithRoleAsync(userId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(user);
+            _passwordHasherMock.Setup(h => h.Verify("WrongPassword!", "oldHash"))
+                .Returns(false);
+
+            // Act
+            var result = await _authService.ChangePasswordAsync(userId, request);
+
+            // Assert
+            result.IsFailure.Should().BeTrue();
+            result.Error.Should().Be("Le mot de passe actuel est incorrect.");
+            result.ErrorCode.Should().Be(401);
+        }
+
+        [Fact]
+        public async Task Given_MismatchedNewPasswords_When_ChangePassword_Should_ReturnBadRequest()
+        {
+            // Arrange
+            var userId = 1;
+            var request = new ChangePasswordRequest("OldPassword@123!", "NewPassword@456!", "DifferentPassword@789!");
+            var role = new Role { Id = 1, Label = "User" };
+            var user = new User
+            {
+                Id = userId,
+                Email = "test@example.com",
+                Pseudo = "TestUser",
+                PasswordHash = "oldHash",
+                RoleId = 1,
+                Role = role,
+                IsSuspended = false
+            };
+
+            _userRepositoryMock.Setup(r => r.GetByIdWithRoleAsync(userId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(user);
+            _passwordHasherMock.Setup(h => h.Verify("OldPassword@123!", "oldHash"))
+                .Returns(true);
+
+            // Act
+            var result = await _authService.ChangePasswordAsync(userId, request);
+
+            // Assert
+            result.IsFailure.Should().BeTrue();
+            result.Error.Should().Be("Les nouveaux mots de passe ne correspondent pas.");
+            result.ErrorCode.Should().Be(400);
+        }
+
+        [Fact]
+        public async Task Given_WeakNewPassword_When_ChangePassword_Should_ReturnBadRequest()
+        {
+            // Arrange
+            var userId = 1;
+            var request = new ChangePasswordRequest("OldPassword@123!", "weak", "weak");
+            var role = new Role { Id = 1, Label = "User" };
+            var user = new User
+            {
+                Id = userId,
+                Email = "test@example.com",
+                Pseudo = "TestUser",
+                PasswordHash = "oldHash",
+                RoleId = 1,
+                Role = role,
+                IsSuspended = false
+            };
+
+            _userRepositoryMock.Setup(r => r.GetByIdWithRoleAsync(userId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(user);
+            _passwordHasherMock.Setup(h => h.Verify("OldPassword@123!", "oldHash"))
+                .Returns(true);
+
+            // Act
+            var result = await _authService.ChangePasswordAsync(userId, request);
+
+            // Assert
+            result.IsFailure.Should().BeTrue();
+            result.ErrorCode.Should().Be(400);
+        }
+
+        [Fact]
+        public async Task Given_SameAsOldPassword_When_ChangePassword_Should_ReturnBadRequest()
+        {
+            // Arrange
+            var userId = 1;
+            var request = new ChangePasswordRequest("OldPassword@123!", "OldPassword@123!", "OldPassword@123!");
+            var role = new Role { Id = 1, Label = "User" };
+            var user = new User
+            {
+                Id = userId,
+                Email = "test@example.com",
+                Pseudo = "TestUser",
+                PasswordHash = "oldHash",
+                RoleId = 1,
+                Role = role,
+                IsSuspended = false
+            };
+
+            _userRepositoryMock.Setup(r => r.GetByIdWithRoleAsync(userId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(user);
+            _passwordHasherMock.Setup(h => h.Verify("OldPassword@123!", "oldHash"))
+                .Returns(true);
+
+            // Act
+            var result = await _authService.ChangePasswordAsync(userId, request);
+
+            // Assert
+            result.IsFailure.Should().BeTrue();
+            result.Error.Should().Be("Le nouveau mot de passe doit être différent de l'ancien.");
+            result.ErrorCode.Should().Be(400);
+        }
+
+        [Fact]
+        public async Task Given_ValidRequest_When_ChangePassword_Should_SetMustChangePasswordToFalse()
+        {
+            // Arrange
+            var userId = 1;
+            var request = new ChangePasswordRequest("OldPassword@123!", "NewPassword@456!", "NewPassword@456!");
+            var role = new Role { Id = 1, Label = "User" };
+            var user = new User
+            {
+                Id = userId,
+                Email = "test@example.com",
+                Pseudo = "TestUser",
+                PasswordHash = "oldHash",
+                RoleId = 1,
+                Role = role,
+                IsSuspended = false,
+                MustChangePassword = true
+            };
+
+            _userRepositoryMock.Setup(r => r.GetByIdWithRoleAsync(userId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(user);
+            _passwordHasherMock.Setup(h => h.Verify("OldPassword@123!", "oldHash"))
+                .Returns(true);
+            _passwordHasherMock.Setup(h => h.Verify("NewPassword@456!", "oldHash"))
+                .Returns(false);
+            _passwordHasherMock.Setup(h => h.Hash("NewPassword@456!"))
+                .Returns("newHash");
+            _userRepositoryMock.Setup(r => r.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(user);
+            _jwtServiceMock.Setup(j => j.GenerateToken(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+                .Returns("new-jwt-token");
+            _jwtServiceMock.Setup(j => j.GetExpirationDate())
+                .Returns(DateTime.UtcNow.AddHours(24));
+
+            // Act
+            await _authService.ChangePasswordAsync(userId, request);
+
+            // Assert
+            _userRepositoryMock.Verify(r => r.UpdateAsync(
+                It.Is<User>(u => u.MustChangePassword == false),
+                It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        #endregion
     }
 }

@@ -58,6 +58,14 @@ namespace FantasyRealm.Infrastructure.Repositories
         }
 
         /// <inheritdoc />
+        public async Task<User?> GetByIdWithRoleAsync(int id, CancellationToken cancellationToken = default)
+        {
+            return await _context.Users
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+        }
+
+        /// <inheritdoc />
         public async Task<User?> GetByEmailAndPseudoAsync(string email, string pseudo, CancellationToken cancellationToken = default)
         {
             var normalizedEmail = email.ToLowerInvariant().Trim();
