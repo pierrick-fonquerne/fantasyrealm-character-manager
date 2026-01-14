@@ -57,6 +57,43 @@ namespace FantasyRealm.Tests.Unit.Email
         }
 
         [Fact]
+        public void GetTemporaryPasswordTemplate_ContainsPseudo()
+        {
+            var pseudo = "TestPlayer";
+            var temporaryPassword = "TempPass@123!";
+
+            var result = EmailTemplates.GetTemporaryPasswordTemplate(pseudo, temporaryPassword);
+
+            Assert.Contains(pseudo, result);
+            Assert.Contains(temporaryPassword, result);
+            Assert.Contains("mot de passe temporaire", result.ToLower());
+        }
+
+        [Fact]
+        public void GetTemporaryPasswordTemplate_ContainsChangePasswordWarning()
+        {
+            var pseudo = "TestPlayer";
+            var temporaryPassword = "TempPass@123!";
+
+            var result = EmailTemplates.GetTemporaryPasswordTemplate(pseudo, temporaryPassword);
+
+            Assert.Contains("changer ce mot de passe", result.ToLower());
+            Assert.Contains("prochaine connexion", result.ToLower());
+        }
+
+        [Fact]
+        public void GetTemporaryPasswordTemplate_EscapesHtmlCharacters()
+        {
+            var pseudo = "<script>alert('xss')</script>";
+            var temporaryPassword = "TempPass@123!";
+
+            var result = EmailTemplates.GetTemporaryPasswordTemplate(pseudo, temporaryPassword);
+
+            Assert.DoesNotContain("<script>", result);
+            Assert.Contains("&lt;script&gt;", result);
+        }
+
+        [Fact]
         public void GetCharacterApprovedTemplate_ContainsCharacterName()
         {
             var pseudo = "TestPlayer";
@@ -127,6 +164,7 @@ namespace FantasyRealm.Tests.Unit.Email
         [Theory]
         [InlineData("GetWelcomeTemplate")]
         [InlineData("GetPasswordResetTemplate")]
+        [InlineData("GetTemporaryPasswordTemplate")]
         [InlineData("GetCharacterApprovedTemplate")]
         [InlineData("GetCharacterRejectedTemplate")]
         [InlineData("GetCommentApprovedTemplate")]
@@ -138,6 +176,7 @@ namespace FantasyRealm.Tests.Unit.Email
             {
                 "GetWelcomeTemplate" => EmailTemplates.GetWelcomeTemplate("Test"),
                 "GetPasswordResetTemplate" => EmailTemplates.GetPasswordResetTemplate("Test", "token"),
+                "GetTemporaryPasswordTemplate" => EmailTemplates.GetTemporaryPasswordTemplate("Test", "TempPass123!"),
                 "GetCharacterApprovedTemplate" => EmailTemplates.GetCharacterApprovedTemplate("Test", "Character"),
                 "GetCharacterRejectedTemplate" => EmailTemplates.GetCharacterRejectedTemplate("Test", "Character", "Reason"),
                 "GetCommentApprovedTemplate" => EmailTemplates.GetCommentApprovedTemplate("Test", "Character"),
@@ -162,6 +201,7 @@ namespace FantasyRealm.Tests.Unit.Email
             {
                 EmailTemplates.GetWelcomeTemplate("Test"),
                 EmailTemplates.GetPasswordResetTemplate("Test", "token"),
+                EmailTemplates.GetTemporaryPasswordTemplate("Test", "TempPass123!"),
                 EmailTemplates.GetCharacterApprovedTemplate("Test", "Character"),
                 EmailTemplates.GetCharacterRejectedTemplate("Test", "Character", "Reason"),
                 EmailTemplates.GetCommentApprovedTemplate("Test", "Character"),

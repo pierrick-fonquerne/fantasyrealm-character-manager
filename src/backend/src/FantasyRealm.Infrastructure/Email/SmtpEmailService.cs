@@ -49,6 +49,14 @@ namespace FantasyRealm.Infrastructure.Email
         }
 
         /// <inheritdoc />
+        public async Task SendTemporaryPasswordEmailAsync(string toEmail, string pseudo, string temporaryPassword, CancellationToken cancellationToken = default)
+        {
+            var subject = "Votre nouveau mot de passe FantasyRealm";
+            var body = EmailTemplates.GetTemporaryPasswordTemplate(pseudo, temporaryPassword);
+            await SendEmailAsync(toEmail, subject, body, cancellationToken);
+        }
+
+        /// <inheritdoc />
         public async Task SendCharacterApprovedEmailAsync(string toEmail, string pseudo, string characterName, CancellationToken cancellationToken = default)
         {
             var subject = $"Your character {characterName} has been approved!";

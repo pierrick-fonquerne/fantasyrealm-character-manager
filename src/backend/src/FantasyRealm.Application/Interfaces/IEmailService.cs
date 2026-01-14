@@ -25,6 +25,16 @@ namespace FantasyRealm.Application.Interfaces
         Task SendPasswordResetEmailAsync(string toEmail, string pseudo, string resetToken, CancellationToken cancellationToken = default);
 
         /// <summary>
+        /// Sends an email containing a temporary password.
+        /// </summary>
+        /// <param name="toEmail">The recipient's email address.</param>
+        /// <param name="pseudo">The user's display name.</param>
+        /// <param name="temporaryPassword">The generated temporary password.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        Task SendTemporaryPasswordEmailAsync(string toEmail, string pseudo, string temporaryPassword, CancellationToken cancellationToken = default);
+
+        /// <summary>
         /// Sends a notification when a character has been approved by an employee.
         /// </summary>
         /// <param name="toEmail">The recipient's email address.</param>

@@ -1,18 +1,15 @@
 import { useState, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
-import { Input, PasswordInput, Button, Alert } from '../ui';
+import { Input, Button, Alert } from '../ui';
 import { authService, type ApiError } from '../../services/authService';
-import { useAuth } from '../../context/AuthContext';
 
-interface LoginFormProps {
+interface ForgotPasswordFormProps {
   onSuccess: () => void;
 }
 
-const LoginForm = ({ onSuccess }: LoginFormProps) => {
-  const { login } = useAuth();
+const ForgotPasswordForm = ({ onSuccess }: ForgotPasswordFormProps) => {
   const [formData, setFormData] = useState({
     email: '',
-    password: '',
+    pseudo: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [apiError, setApiError] = useState<string | null>(null);
@@ -27,8 +24,12 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
       newErrors.email = 'L\'email n\'est pas valide';
     }
 
-    if (!formData.password) {
-      newErrors.password = 'Le mot de passe est requis';
+    if (!formData.pseudo.trim()) {
+      newErrors.pseudo = 'Le pseudo est requis';
+    } else if (formData.pseudo.length < 3) {
+      newErrors.pseudo = 'Le pseudo doit contenir au moins 3 caractères';
+    } else if (formData.pseudo.length > 30) {
+      newErrors.pseudo = 'Le pseudo ne doit pas dépasser 30 caractères';
     }
 
     setErrors(newErrors);
@@ -46,18 +47,11 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
     setIsLoading(true);
 
     try {
-      const response = await authService.login(formData);
-
-      if (response.mustChangePassword) {
-        setApiError('Vous devez changer votre mot de passe. Cette fonctionnalité sera disponible prochainement.');
-        return;
-      }
-
-      login(response);
+      await authService.forgotPassword(formData);
       onSuccess();
     } catch (error) {
       const apiErr = error as ApiError;
-      setApiError(apiErr.message || 'Une erreur est survenue lors de la connexion');
+      setApiError(apiErr.message || 'Une erreur est survenue');
     } finally {
       setIsLoading(false);
     }
@@ -93,25 +87,21 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
           required
         />
 
-        <PasswordInput
-          label="Mot de passe"
-          placeholder="Votre mot de passe"
-          value={formData.password}
-          onChange={handleChange('password')}
-          error={errors.password}
-          autoComplete="current-password"
+        <Input
+          type="text"
+          label="Pseudo"
+          placeholder="Votre pseudo"
+          value={formData.pseudo}
+          onChange={handleChange('pseudo')}
+          error={errors.pseudo}
+          autoComplete="username"
           required
         />
       </div>
 
-      <div className="mt-4 text-right">
-        <Link
-          to="/forgot-password"
-          className="text-sm text-cream-400 hover:text-gold-500 transition-colors"
-        >
-          Mot de passe oublié ?
-        </Link>
-      </div>
+      <p className="mt-4 text-sm text-cream-400">
+        Un nouveau mot de passe temporaire sera envoyé à votre adresse email.
+      </p>
 
       <Button
         type="submit"
@@ -121,10 +111,10 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
         isLoading={isLoading}
         className="mt-6"
       >
-        Se connecter
+        Réinitialiser le mot de passe
       </Button>
     </form>
   );
 };
 
-export { LoginForm };
+export { ForgotPasswordForm };

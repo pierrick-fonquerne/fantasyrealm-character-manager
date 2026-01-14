@@ -23,5 +23,13 @@ namespace FantasyRealm.Application.Interfaces
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>A result containing the login response with token or an error.</returns>
         Task<Result<LoginResponse>> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Initiates a password reset by generating a temporary password and sending it via email.
+        /// </summary>
+        /// <param name="request">The forgot password request containing email and pseudo.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>A result indicating success or an error.</returns>
+        Task<Result<Unit>> ForgotPasswordAsync(ForgotPasswordRequest request, CancellationToken cancellationToken = default);
     }
 }

@@ -34,6 +34,15 @@ interface LoginResponse {
   mustChangePassword: boolean;
 }
 
+interface ForgotPasswordRequest {
+  email: string;
+  pseudo: string;
+}
+
+interface ForgotPasswordResponse {
+  message: string;
+}
+
 const authService = {
   register: async (data: RegisterRequest): Promise<RegisterResponse> => {
     return apiClient.post<RegisterRequest, RegisterResponse>('/auth/register', data);
@@ -42,7 +51,11 @@ const authService = {
   login: async (data: LoginRequest): Promise<LoginResponse> => {
     return apiClient.post<LoginRequest, LoginResponse>('/auth/login', data);
   },
+
+  forgotPassword: async (data: ForgotPasswordRequest): Promise<ForgotPasswordResponse> => {
+    return apiClient.post<ForgotPasswordRequest, ForgotPasswordResponse>('/auth/forgot-password', data);
+  },
 };
 
 export { authService };
-export type { RegisterRequest, RegisterResponse, LoginRequest, LoginResponse, UserInfo, ApiError };
+export type { RegisterRequest, RegisterResponse, LoginRequest, LoginResponse, ForgotPasswordRequest, ForgotPasswordResponse, UserInfo, ApiError };

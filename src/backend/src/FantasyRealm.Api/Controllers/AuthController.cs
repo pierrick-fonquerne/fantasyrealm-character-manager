@@ -67,5 +67,32 @@ namespace FantasyRealm.Api.Controllers
 
             return Ok(result.Value);
         }
+
+        /// <summary>
+        /// Initiates a password reset by generating and sending a temporary password.
+        /// </summary>
+        /// <param name="request">The email and pseudo for identity verification.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>Success message.</returns>
+        /// <response code="200">Password reset email sent successfully.</response>
+        /// <response code="400">Invalid request data.</response>
+        /// <response code="403">Account suspended.</response>
+        /// <response code="404">No account matches the provided email and pseudo.</response>
+        [HttpPost("forgot-password")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request, CancellationToken cancellationToken)
+        {
+            var result = await _authService.ForgotPasswordAsync(request, cancellationToken);
+
+            if (result.IsFailure)
+            {
+                return StatusCode(result.ErrorCode ?? 400, new { message = result.Error });
+            }
+
+            return Ok(new { message = "Un nouveau mot de passe a été envoyé à votre adresse email." });
+        }
     }
 }

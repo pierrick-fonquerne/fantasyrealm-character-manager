@@ -15,9 +15,11 @@ namespace FantasyRealm.Application.Services
         private const string DefaultRole = "User";
         private const string InvalidCredentialsMessage = "Identifiants incorrects.";
         private const string AccountSuspendedMessage = "Votre compte a été suspendu.";
+        private const string UserNotFoundMessage = "Aucun compte ne correspond à ces informations.";
 
         private readonly IUserRepository _userRepository;
         private readonly IPasswordHasher _passwordHasher;
+        private readonly IPasswordGenerator _passwordGenerator;
         private readonly IEmailService _emailService;
         private readonly IJwtService _jwtService;
         private readonly ILogger<AuthService> _logger;
@@ -25,12 +27,14 @@ namespace FantasyRealm.Application.Services
         public AuthService(
             IUserRepository userRepository,
             IPasswordHasher passwordHasher,
+            IPasswordGenerator passwordGenerator,
             IEmailService emailService,
             IJwtService jwtService,
             ILogger<AuthService> logger)
         {
             _userRepository = userRepository;
             _passwordHasher = passwordHasher;
+            _passwordGenerator = passwordGenerator;
             _emailService = emailService;
             _jwtService = jwtService;
             _logger = logger;
@@ -141,6 +145,50 @@ namespace FantasyRealm.Application.Services
                 userInfo,
                 user.MustChangePassword
             ));
+        }
+
+        /// <inheritdoc />
+        public async Task<Result<Unit>> ForgotPasswordAsync(ForgotPasswordRequest request, CancellationToken cancellationToken = default)
+        {
+            var normalizedEmail = request.Email.ToLowerInvariant().Trim();
+            var normalizedPseudo = request.Pseudo.Trim();
+
+            var user = await _userRepository.GetByEmailAndPseudoAsync(normalizedEmail, normalizedPseudo, cancellationToken);
+
+            if (user is null)
+            {
+                _logger.LogWarning("Password reset failed: no user found for email {Email} and pseudo {Pseudo}", normalizedEmail, normalizedPseudo);
+                return Result<Unit>.Failure(UserNotFoundMessage, 404);
+            }
+
+            if (user.IsSuspended)
+            {
+                _logger.LogWarning("Password reset failed: account suspended for user {UserId}", user.Id);
+                return Result<Unit>.Failure(AccountSuspendedMessage, 403);
+            }
+
+            var temporaryPassword = _passwordGenerator.GenerateSecurePassword();
+            user.PasswordHash = _passwordHasher.Hash(temporaryPassword);
+            user.MustChangePassword = true;
+
+            await _userRepository.UpdateAsync(user, cancellationToken);
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await _emailService.SendTemporaryPasswordEmailAsync(user.Email, user.Pseudo, temporaryPassword, CancellationToken.None);
+                    _logger.LogInformation("Temporary password email sent to {Email}", user.Email);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to send temporary password email to {Email}", user.Email);
+                }
+            }, CancellationToken.None);
+
+            _logger.LogInformation("Password reset successful for user {UserId} ({Email})", user.Id, user.Email);
+
+            return Result<Unit>.Success(Unit.Value);
         }
     }
 }
