@@ -11,15 +11,8 @@ namespace FantasyRealm.Api.Controllers
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
-    public sealed class AuthController : ControllerBase
+    public sealed class AuthController(IAuthService authService) : ControllerBase
     {
-        private readonly IAuthService _authService;
-
-        public AuthController(IAuthService authService)
-        {
-            _authService = authService;
-        }
-
         /// <summary>
         /// Registers a new user account.
         /// </summary>
@@ -35,7 +28,7 @@ namespace FantasyRealm.Api.Controllers
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken cancellationToken)
         {
-            var result = await _authService.RegisterAsync(request, cancellationToken);
+            var result = await authService.RegisterAsync(request, cancellationToken);
 
             if (result.IsFailure)
             {
@@ -60,7 +53,7 @@ namespace FantasyRealm.Api.Controllers
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
         {
-            var result = await _authService.LoginAsync(request, cancellationToken);
+            var result = await authService.LoginAsync(request, cancellationToken);
 
             if (result.IsFailure)
             {
@@ -87,7 +80,7 @@ namespace FantasyRealm.Api.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request, CancellationToken cancellationToken)
         {
-            var result = await _authService.ForgotPasswordAsync(request, cancellationToken);
+            var result = await authService.ForgotPasswordAsync(request, cancellationToken);
 
             if (result.IsFailure)
             {
@@ -122,7 +115,7 @@ namespace FantasyRealm.Api.Controllers
                 return Unauthorized(new { message = "Token invalide." });
             }
 
-            var result = await _authService.ChangePasswordAsync(userId, request, cancellationToken);
+            var result = await authService.ChangePasswordAsync(userId, request, cancellationToken);
 
             if (result.IsFailure)
             {

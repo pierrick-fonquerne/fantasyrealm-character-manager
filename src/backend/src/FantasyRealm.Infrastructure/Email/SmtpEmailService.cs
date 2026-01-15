@@ -1,5 +1,4 @@
 using FantasyRealm.Application.Interfaces;
-using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -10,33 +9,24 @@ namespace FantasyRealm.Infrastructure.Email
     /// <summary>
     /// SMTP-based implementation of the email service using MailKit.
     /// </summary>
-    public class SmtpEmailService : IEmailService
+    /// <remarks>
+    /// Initializes a new instance of the <see cref="SmtpEmailService"/> class.
+    /// </remarks>
+    /// <param name="settings">The email configuration settings.</param>
+    /// <param name="smtpClientFactory">The factory for creating SMTP clients.</param>
+    /// <param name="logger">The logger instance.</param>
+    public class SmtpEmailService(
+        IOptions<EmailSettings> settings,
+        ISmtpClientFactory smtpClientFactory,
+        ILogger<SmtpEmailService> logger) : IEmailService
     {
-        private readonly EmailSettings _settings;
-        private readonly ISmtpClientFactory _smtpClientFactory;
-        private readonly ILogger<SmtpEmailService> _logger;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SmtpEmailService"/> class.
-        /// </summary>
-        /// <param name="settings">The email configuration settings.</param>
-        /// <param name="smtpClientFactory">The factory for creating SMTP clients.</param>
-        /// <param name="logger">The logger instance.</param>
-        public SmtpEmailService(
-            IOptions<EmailSettings> settings,
-            ISmtpClientFactory smtpClientFactory,
-            ILogger<SmtpEmailService> logger)
-        {
-            _settings = settings.Value;
-            _smtpClientFactory = smtpClientFactory;
-            _logger = logger;
-        }
+        private readonly EmailSettings _settings = settings.Value;
 
         /// <inheritdoc />
         public async Task SendWelcomeEmailAsync(string toEmail, string pseudo, CancellationToken cancellationToken = default)
         {
             var subject = "Welcome to FantasyRealm!";
-            var body = EmailTemplates.GetWelcomeTemplate(pseudo);
+            var body = EmailTemplates.GetWelcomeTemplate(pseudo, _settings.BaseUrl);
             await SendEmailAsync(toEmail, subject, body, cancellationToken);
         }
 
@@ -44,7 +34,7 @@ namespace FantasyRealm.Infrastructure.Email
         public async Task SendPasswordResetEmailAsync(string toEmail, string pseudo, string resetToken, CancellationToken cancellationToken = default)
         {
             var subject = "Reset your FantasyRealm password";
-            var body = EmailTemplates.GetPasswordResetTemplate(pseudo, resetToken);
+            var body = EmailTemplates.GetPasswordResetTemplate(pseudo, resetToken, _settings.BaseUrl);
             await SendEmailAsync(toEmail, subject, body, cancellationToken);
         }
 
@@ -52,7 +42,7 @@ namespace FantasyRealm.Infrastructure.Email
         public async Task SendTemporaryPasswordEmailAsync(string toEmail, string pseudo, string temporaryPassword, CancellationToken cancellationToken = default)
         {
             var subject = "Votre nouveau mot de passe FantasyRealm";
-            var body = EmailTemplates.GetTemporaryPasswordTemplate(pseudo, temporaryPassword);
+            var body = EmailTemplates.GetTemporaryPasswordTemplate(pseudo, temporaryPassword, _settings.BaseUrl);
             await SendEmailAsync(toEmail, subject, body, cancellationToken);
         }
 
@@ -60,7 +50,7 @@ namespace FantasyRealm.Infrastructure.Email
         public async Task SendCharacterApprovedEmailAsync(string toEmail, string pseudo, string characterName, CancellationToken cancellationToken = default)
         {
             var subject = $"Your character {characterName} has been approved!";
-            var body = EmailTemplates.GetCharacterApprovedTemplate(pseudo, characterName);
+            var body = EmailTemplates.GetCharacterApprovedTemplate(pseudo, characterName, _settings.BaseUrl);
             await SendEmailAsync(toEmail, subject, body, cancellationToken);
         }
 
@@ -68,7 +58,7 @@ namespace FantasyRealm.Infrastructure.Email
         public async Task SendCharacterRejectedEmailAsync(string toEmail, string pseudo, string characterName, string reason, CancellationToken cancellationToken = default)
         {
             var subject = $"Your character {characterName} was not approved";
-            var body = EmailTemplates.GetCharacterRejectedTemplate(pseudo, characterName, reason);
+            var body = EmailTemplates.GetCharacterRejectedTemplate(pseudo, characterName, reason, _settings.BaseUrl);
             await SendEmailAsync(toEmail, subject, body, cancellationToken);
         }
 
@@ -76,7 +66,7 @@ namespace FantasyRealm.Infrastructure.Email
         public async Task SendCommentApprovedEmailAsync(string toEmail, string pseudo, string characterName, CancellationToken cancellationToken = default)
         {
             var subject = "Your comment has been approved!";
-            var body = EmailTemplates.GetCommentApprovedTemplate(pseudo, characterName);
+            var body = EmailTemplates.GetCommentApprovedTemplate(pseudo, characterName, _settings.BaseUrl);
             await SendEmailAsync(toEmail, subject, body, cancellationToken);
         }
 
@@ -111,7 +101,7 @@ namespace FantasyRealm.Infrastructure.Email
 
             try
             {
-                using var client = _smtpClientFactory.Create();
+                using var client = smtpClientFactory.Create();
 
                 var secureSocketOptions = _settings.UseSsl
                     ? SecureSocketOptions.StartTls
@@ -122,11 +112,11 @@ namespace FantasyRealm.Infrastructure.Email
                 await client.SendAsync(message, cancellationToken);
                 await client.DisconnectAsync(true, cancellationToken);
 
-                _logger.LogInformation("Email sent successfully to {Email} with subject '{Subject}'", toEmail, subject);
+                logger.LogInformation("Email sent successfully to {Email} with subject '{Subject}'", toEmail, subject);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to send email to {Email} with subject '{Subject}'", toEmail, subject);
+                logger.LogError(ex, "Failed to send email to {Email} with subject '{Subject}'", toEmail, subject);
                 throw;
             }
         }

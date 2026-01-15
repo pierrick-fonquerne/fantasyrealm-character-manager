@@ -8,9 +8,6 @@ namespace FantasyRealm.Infrastructure.Email
     /// </summary>
     public static class EmailTemplates
     {
-        private const string BaseUrl = "https://fantasy-realm.com";
-
-        // Dark fantasy color palette - aligned with official style guide v3.0
         private const string DarkBg = "#0D0D0F";      // --dark-900
         private const string CardBg = "#121110";      // --dark-800
         private const string CardBorder = "#18181B";  // --dark-700
@@ -24,8 +21,9 @@ namespace FantasyRealm.Infrastructure.Email
         /// Generates a welcome email template for new users.
         /// </summary>
         /// <param name="pseudo">The user's display name.</param>
+        /// <param name="baseUrl">The base URL for links in the email.</param>
         /// <returns>The HTML email body.</returns>
-        public static string GetWelcomeTemplate(string pseudo)
+        public static string GetWelcomeTemplate(string pseudo, string baseUrl)
         {
             return WrapInLayout(
                 "Bienvenue dans FantasyRealm !",
@@ -74,7 +72,7 @@ namespace FantasyRealm.Infrastructure.Email
                 </div>
 
                 <div style=""text-align: center; margin: 30px 0;"">
-                    {GetPrimaryButton("Créer mon premier personnage", $"{BaseUrl}/characters/create", "🛡️")}
+                    {GetPrimaryButton("Créer mon premier personnage", $"{baseUrl}/characters/create", "🛡️")}
                 </div>
 
                 <p style=""color: {TextMuted}; text-align: center; font-size: 14px; margin-top: 25px;"">
@@ -88,10 +86,11 @@ namespace FantasyRealm.Infrastructure.Email
         /// </summary>
         /// <param name="pseudo">The user's display name.</param>
         /// <param name="resetToken">The password reset token.</param>
+        /// <param name="baseUrl">The base URL for links in the email.</param>
         /// <returns>The HTML email body.</returns>
-        public static string GetPasswordResetTemplate(string pseudo, string resetToken)
+        public static string GetPasswordResetTemplate(string pseudo, string resetToken, string baseUrl)
         {
-            var resetUrl = $"{BaseUrl}/reset-password?token={Uri.EscapeDataString(resetToken)}";
+            var resetUrl = $"{baseUrl}/reset-password?token={Uri.EscapeDataString(resetToken)}";
             return WrapInLayout(
                 "Réinitialisation de mot de passe",
                 $@"
@@ -130,8 +129,9 @@ namespace FantasyRealm.Infrastructure.Email
         /// </summary>
         /// <param name="pseudo">The user's display name.</param>
         /// <param name="temporaryPassword">The generated temporary password.</param>
+        /// <param name="baseUrl">The base URL for links in the email.</param>
         /// <returns>The HTML email body.</returns>
-        public static string GetTemporaryPasswordTemplate(string pseudo, string temporaryPassword)
+        public static string GetTemporaryPasswordTemplate(string pseudo, string temporaryPassword, string baseUrl)
         {
             return WrapInLayout(
                 "Nouveau mot de passe temporaire",
@@ -172,7 +172,7 @@ namespace FantasyRealm.Infrastructure.Email
                 </div>
 
                 <div style=""text-align: center; margin: 30px 0;"">
-                    {GetPrimaryButton("Se connecter", $"{BaseUrl}/login", "🔑")}
+                    {GetPrimaryButton("Se connecter", $"{baseUrl}/login", "🔑")}
                 </div>
 
                 <div style=""background: rgba(212, 175, 55, 0.1); border: 1px solid {GoldDark}; border-radius: 8px; padding: 15px; margin-top: 25px;"">
@@ -188,8 +188,9 @@ namespace FantasyRealm.Infrastructure.Email
         /// </summary>
         /// <param name="pseudo">The user's display name.</param>
         /// <param name="characterName">The approved character's name.</param>
+        /// <param name="baseUrl">The base URL for links in the email.</param>
         /// <returns>The HTML email body.</returns>
-        public static string GetCharacterApprovedTemplate(string pseudo, string characterName)
+        public static string GetCharacterApprovedTemplate(string pseudo, string characterName, string baseUrl)
         {
             return WrapInLayout(
                 "Personnage approuvé !",
@@ -218,7 +219,7 @@ namespace FantasyRealm.Infrastructure.Email
                 </div>
 
                 <div style=""text-align: center; margin: 30px 0;"">
-                    {GetPrimaryButton("Voir mes personnages", $"{BaseUrl}/characters", "👥")}
+                    {GetPrimaryButton("Voir mes personnages", $"{baseUrl}/characters", "👥")}
                 </div>
             ");
         }
@@ -229,8 +230,9 @@ namespace FantasyRealm.Infrastructure.Email
         /// <param name="pseudo">The user's display name.</param>
         /// <param name="characterName">The rejected character's name.</param>
         /// <param name="reason">The rejection reason.</param>
+        /// <param name="baseUrl">The base URL for links in the email.</param>
         /// <returns>The HTML email body.</returns>
-        public static string GetCharacterRejectedTemplate(string pseudo, string characterName, string reason)
+        public static string GetCharacterRejectedTemplate(string pseudo, string characterName, string reason, string baseUrl)
         {
             return WrapInLayout(
                 "Personnage non approuvé",
@@ -266,7 +268,7 @@ namespace FantasyRealm.Infrastructure.Email
                 </p>
 
                 <div style=""text-align: center; margin: 30px 0;"">
-                    {GetPrimaryButton("Modifier mon personnage", $"{BaseUrl}/characters", "✏️")}
+                    {GetPrimaryButton("Modifier mon personnage", $"{baseUrl}/characters", "✏️")}
                 </div>
             ");
         }
@@ -276,8 +278,9 @@ namespace FantasyRealm.Infrastructure.Email
         /// </summary>
         /// <param name="pseudo">The user's display name.</param>
         /// <param name="characterName">The character's name that was commented on.</param>
+        /// <param name="baseUrl">The base URL for links in the email.</param>
         /// <returns>The HTML email body.</returns>
-        public static string GetCommentApprovedTemplate(string pseudo, string characterName)
+        public static string GetCommentApprovedTemplate(string pseudo, string characterName, string baseUrl)
         {
             return WrapInLayout(
                 "Commentaire publié !",
@@ -304,7 +307,7 @@ namespace FantasyRealm.Infrastructure.Email
                 </p>
 
                 <div style=""text-align: center; margin: 30px 0;"">
-                    {GetPrimaryButton("Explorer la galerie", $"{BaseUrl}/gallery", "🖼️")}
+                    {GetPrimaryButton("Explorer la galerie", $"{baseUrl}/gallery", "🖼️")}
                 </div>
             ");
         }
@@ -425,94 +428,94 @@ namespace FantasyRealm.Infrastructure.Email
         private static string WrapInLayout(string title, string content)
         {
             return $@"
-<!DOCTYPE html>
-<html lang=""fr"">
-<head>
-    <meta charset=""UTF-8"">
-    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
-    <title>{Encode(title)} - FantasyRealm</title>
-    <!--[if mso]>
-    <noscript>
-        <xml>
-            <o:OfficeDocumentSettings>
-                <o:PixelsPerInch>96</o:PixelsPerInch>
-            </o:OfficeDocumentSettings>
-        </xml>
-    </noscript>
-    <![endif]-->
-</head>
-<body style=""margin: 0; padding: 0; background-color: {DarkBg}; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;"">
+                <!DOCTYPE html>
+                <html lang=""fr"">
+                <head>
+                    <meta charset=""UTF-8"">
+                    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+                    <title>{Encode(title)} - FantasyRealm</title>
+                    <!--[if mso]>
+                    <noscript>
+                        <xml>
+                            <o:OfficeDocumentSettings>
+                                <o:PixelsPerInch>96</o:PixelsPerInch>
+                            </o:OfficeDocumentSettings>
+                        </xml>
+                    </noscript>
+                    <![endif]-->
+                </head>
+                <body style=""margin: 0; padding: 0; background-color: {DarkBg}; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;"">
 
-    <!-- Wrapper table for full-width background -->
-    <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" width=""100%"" style=""background-color: {DarkBg};"">
-        <tr>
-            <td align=""center"" style=""padding: 40px 20px;"">
+                    <!-- Wrapper table for full-width background -->
+                    <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" width=""100%"" style=""background-color: {DarkBg};"">
+                        <tr>
+                            <td align=""center"" style=""padding: 40px 20px;"">
 
-                <!-- Main container -->
-                <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" width=""600"" style=""max-width: 600px; width: 100%;"">
+                                <!-- Main container -->
+                                <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" width=""600"" style=""max-width: 600px; width: 100%;"">
 
-                    <!-- Header -->
-                    <tr>
-                        <td style=""padding-bottom: 30px;"">
-                            <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" width=""100%"">
-                                <tr>
-                                    <td align=""center"" style=""padding: 25px 30px; background: linear-gradient(135deg, {CardBg} 0%, #16162A 100%); border: 1px solid {CardBorder}; border-radius: 16px 16px 0 0; border-bottom: 3px solid {GoldPrimary};"">
-                                        <table role=""presentation"" cellpadding=""0"" cellspacing=""0"">
-                                            <tr>
-                                                <td style=""font-size: 32px; padding-right: 12px;"">🏰</td>
-                                                <td>
-                                                    <span style=""font-size: 28px; font-weight: 800; color: {GoldPrimary}; letter-spacing: 1px;"">
-                                                        FANTASYREALM
-                                                    </span>
-                                                    <br>
-                                                    <span style=""font-size: 11px; color: {TextMuted}; letter-spacing: 3px; text-transform: uppercase;"">
-                                                        Character Manager
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
+                                    <!-- Header -->
+                                    <tr>
+                                        <td>
+                                            <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" width=""100%"">
+                                                <tr>
+                                                    <td align=""center"" style=""padding: 25px 30px; background: linear-gradient(135deg, {CardBg} 0%, #16162A 100%); border: 1px solid {CardBorder}; border-radius: 16px 16px 0 0; border-bottom: 3px solid {GoldPrimary};"">
+                                                        <table role=""presentation"" cellpadding=""0"" cellspacing=""0"">
+                                                            <tr>
+                                                                <td style=""font-size: 32px; padding-right: 12px;"">🏰</td>
+                                                                <td>
+                                                                    <span style=""font-size: 28px; font-weight: 800; color: {GoldPrimary}; letter-spacing: 1px;"">
+                                                                        FANTASYREALM
+                                                                    </span>
+                                                                    <br>
+                                                                    <span style=""font-size: 11px; color: {TextMuted}; letter-spacing: 3px; text-transform: uppercase;"">
+                                                                        Character Manager
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
 
-                    <!-- Content -->
-                    <tr>
-                        <td style=""background: linear-gradient(180deg, {CardBg} 0%, #12121F 100%); border: 1px solid {CardBorder}; border-radius: 0 0 16px 16px; padding: 40px 35px;"">
-                            {content}
-                        </td>
-                    </tr>
+                                    <!-- Content -->
+                                    <tr>
+                                        <td style=""background: linear-gradient(180deg, {CardBg} 0%, #12121F 100%); border: 1px solid {CardBorder}; border-radius: 0 0 16px 16px; padding: 40px 35px;"">
+                                            {content}
+                                        </td>
+                                    </tr>
 
-                    <!-- Footer -->
-                    <tr>
-                        <td style=""padding-top: 30px;"">
-                            <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" width=""100%"">
-                                <tr>
-                                    <td align=""center"">
-                                        <!-- Decorative divider -->
-                                        <div style=""width: 60px; height: 2px; background: linear-gradient(90deg, transparent 0%, {GoldPrimary} 50%, transparent 100%); margin: 0 auto 20px auto;""></div>
+                                    <!-- Footer -->
+                                    <tr>
+                                        <td style=""padding-top: 30px;"">
+                                            <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" width=""100%"">
+                                                <tr>
+                                                    <td align=""center"">
+                                                        <!-- Decorative divider -->
+                                                        <div style=""width: 60px; height: 2px; background: linear-gradient(90deg, transparent 0%, {GoldPrimary} 50%, transparent 100%); margin: 0 auto 20px auto;""></div>
 
-                                        <p style=""color: {TextMuted}; font-size: 12px; margin: 0 0 8px 0;"">
-                                            © {DateTime.UtcNow.Year} FantasyRealm par PixelVerse Studios
-                                        </p>
-                                        <p style=""color: #6B7280; font-size: 11px; margin: 0;"">
-                                            Ceci est un message automatique. Merci de ne pas répondre à cet email.
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
+                                                        <p style=""color: {TextMuted}; font-size: 12px; margin: 0 0 8px 0;"">
+                                                            © {DateTime.UtcNow.Year} FantasyRealm par PixelVerse Studios
+                                                        </p>
+                                                        <p style=""color: #6B7280; font-size: 11px; margin: 0;"">
+                                                            Ceci est un message automatique. Merci de ne pas répondre à cet email.
+                                                        </p>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
 
-                </table>
+                                </table>
 
-            </td>
-        </tr>
-    </table>
+                            </td>
+                        </tr>
+                    </table>
 
-</body>
-</html>";
+                </body>
+                </html>";
         }
     }
 }

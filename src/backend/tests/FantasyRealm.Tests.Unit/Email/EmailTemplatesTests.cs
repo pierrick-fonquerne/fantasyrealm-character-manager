@@ -4,6 +4,8 @@ namespace FantasyRealm.Tests.Unit.Email
 {
     public class EmailTemplatesTests
     {
+        private const string TestBaseUrl = "https://test.fantasy-realm.com";
+
         [Fact]
         public void GetWelcomeTemplate_ContainsPseudo()
         {
@@ -11,7 +13,7 @@ namespace FantasyRealm.Tests.Unit.Email
             var pseudo = "TestPlayer";
 
             // Act
-            var result = EmailTemplates.GetWelcomeTemplate(pseudo);
+            var result = EmailTemplates.GetWelcomeTemplate(pseudo, TestBaseUrl);
 
             // Assert
             Assert.Contains(pseudo, result);
@@ -24,10 +26,21 @@ namespace FantasyRealm.Tests.Unit.Email
         {
             var pseudo = "<script>alert('xss')</script>";
 
-            var result = EmailTemplates.GetWelcomeTemplate(pseudo);
+            var result = EmailTemplates.GetWelcomeTemplate(pseudo, TestBaseUrl);
 
             Assert.DoesNotContain("<script>", result);
             Assert.Contains("&lt;script&gt;", result);
+        }
+
+        [Fact]
+        public void GetWelcomeTemplate_ContainsBaseUrl()
+        {
+            var pseudo = "TestPlayer";
+
+            var result = EmailTemplates.GetWelcomeTemplate(pseudo, TestBaseUrl);
+
+            Assert.Contains(TestBaseUrl, result);
+            Assert.Contains($"{TestBaseUrl}/characters/create", result);
         }
 
         [Fact]
@@ -36,7 +49,7 @@ namespace FantasyRealm.Tests.Unit.Email
             var pseudo = "TestPlayer";
             var resetToken = "abc123token";
 
-            var result = EmailTemplates.GetPasswordResetTemplate(pseudo, resetToken);
+            var result = EmailTemplates.GetPasswordResetTemplate(pseudo, resetToken, TestBaseUrl);
 
             Assert.Contains(pseudo, result);
             Assert.Contains(resetToken, result);
@@ -50,10 +63,21 @@ namespace FantasyRealm.Tests.Unit.Email
             var pseudo = "TestPlayer";
             var resetToken = "abc+def/ghi=jkl";
 
-            var result = EmailTemplates.GetPasswordResetTemplate(pseudo, resetToken);
+            var result = EmailTemplates.GetPasswordResetTemplate(pseudo, resetToken, TestBaseUrl);
 
             Assert.Contains("token=abc%2Bdef%2Fghi%3Djkl", result);
             Assert.DoesNotContain("token=abc+def", result);
+        }
+
+        [Fact]
+        public void GetPasswordResetTemplate_ContainsBaseUrl()
+        {
+            var pseudo = "TestPlayer";
+            var resetToken = "abc123token";
+
+            var result = EmailTemplates.GetPasswordResetTemplate(pseudo, resetToken, TestBaseUrl);
+
+            Assert.Contains($"{TestBaseUrl}/reset-password?token=", result);
         }
 
         [Fact]
@@ -62,7 +86,7 @@ namespace FantasyRealm.Tests.Unit.Email
             var pseudo = "TestPlayer";
             var temporaryPassword = "TempPass@123!";
 
-            var result = EmailTemplates.GetTemporaryPasswordTemplate(pseudo, temporaryPassword);
+            var result = EmailTemplates.GetTemporaryPasswordTemplate(pseudo, temporaryPassword, TestBaseUrl);
 
             Assert.Contains(pseudo, result);
             Assert.Contains(temporaryPassword, result);
@@ -75,7 +99,7 @@ namespace FantasyRealm.Tests.Unit.Email
             var pseudo = "TestPlayer";
             var temporaryPassword = "TempPass@123!";
 
-            var result = EmailTemplates.GetTemporaryPasswordTemplate(pseudo, temporaryPassword);
+            var result = EmailTemplates.GetTemporaryPasswordTemplate(pseudo, temporaryPassword, TestBaseUrl);
 
             Assert.Contains("changer ce mot de passe", result.ToLower());
             Assert.Contains("prochaine connexion", result.ToLower());
@@ -87,10 +111,21 @@ namespace FantasyRealm.Tests.Unit.Email
             var pseudo = "<script>alert('xss')</script>";
             var temporaryPassword = "TempPass@123!";
 
-            var result = EmailTemplates.GetTemporaryPasswordTemplate(pseudo, temporaryPassword);
+            var result = EmailTemplates.GetTemporaryPasswordTemplate(pseudo, temporaryPassword, TestBaseUrl);
 
             Assert.DoesNotContain("<script>", result);
             Assert.Contains("&lt;script&gt;", result);
+        }
+
+        [Fact]
+        public void GetTemporaryPasswordTemplate_ContainsBaseUrl()
+        {
+            var pseudo = "TestPlayer";
+            var temporaryPassword = "TempPass@123!";
+
+            var result = EmailTemplates.GetTemporaryPasswordTemplate(pseudo, temporaryPassword, TestBaseUrl);
+
+            Assert.Contains($"{TestBaseUrl}/login", result);
         }
 
         [Fact]
@@ -99,11 +134,22 @@ namespace FantasyRealm.Tests.Unit.Email
             var pseudo = "TestPlayer";
             var characterName = "Thorin";
 
-            var result = EmailTemplates.GetCharacterApprovedTemplate(pseudo, characterName);
+            var result = EmailTemplates.GetCharacterApprovedTemplate(pseudo, characterName, TestBaseUrl);
 
             Assert.Contains(pseudo, result);
             Assert.Contains(characterName, result);
             Assert.Contains("approuvé", result.ToLower());
+        }
+
+        [Fact]
+        public void GetCharacterApprovedTemplate_ContainsBaseUrl()
+        {
+            var pseudo = "TestPlayer";
+            var characterName = "Thorin";
+
+            var result = EmailTemplates.GetCharacterApprovedTemplate(pseudo, characterName, TestBaseUrl);
+
+            Assert.Contains($"{TestBaseUrl}/characters", result);
         }
 
         [Fact]
@@ -113,7 +159,7 @@ namespace FantasyRealm.Tests.Unit.Email
             var characterName = "Thorin";
             var reason = "Inappropriate content";
 
-            var result = EmailTemplates.GetCharacterRejectedTemplate(pseudo, characterName, reason);
+            var result = EmailTemplates.GetCharacterRejectedTemplate(pseudo, characterName, reason, TestBaseUrl);
 
             Assert.Contains(pseudo, result);
             Assert.Contains(characterName, result);
@@ -122,16 +168,39 @@ namespace FantasyRealm.Tests.Unit.Email
         }
 
         [Fact]
+        public void GetCharacterRejectedTemplate_ContainsBaseUrl()
+        {
+            var pseudo = "TestPlayer";
+            var characterName = "Thorin";
+            var reason = "Inappropriate content";
+
+            var result = EmailTemplates.GetCharacterRejectedTemplate(pseudo, characterName, reason, TestBaseUrl);
+
+            Assert.Contains($"{TestBaseUrl}/characters", result);
+        }
+
+        [Fact]
         public void GetCommentApprovedTemplate_ContainsCharacterName()
         {
             var pseudo = "TestPlayer";
             var characterName = "Thorin";
 
-            var result = EmailTemplates.GetCommentApprovedTemplate(pseudo, characterName);
+            var result = EmailTemplates.GetCommentApprovedTemplate(pseudo, characterName, TestBaseUrl);
 
             Assert.Contains(pseudo, result);
             Assert.Contains(characterName, result);
             Assert.Contains("Commentaire publié", result);
+        }
+
+        [Fact]
+        public void GetCommentApprovedTemplate_ContainsBaseUrl()
+        {
+            var pseudo = "TestPlayer";
+            var characterName = "Thorin";
+
+            var result = EmailTemplates.GetCommentApprovedTemplate(pseudo, characterName, TestBaseUrl);
+
+            Assert.Contains($"{TestBaseUrl}/gallery", result);
         }
 
         [Fact]
@@ -174,12 +243,12 @@ namespace FantasyRealm.Tests.Unit.Email
         {
             var result = templateMethod switch
             {
-                "GetWelcomeTemplate" => EmailTemplates.GetWelcomeTemplate("Test"),
-                "GetPasswordResetTemplate" => EmailTemplates.GetPasswordResetTemplate("Test", "token"),
-                "GetTemporaryPasswordTemplate" => EmailTemplates.GetTemporaryPasswordTemplate("Test", "TempPass123!"),
-                "GetCharacterApprovedTemplate" => EmailTemplates.GetCharacterApprovedTemplate("Test", "Character"),
-                "GetCharacterRejectedTemplate" => EmailTemplates.GetCharacterRejectedTemplate("Test", "Character", "Reason"),
-                "GetCommentApprovedTemplate" => EmailTemplates.GetCommentApprovedTemplate("Test", "Character"),
+                "GetWelcomeTemplate" => EmailTemplates.GetWelcomeTemplate("Test", TestBaseUrl),
+                "GetPasswordResetTemplate" => EmailTemplates.GetPasswordResetTemplate("Test", "token", TestBaseUrl),
+                "GetTemporaryPasswordTemplate" => EmailTemplates.GetTemporaryPasswordTemplate("Test", "TempPass123!", TestBaseUrl),
+                "GetCharacterApprovedTemplate" => EmailTemplates.GetCharacterApprovedTemplate("Test", "Character", TestBaseUrl),
+                "GetCharacterRejectedTemplate" => EmailTemplates.GetCharacterRejectedTemplate("Test", "Character", "Reason", TestBaseUrl),
+                "GetCommentApprovedTemplate" => EmailTemplates.GetCommentApprovedTemplate("Test", "Character", TestBaseUrl),
                 "GetCommentRejectedTemplate" => EmailTemplates.GetCommentRejectedTemplate("Test", "Character", "Reason"),
                 "GetAccountSuspendedTemplate" => EmailTemplates.GetAccountSuspendedTemplate("Test", "Reason"),
                 _ => throw new ArgumentException($"Unknown template: {templateMethod}")
@@ -199,12 +268,12 @@ namespace FantasyRealm.Tests.Unit.Email
 
             var templates = new[]
             {
-                EmailTemplates.GetWelcomeTemplate("Test"),
-                EmailTemplates.GetPasswordResetTemplate("Test", "token"),
-                EmailTemplates.GetTemporaryPasswordTemplate("Test", "TempPass123!"),
-                EmailTemplates.GetCharacterApprovedTemplate("Test", "Character"),
-                EmailTemplates.GetCharacterRejectedTemplate("Test", "Character", "Reason"),
-                EmailTemplates.GetCommentApprovedTemplate("Test", "Character"),
+                EmailTemplates.GetWelcomeTemplate("Test", TestBaseUrl),
+                EmailTemplates.GetPasswordResetTemplate("Test", "token", TestBaseUrl),
+                EmailTemplates.GetTemporaryPasswordTemplate("Test", "TempPass123!", TestBaseUrl),
+                EmailTemplates.GetCharacterApprovedTemplate("Test", "Character", TestBaseUrl),
+                EmailTemplates.GetCharacterRejectedTemplate("Test", "Character", "Reason", TestBaseUrl),
+                EmailTemplates.GetCommentApprovedTemplate("Test", "Character", TestBaseUrl),
                 EmailTemplates.GetCommentRejectedTemplate("Test", "Character", "Reason"),
                 EmailTemplates.GetAccountSuspendedTemplate("Test", "Reason")
             };
