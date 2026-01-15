@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { Input, PasswordInput, Button, Alert } from '../ui';
-import { authService, type ApiError } from '../../services/authService';
+import { ChangePasswordModal } from './ChangePasswordModal';
+import { authService, type ApiError, type ChangePasswordResponse } from '../../services/authService';
 import { useAuth } from '../../context/AuthContext';
 
 interface LoginFormProps {
@@ -17,6 +18,8 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [apiError, setApiError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  const [temporaryToken, setTemporaryToken] = useState<string | null>(null);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -49,7 +52,8 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
       const response = await authService.login(formData);
 
       if (response.mustChangePassword) {
-        setApiError('Vous devez changer votre mot de passe. Cette fonctionnalité sera disponible prochainement.');
+        setTemporaryToken(response.token);
+        setShowChangePasswordModal(true);
         return;
       }
 
@@ -73,7 +77,25 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
     }
   };
 
+  const handlePasswordChangeSuccess = (response: ChangePasswordResponse) => {
+    setShowChangePasswordModal(false);
+    setTemporaryToken(null);
+    login({
+      token: response.token,
+      expiresAt: response.expiresAt,
+      user: response.user,
+      mustChangePassword: false,
+    });
+    onSuccess();
+  };
+
   return (
+    <>
+      <ChangePasswordModal
+        isOpen={showChangePasswordModal}
+        token={temporaryToken || ''}
+        onSuccess={handlePasswordChangeSuccess}
+      />
     <form onSubmit={handleSubmit} noValidate>
       {apiError && (
         <Alert variant="error" className="mb-6" onClose={() => setApiError(null)}>
@@ -124,6 +146,7 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
         Se connecter
       </Button>
     </form>
+    </>
   );
 };
 

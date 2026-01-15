@@ -37,6 +37,14 @@ namespace FantasyRealm.Application.Interfaces
         Task<User?> GetByEmailWithRoleAsync(string email, CancellationToken cancellationToken = default);
 
         /// <summary>
+        /// Retrieves a user by ID, including their role.
+        /// </summary>
+        /// <param name="id">The user ID.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>The user with their role, or null if not found.</returns>
+        Task<User?> GetByIdWithRoleAsync(int id, CancellationToken cancellationToken = default);
+
+        /// <summary>
         /// Retrieves a user by email and pseudo combination, including their role.
         /// Used for password reset verification.
         /// </summary>

@@ -63,6 +63,7 @@ services:
       ConnectionStrings__PostgreSQL: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-fantasyrealm};Username=${POSTGRES_USER:-fantasyrealm};Password=${POSTGRES_PASSWORD}"
       ConnectionStrings__MongoDB: "mongodb://${MONGO_USER:-fantasyrealm}:${MONGO_PASSWORD}@mongodb:27017/${MONGO_DB:-fantasyrealm_logs}?authSource=admin"
       Email__Password: ${EMAIL_PASSWORD}
+      Email__BaseUrl: ${FRONTEND_URL:-http://localhost:5173}
     depends_on:
       postgres:
         condition: service_healthy

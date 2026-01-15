@@ -2,3 +2,4 @@ export { RegisterForm } from './RegisterForm';
 export { LoginForm } from './LoginForm';
 export { ForgotPasswordForm } from './ForgotPasswordForm';
 export { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
+export { ChangePasswordModal } from './ChangePasswordModal';

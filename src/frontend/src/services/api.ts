@@ -45,6 +45,41 @@ class ApiClient {
     return response.json();
   }
 
+  async postAuthenticated<TRequest, TResponse>(
+    endpoint: string,
+    data: TRequest,
+    token: string
+  ): Promise<TResponse> {
+    let response: Response;
+
+    try {
+      response = await fetch(`${this.baseUrl}${endpoint}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      });
+    } catch {
+      throw {
+        message: 'Impossible de contacter le serveur. Vérifiez votre connexion internet.',
+        status: 0,
+      } as ApiError;
+    }
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const error: ApiError = {
+        message: errorData.message || 'Une erreur est survenue',
+        status: response.status,
+      };
+      throw error;
+    }
+
+    return response.json();
+  }
+
   async get<TResponse>(endpoint: string): Promise<TResponse> {
     let response: Response;
 

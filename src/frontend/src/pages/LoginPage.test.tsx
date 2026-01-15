@@ -146,7 +146,7 @@ describe('LoginPage', () => {
       await userEvent.click(screen.getByRole('button', { name: /se connecter/i }));
 
       await waitFor(() => {
-        expect(screen.getByText(/vous devez changer votre mot de passe/i)).toBeInTheDocument();
+        expect(screen.getByText(/changement de mot de passe obligatoire/i)).toBeInTheDocument();
       });
 
       expect(mockNavigate).not.toHaveBeenCalled();

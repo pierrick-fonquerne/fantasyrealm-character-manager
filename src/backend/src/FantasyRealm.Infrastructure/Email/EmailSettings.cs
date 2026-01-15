@@ -44,5 +44,10 @@ namespace FantasyRealm.Infrastructure.Email
         /// Gets or sets the sender display name.
         /// </summary>
         public string FromName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the base URL for links in email templates.
+        /// </summary>
+        public string BaseUrl { get; set; } = string.Empty;
     }
 }

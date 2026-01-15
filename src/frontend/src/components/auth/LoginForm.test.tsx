@@ -295,7 +295,7 @@ describe('LoginForm', () => {
   });
 
   describe('MustChangePassword handling', () => {
-    it('should display message when mustChangePassword is true', async () => {
+    it('should display change password modal when mustChangePassword is true', async () => {
       mockAuthLogin.mockResolvedValueOnce({
         ...mockLoginResponse,
         mustChangePassword: true,
@@ -308,7 +308,7 @@ describe('LoginForm', () => {
       await userEvent.click(screen.getByRole('button', { name: /se connecter/i }));
 
       await waitFor(() => {
-        expect(screen.getByText(/vous devez changer votre mot de passe/i)).toBeInTheDocument();
+        expect(screen.getByText(/changement de mot de passe obligatoire/i)).toBeInTheDocument();
       });
     });
 
@@ -325,7 +325,7 @@ describe('LoginForm', () => {
       await userEvent.click(screen.getByRole('button', { name: /se connecter/i }));
 
       await waitFor(() => {
-        expect(screen.getByText(/vous devez changer votre mot de passe/i)).toBeInTheDocument();
+        expect(screen.getByText(/changement de mot de passe obligatoire/i)).toBeInTheDocument();
       });
 
       expect(mockOnSuccess).not.toHaveBeenCalled();
@@ -344,7 +344,7 @@ describe('LoginForm', () => {
       await userEvent.click(screen.getByRole('button', { name: /se connecter/i }));
 
       await waitFor(() => {
-        expect(screen.getByText(/vous devez changer votre mot de passe/i)).toBeInTheDocument();
+        expect(screen.getByText(/changement de mot de passe obligatoire/i)).toBeInTheDocument();
       });
 
       expect(mockLogin).not.toHaveBeenCalled();
