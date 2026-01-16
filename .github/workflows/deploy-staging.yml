@@ -1,0 +1,115 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+jobs:
+  # Run CI first to ensure code quality
+  ci:
+    name: Run CI checks
+    uses: ./.github/workflows/ci.yml
+
+  # Deploy backend to Railway
+  deploy-backend:
+    name: Deploy Backend to Railway
+    needs: ci
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: ${{ steps.deploy.outputs.url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy to Railway
+        id: deploy
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_STAGING }}
+        run: |
+          railway up --service ${{ secrets.RAILWAY_SERVICE_ID_STAGING }} --detach
+          echo "url=https://$(railway domain)" >> $GITHUB_OUTPUT
+
+      - name: Deployment summary
+        run: |
+          echo "### 🚀 Backend Deployment" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** Staging" >> $GITHUB_STEP_SUMMARY
+          echo "**Service:** Backend API (.NET)" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** ${{ steps.deploy.outputs.url }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+
+  # Run database migrations
+  migrate-database:
+    name: Run Database Migrations
+    needs: deploy-backend
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Get Database URL
+        id: db-url
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_STAGING }}
+        run: |
+          DB_URL=$(railway variables get DATABASE_URL --service ${{ secrets.RAILWAY_POSTGRES_SERVICE_ID_STAGING }})
+          echo "::add-mask::$DB_URL"
+          echo "database_url=$DB_URL" >> $GITHUB_OUTPUT
+
+      - name: Run migrations
+        env:
+          DATABASE_URL: ${{ steps.db-url.outputs.database_url }}
+        run: |
+          chmod +x infra/scripts/migrate-database.sh
+          bash infra/scripts/migrate-database.sh "$DATABASE_URL"
+
+      - name: Migration summary
+        run: |
+          echo "### 🗄️ Database Migrations" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** Staging" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ✅ Completed" >> $GITHUB_STEP_SUMMARY
+
+  # Deployment notification
+  notify:
+    name: Deployment Notification
+    needs: [deploy-backend, migrate-database]
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check deployment status
+        run: |
+          if [[ "${{ needs.deploy-backend.result }}" == "success" ]] && [[ "${{ needs.migrate-database.result }}" == "success" ]]; then
+            echo "### ✅ Staging Deployment Successful" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Branch:** develop" >> $GITHUB_STEP_SUMMARY
+            echo "**Backend:** Deployed to Railway" >> $GITHUB_STEP_SUMMARY
+            echo "**Database:** Migrations applied" >> $GITHUB_STEP_SUMMARY
+            echo "**Frontend:** Auto-deployed to Vercel (preview)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ❌ Staging Deployment Failed" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Please check the logs for details." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi

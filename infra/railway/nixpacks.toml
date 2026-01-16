@@ -1,0 +1,20 @@
+# Nixpacks configuration for FantasyRealm .NET API
+# Railway uses Nixpacks to automatically build and deploy the application
+# https://nixpacks.com/docs
+
+[phases.setup]
+nixPkgs = ["dotnet-sdk_8"]
+
+[phases.build]
+cmds = [
+    "cd src/backend",
+    "dotnet restore",
+    "dotnet publish FantasyRealm.Api/FantasyRealm.Api.csproj -c Release -o out"
+]
+
+[start]
+cmd = "cd src/backend && dotnet out/FantasyRealm.Api.dll"
+
+[variables]
+ASPNETCORE_URLS = "http://0.0.0.0:$PORT"
+DOTNET_SYSTEM_GLOBALIZATION_INVARIANT = "1"
