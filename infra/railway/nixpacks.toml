@@ -12,5 +12,4 @@ cmds = [
 cmd = "cd src/backend && dotnet out/FantasyRealm.Api.dll"
 
 [variables]
-ASPNETCORE_URLS = "http://0.0.0.0:$PORT"
 DOTNET_SYSTEM_GLOBALIZATION_INVARIANT = "1"
