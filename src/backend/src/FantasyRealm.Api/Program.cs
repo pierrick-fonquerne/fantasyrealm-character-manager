@@ -28,10 +28,32 @@ namespace FantasyRealm.Api
             {
                 options.AddPolicy("AllowFrontend", policy =>
                 {
-                    policy.WithOrigins(corsOrigins)
-                          .AllowAnyMethod()
-                          .AllowAnyHeader()
-                          .AllowCredentials();
+                    policy.SetIsOriginAllowed(origin =>
+                    {
+                        // Check each configured origin pattern
+                        foreach (var allowedOrigin in corsOrigins)
+                        {
+                            var pattern = allowedOrigin.Trim();
+
+                            // Support wildcard patterns like https://*.vercel.app
+                            if (pattern.Contains("*"))
+                            {
+                                var regex = new System.Text.RegularExpressions.Regex(
+                                    "^" + System.Text.RegularExpressions.Regex.Escape(pattern).Replace("\\*", ".*") + "$");
+                                if (regex.IsMatch(origin))
+                                    return true;
+                            }
+                            // Exact match
+                            else if (pattern.Equals(origin, StringComparison.OrdinalIgnoreCase))
+                            {
+                                return true;
+                            }
+                        }
+                        return false;
+                    })
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .AllowCredentials();
                 });
             });
 
