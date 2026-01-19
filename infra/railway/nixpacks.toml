@@ -1,7 +1,3 @@
-# Nixpacks configuration for FantasyRealm .NET API
-# Railway uses Nixpacks to automatically build and deploy the application
-# https://nixpacks.com/docs
-
 [phases.setup]
 nixPkgs = ["dotnet-sdk_8"]
 
