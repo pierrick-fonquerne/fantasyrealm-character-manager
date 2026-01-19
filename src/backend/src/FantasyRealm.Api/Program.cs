@@ -21,11 +21,14 @@ namespace FantasyRealm.Api
             builder.Services.AddSwaggerGen();
 
             // CORS configuration
+            var corsOrigins = builder.Configuration["CorsOrigins"]?.Split(',')
+                ?? new[] { "http://localhost:5173" };
+
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowFrontend", policy =>
                 {
-                    policy.WithOrigins("http://localhost:5173")
+                    policy.WithOrigins(corsOrigins)
                           .AllowAnyMethod()
                           .AllowAnyHeader()
                           .AllowCredentials();
