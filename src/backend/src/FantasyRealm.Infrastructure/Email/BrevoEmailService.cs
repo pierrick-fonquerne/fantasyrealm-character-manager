@@ -1,26 +1,37 @@
+using System.Net.Http.Json;
 using FantasyRealm.Application.Interfaces;
-using MailKit.Security;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using MimeKit;
 
 namespace FantasyRealm.Infrastructure.Email
 {
     /// <summary>
-    /// SMTP-based implementation of the email service using MailKit.
+    /// Brevo API-based implementation of the email service.
     /// </summary>
-    /// <remarks>
-    /// Initializes a new instance of the <see cref="SmtpEmailService"/> class.
-    /// </remarks>
-    /// <param name="settings">The email configuration settings.</param>
-    /// <param name="smtpClientFactory">The factory for creating SMTP clients.</param>
-    /// <param name="logger">The logger instance.</param>
-    public class SmtpEmailService(
-        IOptions<EmailSettings> settings,
-        ISmtpClientFactory smtpClientFactory,
-        ILogger<SmtpEmailService> logger) : IEmailService
+    public class BrevoEmailService : IEmailService
     {
-        private readonly EmailSettings _settings = settings.Value;
+        private readonly BrevoSettings _settings;
+        private readonly HttpClient _httpClient;
+        private readonly ILogger<BrevoEmailService> _logger;
+        private const string BrevoApiUrl = "https://api.brevo.com/v3/smtp/email";
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BrevoEmailService"/> class.
+        /// </summary>
+        /// <param name="settings">The Brevo configuration settings.</param>
+        /// <param name="httpClient">The HTTP client for API calls.</param>
+        /// <param name="logger">The logger instance.</param>
+        public BrevoEmailService(
+            IOptions<BrevoSettings> settings,
+            HttpClient httpClient,
+            ILogger<BrevoEmailService> logger)
+        {
+            _settings = settings.Value;
+            _httpClient = httpClient;
+            _logger = logger;
+
+            _httpClient.DefaultRequestHeaders.Add("api-key", _settings.ApiKey);
+        }
 
         /// <inheritdoc />
         public async Task SendWelcomeEmailAsync(string toEmail, string pseudo, CancellationToken cancellationToken = default)
@@ -88,35 +99,33 @@ namespace FantasyRealm.Infrastructure.Email
 
         private async Task SendEmailAsync(string toEmail, string subject, string htmlBody, CancellationToken cancellationToken)
         {
-            var message = new MimeMessage();
-            message.From.Add(new MailboxAddress(_settings.FromName, _settings.FromAddress));
-            message.To.Add(MailboxAddress.Parse(toEmail));
-            message.Subject = subject;
-
-            var bodyBuilder = new BodyBuilder
+            var request = new BrevoEmailRequest
             {
-                HtmlBody = htmlBody
+                Sender = new BrevoEmailAddress { Email = _settings.FromAddress, Name = _settings.FromName },
+                To = [new BrevoEmailAddress { Email = toEmail }],
+                Subject = subject,
+                HtmlContent = htmlBody
             };
-            message.Body = bodyBuilder.ToMessageBody();
 
             try
             {
-                using var client = smtpClientFactory.Create();
+                var response = await _httpClient.PostAsJsonAsync(BrevoApiUrl, request, cancellationToken);
 
-                var secureSocketOptions = _settings.UseSsl
-                    ? SecureSocketOptions.StartTls
-                    : SecureSocketOptions.None;
-
-                await client.ConnectAsync(_settings.Host, _settings.Port, secureSocketOptions, cancellationToken);
-                await client.AuthenticateAsync(_settings.Username, _settings.Password, cancellationToken);
-                await client.SendAsync(message, cancellationToken);
-                await client.DisconnectAsync(true, cancellationToken);
-
-                logger.LogInformation("Email sent successfully to {Email} with subject '{Subject}'", toEmail, subject);
+                if (response.IsSuccessStatusCode)
+                {
+                    _logger.LogInformation("Email sent successfully to {Email} with subject '{Subject}'", toEmail, subject);
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
+                    _logger.LogError("Failed to send email to {Email}. Status: {Status}, Error: {Error}",
+                        toEmail, response.StatusCode, errorContent);
+                    throw new HttpRequestException($"Brevo API error: {response.StatusCode} - {errorContent}");
+                }
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not HttpRequestException)
             {
-                logger.LogError(ex, "Failed to send email to {Email} with subject '{Subject}'", toEmail, subject);
+                _logger.LogError(ex, "Failed to send email to {Email} with subject '{Subject}'", toEmail, subject);
                 throw;
             }
         }

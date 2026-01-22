@@ -44,9 +44,8 @@ namespace FantasyRealm.Infrastructure
                 });
             }
 
-            services.Configure<EmailSettings>(configuration.GetSection(EmailSettings.SectionName));
-            services.AddSingleton<ISmtpClientFactory, SmtpClientFactory>();
-            services.AddScoped<IEmailService, SmtpEmailService>();
+            services.Configure<BrevoSettings>(configuration.GetSection(BrevoSettings.SectionName));
+            services.AddHttpClient<IEmailService, BrevoEmailService>();
 
             services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
             services.AddSingleton<IJwtService, JwtService>();
