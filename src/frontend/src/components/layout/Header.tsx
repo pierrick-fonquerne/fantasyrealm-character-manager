@@ -118,6 +118,30 @@ const Header = () => {
                       </svg>
                       Paramètres
                     </Link>
+                    {(user?.role === 'Employee' || user?.role === 'Admin') && (
+                      <Link
+                        to="/moderation"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-cream-300 hover:bg-dark-700 hover:text-cream-100 transition-colors"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Modération
+                      </Link>
+                    )}
+                    {user?.role === 'Admin' && (
+                      <Link
+                        to="/administration"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-cream-300 hover:bg-dark-700 hover:text-cream-100 transition-colors"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                        </svg>
+                        Administration
+                      </Link>
+                    )}
                     <div className="border-t border-dark-700 my-1" />
                     <button
                       type="button"
@@ -226,6 +250,24 @@ const Header = () => {
                   >
                     Paramètres
                   </Link>
+                  {(user?.role === 'Employee' || user?.role === 'Admin') && (
+                    <Link
+                      to="/moderation"
+                      className="px-4 py-2 text-sm text-cream-300 hover:bg-dark-800 rounded-lg transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Modération
+                    </Link>
+                  )}
+                  {user?.role === 'Admin' && (
+                    <Link
+                      to="/administration"
+                      className="px-4 py-2 text-sm text-cream-300 hover:bg-dark-800 rounded-lg transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Administration
+                    </Link>
+                  )}
                   <button
                     type="button"
                     onClick={handleLogout}
