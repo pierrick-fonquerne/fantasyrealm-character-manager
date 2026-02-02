@@ -49,10 +49,14 @@ const Header = () => {
   return (
     <header className="sticky top-0 z-40 w-full bg-dark-900/95 backdrop-blur-sm border-b border-dark-700">
       <div className="max-w-7xl mx-auto px-4 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <Link to="/" className="font-display text-xl font-semibold text-gold-400 hover:text-gold-300 transition-colors">
-            FantasyRealm
+          <Link to="/" className="hover:opacity-90 transition-opacity">
+            <img
+              src="/assets/logos/fantasyrealm-logo-transparent.png"
+              alt="FantasyRealm"
+              className="h-14 w-auto"
+            />
           </Link>
 
           {/* Navigation Desktop */}

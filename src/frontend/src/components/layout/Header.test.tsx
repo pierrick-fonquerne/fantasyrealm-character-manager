@@ -43,9 +43,9 @@ describe('Header', () => {
   });
 
   describe('common elements', () => {
-    it('renders the logo with correct text', () => {
+    it('renders the logo with correct alt text', () => {
       renderWithRouter();
-      expect(screen.getByText('FantasyRealm')).toBeInTheDocument();
+      expect(screen.getByAltText('FantasyRealm')).toBeInTheDocument();
     });
 
     it('renders navigation links on desktop', () => {
@@ -72,7 +72,7 @@ describe('Header', () => {
 
     it('has correct href for logo', () => {
       renderWithRouter();
-      const logo = screen.getByText('FantasyRealm');
+      const logo = screen.getByAltText('FantasyRealm').closest('a');
       expect(logo).toHaveAttribute('href', '/');
     });
 
