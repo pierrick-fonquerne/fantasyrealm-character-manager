@@ -1,13 +1,13 @@
 import { Card, CardBody } from '../ui';
 
-interface Feature {
+interface Advantage {
   icon: React.ReactNode;
   title: string;
   description: string;
 }
 
-const FeaturesSection = () => {
-  const features: Feature[] = [
+const AdvantagesSection = () => {
+  const advantages: Advantage[] = [
     {
       icon: (
         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -21,7 +21,7 @@ const FeaturesSection = () => {
       ),
       title: 'Personnalisation avancée',
       description:
-        'Modifiez chaque trait du visage de votre personnage avec précision : yeux, nez, bouche, et bien plus encore.',
+        'Modifiez chaque trait du visage de votre personnage avec précision : yeux, nez, bouche, couleur de peau, cheveux et bien plus encore.',
     },
     {
       icon: (
@@ -36,7 +36,7 @@ const FeaturesSection = () => {
       ),
       title: 'Partagez vos créations',
       description:
-        'Publiez vos personnages dans la galerie et découvrez les créations des autres joueurs de la communauté.',
+        'Publiez vos personnages dans la galerie communautaire et découvrez les créations des autres joueurs. Laissez des avis et recevez des retours.',
     },
     {
       icon: (
@@ -51,40 +51,41 @@ const FeaturesSection = () => {
       ),
       title: 'Équipements variés',
       description:
-        'Armes, armures, vêtements, accessoires... Des centaines d\'équipements pour rendre votre héros unique.',
+        'Armes, armures, vêtements, accessoires… Des centaines d\'articles proposés par la plateforme pour rendre votre héros unique.',
     },
   ];
 
   return (
-    <section className="py-16 lg:py-24 bg-dark-900">
+    <section aria-labelledby="advantages-heading" className="py-16 lg:py-24 bg-dark-950">
       <div className="max-w-7xl mx-auto px-4 lg:px-8">
-        {/* Header */}
         <div className="text-center mb-12 lg:mb-16">
-          <h2 className="text-3xl lg:text-4xl font-display font-bold text-cream-100 mb-4">
-            Pourquoi <span className="text-gold-400">FantasyRealm</span> ?
+          <h2
+            id="advantages-heading"
+            className="text-3xl lg:text-4xl font-display font-bold text-cream-100 mb-4"
+          >
+            Pourquoi utiliser notre <span className="text-gold-400">gestionnaire</span> ?
           </h2>
           <p className="text-cream-300 max-w-2xl mx-auto">
-            Découvrez les avantages de notre plateforme de personnages
+            Découvrez les avantages de notre système de gestion de personnages
           </p>
         </div>
 
-        {/* Features Grid */}
         <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
-          {features.map((feature) => (
+          {advantages.map((advantage) => (
             <Card
-              key={feature.title}
+              key={advantage.title}
               variant="default"
               className="text-center hover:border-gold-500/30 transition-colors duration-300"
             >
               <CardBody className="p-8">
                 <div className="w-16 h-16 mx-auto mb-6 rounded-xl bg-gold-500/10 flex items-center justify-center text-gold-400">
-                  {feature.icon}
+                  {advantage.icon}
                 </div>
                 <h3 className="text-xl font-display font-semibold text-cream-100 mb-3">
-                  {feature.title}
+                  {advantage.title}
                 </h3>
                 <p className="text-cream-300 leading-relaxed">
-                  {feature.description}
+                  {advantage.description}
                 </p>
               </CardBody>
             </Card>
@@ -95,4 +96,4 @@ const FeaturesSection = () => {
   );
 };
 
-export default FeaturesSection;
+export default AdvantagesSection;

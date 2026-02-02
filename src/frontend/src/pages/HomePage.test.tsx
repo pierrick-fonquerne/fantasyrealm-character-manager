@@ -36,8 +36,8 @@ describe('HomePage', () => {
 
   it('renders the Header component', () => {
     renderWithRouter();
-    const logos = screen.getAllByText('FantasyRealm');
-    expect(logos.length).toBeGreaterThan(0);
+    const logo = screen.getByAltText('FantasyRealm');
+    expect(logo).toBeInTheDocument();
   });
 
   it('renders the HeroSection with main title', () => {
@@ -46,38 +46,32 @@ describe('HomePage', () => {
     expect(screen.getByText('légendaire')).toBeInTheDocument();
   });
 
-  it('renders the hero badge', () => {
+  it('renders hero CTA buttons', () => {
     renderWithRouter();
-    expect(screen.getByText('Nouveau')).toBeInTheDocument();
+    expect(screen.getByText('Créer un personnage')).toBeInTheDocument();
+    expect(screen.getByText('Explorer la galerie')).toBeInTheDocument();
   });
 
-  it('renders hero statistics', () => {
+  it('renders the CompanySection', () => {
     renderWithRouter();
-    expect(screen.getByText('12K+')).toBeInTheDocument();
-    expect(screen.getByText('5K+')).toBeInTheDocument();
+    expect(document.getElementById('company-heading')).toBeInTheDocument();
+    expect(screen.getByText('2015')).toBeInTheDocument();
+    expect(screen.getByText('5M+')).toBeInTheDocument();
+    expect(screen.getByText('150+')).toBeInTheDocument();
   });
 
-  it('renders the FeaturesSection', () => {
+  it('renders the AdvantagesSection', () => {
     renderWithRouter();
     expect(screen.getByText('Personnalisation avancée')).toBeInTheDocument();
     expect(screen.getByText('Partagez vos créations')).toBeInTheDocument();
     expect(screen.getByText('Équipements variés')).toBeInTheDocument();
   });
 
-  it('renders the PopularHeroesSection', () => {
+  it('renders the GameSection', () => {
     renderWithRouter();
-    expect(screen.getByText('populaires')).toBeInTheDocument();
-  });
-
-  it('renders the AboutSection', () => {
-    renderWithRouter();
-    expect(screen.getByText(/À propos de/)).toBeInTheDocument();
-  });
-
-  it('renders the CtaSection', () => {
-    renderWithRouter();
-    expect(screen.getByText(/Prêt à/)).toBeInTheDocument();
-    expect(screen.getByText('créer')).toBeInTheDocument();
+    expect(document.getElementById('game-heading')).toBeInTheDocument();
+    expect(screen.getByText('Combats épiques')).toBeInTheDocument();
+    expect(screen.getByText('4 classes jouables')).toBeInTheDocument();
   });
 
   it('renders the Footer component', () => {
@@ -93,9 +87,15 @@ describe('HomePage', () => {
     expect(main).toBeInTheDocument();
   });
 
-  it('renders CTA buttons', () => {
+  it('has skip link for accessibility', () => {
     renderWithRouter();
-    expect(screen.getByText('Créer un personnage')).toBeInTheDocument();
-    expect(screen.getByText('Créer un compte')).toBeInTheDocument();
+    expect(screen.getByText('Aller au contenu principal')).toBeInTheDocument();
+  });
+
+  it('has aria-labelledby on each section', () => {
+    renderWithRouter();
+    expect(document.getElementById('company-heading')).toBeInTheDocument();
+    expect(document.getElementById('advantages-heading')).toBeInTheDocument();
+    expect(document.getElementById('game-heading')).toBeInTheDocument();
   });
 });
