@@ -785,6 +785,71 @@ namespace FantasyRealm.Tests.Integration.Controllers
 
         #endregion
 
+        #region Me Tests
+
+        [Fact]
+        public async Task Me_WithValidToken_ReturnsOkAndUserInfo()
+        {
+            // Arrange
+            var email = $"me_{Guid.NewGuid():N}@example.com";
+            var password = "MySecure@Pass123";
+            var pseudo = $"Me{Guid.NewGuid():N}"[..20];
+
+            await _client.PostAsJsonAsync("/api/auth/register", new
+            {
+                Email = email,
+                Pseudo = pseudo,
+                Password = password,
+                ConfirmPassword = password
+            });
+
+            var loginResponse = await _client.PostAsJsonAsync("/api/auth/login", new { Email = email, Password = password });
+            var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponse>();
+
+            using var request = new HttpRequestMessage(HttpMethod.Get, "/api/auth/me");
+            request.Headers.Add("Authorization", $"Bearer {loginResult!.Token}");
+
+            // Act
+            var response = await _client.SendAsync(request);
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            var result = await response.Content.ReadFromJsonAsync<MeResponse>();
+            result.Should().NotBeNull();
+            result!.Email.Should().Be(email.ToLowerInvariant());
+            result.Pseudo.Should().Be(pseudo);
+            result.Role.Should().Be("User");
+            result.Id.Should().BeGreaterThan(0);
+        }
+
+        [Fact]
+        public async Task Me_WithoutToken_ReturnsUnauthorized()
+        {
+            // Act
+            var response = await _client.GetAsync("/api/auth/me");
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        }
+
+        [Fact]
+        public async Task Me_WithInvalidToken_ReturnsUnauthorized()
+        {
+            // Arrange
+            using var request = new HttpRequestMessage(HttpMethod.Get, "/api/auth/me");
+            request.Headers.Add("Authorization", "Bearer invalid.token.here");
+
+            // Act
+            var response = await _client.SendAsync(request);
+
+            // Assert
+            response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        }
+
+        #endregion
+
         private record ErrorResponse(string Message);
+        private record MeResponse(int Id, string Email, string Pseudo, string Role);
     }
 }

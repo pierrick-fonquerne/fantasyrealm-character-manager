@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using FantasyRealm.Application.DTOs;
 using FantasyRealm.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -123,6 +124,34 @@ namespace FantasyRealm.Api.Controllers
             }
 
             return Ok(result.Value);
+        }
+
+        /// <summary>
+        /// Returns the authenticated user's information from the JWT claims.
+        /// </summary>
+        /// <returns>The current user's id, email, pseudo, and role.</returns>
+        /// <response code="200">User information retrieved successfully.</response>
+        /// <response code="401">Not authenticated or invalid token.</response>
+        [HttpGet("me")]
+        [Authorize]
+        [ProducesResponseType(typeof(UserInfo), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public IActionResult Me()
+        {
+            var idClaim = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+            var email = User.FindFirst(JwtRegisteredClaimNames.Email)?.Value;
+            var pseudo = User.FindFirst("pseudo")?.Value;
+            var role = User.FindFirst(ClaimTypes.Role)?.Value;
+
+            if (string.IsNullOrEmpty(idClaim) || !int.TryParse(idClaim, out var id)
+                || string.IsNullOrEmpty(email)
+                || string.IsNullOrEmpty(pseudo)
+                || string.IsNullOrEmpty(role))
+            {
+                return Unauthorized(new { message = "Token invalide." });
+            }
+
+            return Ok(new UserInfo(id, email, pseudo, role));
         }
     }
 }
