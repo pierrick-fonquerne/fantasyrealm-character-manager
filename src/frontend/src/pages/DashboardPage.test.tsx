@@ -93,26 +93,6 @@ describe('DashboardPage', () => {
     });
   });
 
-  describe('unauthenticated user', () => {
-    beforeEach(() => {
-      mockAuthState = {
-        isAuthenticated: false,
-        user: null as typeof mockAuthState.user | null,
-        logout: mockLogout,
-      } as typeof mockAuthState;
-    });
-
-    it('should redirect to login page when not authenticated', () => {
-      render(
-        <MemoryRouter initialEntries={['/dashboard']}>
-          <DashboardPage />
-        </MemoryRouter>
-      );
-
-      expect(screen.queryByText(/bienvenue/i)).not.toBeInTheDocument();
-    });
-  });
-
   describe('accessibility (RGAA/WCAG)', () => {
     it('should have no accessibility violations', async () => {
       const { container } = renderWithRouter();

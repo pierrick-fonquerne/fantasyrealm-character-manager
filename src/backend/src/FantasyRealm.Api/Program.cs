@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using System.Text;
 using FantasyRealm.Infrastructure;
 using FantasyRealm.Infrastructure.Security;
@@ -78,8 +79,21 @@ namespace FantasyRealm.Api
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = jwtSettings.Issuer,
                     ValidAudience = jwtSettings.Audience,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret))
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret)),
+                    RoleClaimType = ClaimTypes.Role
                 };
+            });
+
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy("RequireUser", policy =>
+                    policy.RequireRole("User", "Employee", "Admin"));
+
+                options.AddPolicy("RequireEmployee", policy =>
+                    policy.RequireRole("Employee", "Admin"));
+
+                options.AddPolicy("RequireAdmin", policy =>
+                    policy.RequireRole("Admin"));
             });
 
             var app = builder.Build();
