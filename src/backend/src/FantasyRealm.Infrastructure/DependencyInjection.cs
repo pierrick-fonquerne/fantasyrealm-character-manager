@@ -55,6 +55,8 @@ namespace FantasyRealm.Infrastructure
             services.AddSingleton<IPasswordGenerator, SecurePasswordGenerator>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IContactService, ContactService>();
+            services.AddScoped<IReferenceDataRepository, ReferenceDataRepository>();
+            services.AddScoped<IReferenceDataService, ReferenceDataService>();
 
             return services;
         }

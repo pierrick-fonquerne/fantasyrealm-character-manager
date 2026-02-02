@@ -23,6 +23,10 @@ namespace FantasyRealm.Infrastructure.Persistence
 
         public DbSet<Comment> Comments { get; set; } = null!;
 
+        public DbSet<CharacterClass> CharacterClasses { get; set; } = null!;
+
+        public DbSet<EquipmentSlot> EquipmentSlots { get; set; } = null!;
+
         protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
         {
             base.ConfigureConventions(configurationBuilder);
@@ -41,6 +45,8 @@ namespace FantasyRealm.Infrastructure.Persistence
             ConfigureArticle(modelBuilder);
             ConfigureCharacterArticle(modelBuilder);
             ConfigureComment(modelBuilder);
+            ConfigureCharacterClass(modelBuilder);
+            ConfigureEquipmentSlot(modelBuilder);
 
             modelBuilder.ApplySnakeCaseNamingConvention();
         }
@@ -172,6 +178,31 @@ namespace FantasyRealm.Infrastructure.Persistence
                       .WithMany(u => u.Comments)
                       .HasForeignKey(e => e.AuthorId)
                       .OnDelete(DeleteBehavior.Cascade);
+            });
+        }
+
+        private static void ConfigureCharacterClass(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<CharacterClass>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).HasMaxLength(20).IsRequired();
+                entity.Property(e => e.Description).IsRequired();
+                entity.Property(e => e.IconUrl).HasMaxLength(255);
+
+                entity.HasIndex(e => e.Name).IsUnique();
+            });
+        }
+
+        private static void ConfigureEquipmentSlot(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<EquipmentSlot>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).HasMaxLength(30).IsRequired();
+                entity.Property(e => e.DisplayOrder).IsRequired();
+
+                entity.HasIndex(e => e.Name).IsUnique();
             });
         }
     }
