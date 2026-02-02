@@ -5,3 +5,4 @@ export { default as ForgotPasswordPage } from './ForgotPasswordPage';
 export { default as DashboardPage } from './DashboardPage';
 export { default as ContactPage } from './ContactPage';
 export { default as UnauthorizedPage } from './UnauthorizedPage';
+export { default as CreateCharacterPage } from './CreateCharacterPage';
