@@ -401,6 +401,52 @@ namespace FantasyRealm.Infrastructure.Email
             ");
         }
 
+        /// <summary>
+        /// Generates a contact form notification email template for the administrator.
+        /// </summary>
+        /// <param name="fromEmail">The sender's email address.</param>
+        /// <param name="pseudo">The sender's display name.</param>
+        /// <param name="message">The contact message content.</param>
+        /// <returns>The HTML email body.</returns>
+        public static string GetContactNotificationTemplate(string fromEmail, string pseudo, string message)
+        {
+            return WrapInLayout(
+                "Nouveau message de contact",
+                $@"
+                <div style=""text-align: center; margin-bottom: 30px;"">
+                    <div style=""font-size: 48px; margin-bottom: 10px;"">📩</div>
+                    <h1 style=""color: {GoldPrimary}; font-size: 24px; margin: 0; font-weight: 700;"">
+                        Nouveau message de contact
+                    </h1>
+                </div>
+
+                <div style=""background: {CardBg}; border: 1px solid {CardBorder}; border-radius: 12px; padding: 25px; margin-bottom: 25px;"">
+                    <p style=""color: {TextMuted}; margin: 0 0 5px 0; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;"">
+                        Expéditeur
+                    </p>
+                    <p style=""color: {TextLight}; margin: 0 0 15px 0; font-size: 16px;"">
+                        <strong style=""color: {GoldPrimary};"">{Encode(pseudo)}</strong>
+                        &lt;{Encode(fromEmail)}&gt;
+                    </p>
+
+                    <div style=""border-top: 1px solid {CardBorder}; padding-top: 15px; margin-top: 15px;"">
+                        <p style=""color: {TextMuted}; margin: 0 0 5px 0; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;"">
+                            Message
+                        </p>
+                        <p style=""color: {TextLight}; margin: 0; font-size: 15px; line-height: 1.7; white-space: pre-wrap;"">
+                            {Encode(message)}
+                        </p>
+                    </div>
+                </div>
+
+                <div style=""background: rgba(212, 175, 55, 0.1); border: 1px solid {GoldDark}; border-radius: 8px; padding: 15px;"">
+                    <p style=""color: {TextMuted}; margin: 0; font-size: 13px; line-height: 1.6;"">
+                        📧 Vous pouvez répondre directement à <strong style=""color: {GoldLight};"">{Encode(fromEmail)}</strong>
+                    </p>
+                </div>
+            ");
+        }
+
         private static string Encode(string value)
         {
             return WebUtility.HtmlEncode(value);

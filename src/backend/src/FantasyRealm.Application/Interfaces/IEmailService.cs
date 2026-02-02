@@ -85,5 +85,15 @@ namespace FantasyRealm.Application.Interfaces
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
         Task SendAccountSuspendedEmailAsync(string toEmail, string pseudo, string reason, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Sends a contact form notification email to the site administrator.
+        /// </summary>
+        /// <param name="fromEmail">The sender's email address.</param>
+        /// <param name="pseudo">The sender's display name.</param>
+        /// <param name="message">The contact message content.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        Task SendContactNotificationEmailAsync(string fromEmail, string pseudo, string message, CancellationToken cancellationToken = default);
     }
 }

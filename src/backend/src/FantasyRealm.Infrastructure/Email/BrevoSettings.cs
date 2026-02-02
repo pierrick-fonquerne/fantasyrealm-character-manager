@@ -29,5 +29,10 @@ namespace FantasyRealm.Infrastructure.Email
         /// Gets or sets the base URL for links in email templates.
         /// </summary>
         public string BaseUrl { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the email address for receiving contact form messages.
+        /// </summary>
+        public string ContactAddress { get; set; } = string.Empty;
     }
 }

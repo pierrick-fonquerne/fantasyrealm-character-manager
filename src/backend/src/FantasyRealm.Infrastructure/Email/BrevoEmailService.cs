@@ -97,6 +97,14 @@ namespace FantasyRealm.Infrastructure.Email
             await SendEmailAsync(toEmail, subject, body, cancellationToken);
         }
 
+        /// <inheritdoc />
+        public async Task SendContactNotificationEmailAsync(string fromEmail, string pseudo, string message, CancellationToken cancellationToken = default)
+        {
+            var subject = $"[Contact] Message de {pseudo}";
+            var body = EmailTemplates.GetContactNotificationTemplate(fromEmail, pseudo, message);
+            await SendEmailAsync(_settings.ContactAddress, subject, body, cancellationToken);
+        }
+
         private async Task SendEmailAsync(string toEmail, string subject, string htmlBody, CancellationToken cancellationToken)
         {
             var request = new BrevoEmailRequest
