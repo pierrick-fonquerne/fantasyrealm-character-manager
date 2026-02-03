@@ -103,3 +103,8 @@ CREATE TABLE comments (
 CREATE INDEX idx_comments_character_id ON comments(character_id);
 CREATE INDEX idx_comments_author_id ON comments(author_id);
 CREATE INDEX idx_comments_pending ON comments(character_id) WHERE status = 'pending';
+
+-- Record migration
+INSERT INTO migration_history (filename, checksum, execution_time_ms, applied_by)
+VALUES ('001_create_tables.sql', 'v1', 0, 'manual')
+ON CONFLICT (filename) DO NOTHING;

@@ -42,3 +42,8 @@ INSERT INTO equipment_slots (name, display_order) VALUES
     ('Anneau 2', 12),
     ('Main droite', 13),
     ('Main gauche', 14);
+
+-- Record migration
+INSERT INTO migration_history (filename, checksum, execution_time_ms, applied_by)
+VALUES ('003_create_reference_tables.sql', 'v1', 0, 'manual')
+ON CONFLICT (filename) DO NOTHING;
