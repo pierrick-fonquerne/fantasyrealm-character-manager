@@ -90,3 +90,16 @@ export const submitCharacter = (
     `/characters/${id}/submit`,
     token
   );
+
+export interface NameAvailabilityResponse {
+  available: boolean;
+}
+
+export const checkNameAvailability = (
+  name: string,
+  token: string
+): Promise<NameAvailabilityResponse> =>
+  apiClient.getAuthenticated<NameAvailabilityResponse>(
+    `/characters/check-name?name=${encodeURIComponent(name)}`,
+    token
+  );

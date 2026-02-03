@@ -157,6 +157,16 @@ namespace FantasyRealm.Application.Services
             return Result<CharacterResponse>.Success(MapToResponse(character, character.Class.Name));
         }
 
+        /// <inheritdoc />
+        public async Task<Result<bool>> IsNameAvailableAsync(string name, int userId, int? excludeCharacterId, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return Result<bool>.Failure("Le nom est requis.", 400);
+
+            var nameExists = await characterRepository.ExistsByNameAndUserAsync(name, userId, excludeCharacterId, cancellationToken);
+            return Result<bool>.Success(!nameExists);
+        }
+
         private static CharacterResponse MapToResponse(Character character, string className)
         {
             return new CharacterResponse(

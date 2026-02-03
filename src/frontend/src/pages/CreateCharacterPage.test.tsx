@@ -23,6 +23,7 @@ vi.mock('../services/referenceDataService', () => ({
 
 vi.mock('../services/characterService', () => ({
   createCharacter: vi.fn().mockResolvedValue({ id: 1, name: 'Test' }),
+  submitCharacter: vi.fn().mockResolvedValue({ id: 1, name: 'Test', status: 'Pending' }),
 }));
 
 const renderPage = () => {
@@ -41,7 +42,13 @@ describe('CreateCharacterPage', () => {
   it('should render page title', () => {
     renderPage();
 
-    expect(screen.getByRole('heading', { name: /créer un personnage/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /création de personnage/i })).toBeInTheDocument();
+  });
+
+  it('should render page subtitle', () => {
+    renderPage();
+
+    expect(screen.getByText(/forgez votre héros légendaire/i)).toBeInTheDocument();
   });
 
   it('should render the character form', () => {

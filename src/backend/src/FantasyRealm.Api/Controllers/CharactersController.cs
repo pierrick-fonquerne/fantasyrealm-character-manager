@@ -172,6 +172,37 @@ namespace FantasyRealm.Api.Controllers
             return Ok(result.Value);
         }
 
+        /// <summary>
+        /// Checks if a character name is available for the authenticated user.
+        /// </summary>
+        /// <param name="name">The character name to check.</param>
+        /// <param name="excludeId">Optional character ID to exclude (for edit mode).</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>Availability status.</returns>
+        /// <response code="200">Name availability checked successfully.</response>
+        /// <response code="400">Invalid request (missing name).</response>
+        [HttpGet("check-name")]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> CheckNameAvailability(
+            [FromQuery] string name,
+            [FromQuery] int? excludeId,
+            CancellationToken cancellationToken)
+        {
+            if (!TryGetUserId(out var userId))
+                return Unauthorized(new { message = "Token invalide." });
+
+            if (string.IsNullOrWhiteSpace(name))
+                return BadRequest(new { message = "Le nom est requis." });
+
+            var result = await characterService.IsNameAvailableAsync(name, userId, excludeId, cancellationToken);
+
+            if (result.IsFailure)
+                return StatusCode(result.ErrorCode ?? 400, new { message = result.Error });
+
+            return Ok(new { available = result.Value });
+        }
+
         private bool TryGetUserId(out int userId)
         {
             userId = 0;

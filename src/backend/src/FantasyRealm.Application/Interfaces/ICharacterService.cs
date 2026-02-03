@@ -37,5 +37,15 @@ namespace FantasyRealm.Application.Interfaces
         /// Submits a character for moderation review (Draft or Rejected → Pending).
         /// </summary>
         Task<Result<CharacterResponse>> SubmitForReviewAsync(int characterId, int userId, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Checks if a character name is available for the specified user.
+        /// </summary>
+        /// <param name="name">The character name to check.</param>
+        /// <param name="userId">The user identifier.</param>
+        /// <param name="excludeCharacterId">Optional character ID to exclude (for edit mode).</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>True if the name is available, false otherwise.</returns>
+        Task<Result<bool>> IsNameAvailableAsync(string name, int userId, int? excludeCharacterId, CancellationToken cancellationToken);
     }
 }

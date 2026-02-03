@@ -88,3 +88,8 @@ export {
   type BreadcrumbItemProps,
 } from './Breadcrumbs';
 export { Pagination, type PaginationProps } from './Pagination';
+export { ColorSwatchPicker, type ColorSwatchPickerProps } from './ColorSwatchPicker';
+export { ShapeSelector, type ShapeSelectorProps, type ShapeOption } from './ShapeSelector';
+export { ClassSelector } from './ClassSelector';
+export { NameAvailabilityIndicator } from './NameAvailabilityIndicator';
+export { FormStepper, type FormStepperProps, type FormStep } from './FormStepper';
