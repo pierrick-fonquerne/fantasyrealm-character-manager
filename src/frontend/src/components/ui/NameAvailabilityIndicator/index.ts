@@ -1,0 +1,1 @@
+export { NameAvailabilityIndicator } from './NameAvailabilityIndicator';

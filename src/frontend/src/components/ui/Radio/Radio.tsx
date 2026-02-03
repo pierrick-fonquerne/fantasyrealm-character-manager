@@ -10,11 +10,11 @@ interface RadioGroupProps {
   name: string;
   value?: string;
   onChange?: (value: string) => void;
-  options: Array<{
-    value: string;
-    label: string;
-    disabled?: boolean;
-  }>;
+  options: readonly {
+    readonly value: string;
+    readonly label: string;
+    readonly disabled?: boolean;
+  }[];
   error?: string;
   hint?: string;
   orientation?: 'horizontal' | 'vertical';

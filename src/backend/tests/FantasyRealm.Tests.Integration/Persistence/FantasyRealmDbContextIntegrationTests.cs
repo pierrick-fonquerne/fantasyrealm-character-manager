@@ -95,9 +95,12 @@ namespace FantasyRealm.Tests.Integration.Persistence
                 SkinColor = "#E8BEAC",
                 EyeColor = "#4A90D9",
                 HairColor = "#2C1810",
+                HairStyle = "court",
                 EyeShape = "almond",
                 NoseShape = "aquiline",
                 MouthShape = "thin",
+                FaceShape = "ovale",
+                ClassId = 1,
                 UserId = user.Id
             };
 
@@ -146,9 +149,12 @@ namespace FantasyRealm.Tests.Integration.Persistence
                 SkinColor = "#E8BEAC",
                 EyeColor = "#4A90D9",
                 HairColor = "#2C1810",
+                HairStyle = "court",
                 EyeShape = "almond",
                 NoseShape = "aquiline",
                 MouthShape = "thin",
+                FaceShape = "rond",
+                ClassId = 1,
                 UserId = user.Id
             };
             context.Characters.Add(character);
@@ -208,8 +214,11 @@ namespace FantasyRealm.Tests.Integration.Persistence
                 EyeShape = "almond",
                 NoseShape = "aquiline",
                 MouthShape = "thin",
+                HairStyle = "long",
+                FaceShape = "oval",
                 IsShared = true,
-                IsAuthorized = true,
+                Status = CharacterStatus.Approved,
+                ClassId = 1,
                 UserId = owner.Id
             };
             context.Characters.Add(character);
@@ -329,8 +338,11 @@ namespace FantasyRealm.Tests.Integration.Persistence
                 EyeShape = "almond",
                 NoseShape = "aquiline",
                 MouthShape = "thin",
+                HairStyle = "short",
+                FaceShape = "round",
                 IsShared = true,
-                IsAuthorized = true,
+                Status = CharacterStatus.Approved,
+                ClassId = 1,
                 UserId = user.Id
             };
             context.Characters.Add(character);

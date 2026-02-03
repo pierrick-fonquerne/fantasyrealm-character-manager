@@ -99,18 +99,33 @@ namespace FantasyRealm.Infrastructure.Persistence
                 entity.Property(e => e.SkinColor).HasMaxLength(7).IsRequired();
                 entity.Property(e => e.EyeColor).HasMaxLength(7).IsRequired();
                 entity.Property(e => e.HairColor).HasMaxLength(7).IsRequired();
+                entity.Property(e => e.HairStyle).HasMaxLength(50).IsRequired();
                 entity.Property(e => e.EyeShape).HasMaxLength(50).IsRequired();
                 entity.Property(e => e.NoseShape).HasMaxLength(50).IsRequired();
                 entity.Property(e => e.MouthShape).HasMaxLength(50).IsRequired();
+                entity.Property(e => e.FaceShape).HasMaxLength(50).IsRequired();
                 entity.Property(e => e.IsShared).HasDefaultValue(false);
-                entity.Property(e => e.IsAuthorized).HasDefaultValue(false);
+                entity.Property(e => e.Status)
+                      .HasConversion(
+                          v => v.ToString().ToLowerInvariant(),
+                          v => Enum.Parse<CharacterStatus>(v, true))
+                      .HasMaxLength(20)
+                      .HasDefaultValue(CharacterStatus.Draft);
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                 entity.HasIndex(e => new { e.Name, e.UserId }).IsUnique();
+                entity.HasIndex(e => e.Status);
 
                 entity.HasOne(e => e.User)
                       .WithMany(u => u.Characters)
                       .HasForeignKey(e => e.UserId)
                       .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Class)
+                      .WithMany()
+                      .HasForeignKey(e => e.ClassId)
+                      .OnDelete(DeleteBehavior.Restrict);
             });
         }
 

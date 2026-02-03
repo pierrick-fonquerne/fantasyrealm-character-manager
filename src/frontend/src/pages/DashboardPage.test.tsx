@@ -16,11 +16,16 @@ let mockAuthState = {
     pseudo: 'TestUser',
     role: 'User',
   },
+  token: 'fake-token',
   logout: mockLogout,
 };
 
 vi.mock('../context/AuthContext', () => ({
   useAuth: () => mockAuthState,
+}));
+
+vi.mock('../services/characterService', () => ({
+  getMyCharacters: vi.fn().mockResolvedValue([]),
 }));
 
 const renderWithRouter = () => {
@@ -42,6 +47,7 @@ describe('DashboardPage', () => {
         pseudo: 'TestUser',
         role: 'User',
       },
+      token: 'fake-token',
       logout: mockLogout,
     };
   });
@@ -54,16 +60,16 @@ describe('DashboardPage', () => {
       expect(screen.getByText('TestUser')).toBeInTheDocument();
     });
 
-    it('should render subtitle', () => {
+    it('should render create character button', () => {
       renderWithRouter();
 
-      expect(screen.getByText(/votre espace personnel fantasyrealm/i)).toBeInTheDocument();
+      expect(screen.getByText(/créer un personnage/i)).toBeInTheDocument();
     });
 
-    it('should render under construction message', () => {
+    it('should render empty state when no characters', async () => {
       renderWithRouter();
 
-      expect(screen.getByText(/cette section est en cours de construction/i)).toBeInTheDocument();
+      expect(await screen.findByText(/vous n'avez pas encore de personnage/i)).toBeInTheDocument();
     });
 
     it('should render skip link for accessibility', () => {
@@ -90,6 +96,23 @@ describe('DashboardPage', () => {
       renderWithRouter();
 
       expect(screen.getByText(/pixelverse studios/i)).toBeInTheDocument();
+    });
+  });
+
+  describe('with characters', () => {
+    it('should render character list', async () => {
+      const { getMyCharacters } = await import('../services/characterService');
+      vi.mocked(getMyCharacters).mockResolvedValue([
+        { id: 1, name: 'Arthas', className: 'Guerrier', status: 'Draft', gender: 'Male' },
+        { id: 2, name: 'Jaina', className: 'Mage', status: 'Approved', gender: 'Female' },
+      ]);
+
+      renderWithRouter();
+
+      expect(await screen.findByText('Arthas')).toBeInTheDocument();
+      expect(screen.getByText('Jaina')).toBeInTheDocument();
+      expect(screen.getByText('Brouillon')).toBeInTheDocument();
+      expect(screen.getByText('Approuvé')).toBeInTheDocument();
     });
   });
 

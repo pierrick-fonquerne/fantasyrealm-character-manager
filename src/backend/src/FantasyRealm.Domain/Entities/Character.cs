@@ -11,7 +11,11 @@ namespace FantasyRealm.Domain.Entities
 
         public string Name { get; set; } = string.Empty;
 
+        public int ClassId { get; set; }
+
         public Gender Gender { get; set; }
+
+        public CharacterStatus Status { get; set; }
 
         public string SkinColor { get; set; } = string.Empty;
 
@@ -19,21 +23,29 @@ namespace FantasyRealm.Domain.Entities
 
         public string HairColor { get; set; } = string.Empty;
 
+        public string HairStyle { get; set; } = string.Empty;
+
         public string EyeShape { get; set; } = string.Empty;
 
         public string NoseShape { get; set; } = string.Empty;
 
         public string MouthShape { get; set; } = string.Empty;
 
+        public string FaceShape { get; set; } = string.Empty;
+
         public byte[]? Image { get; set; }
 
         public bool IsShared { get; set; }
 
-        public bool IsAuthorized { get; set; }
+        public DateTime CreatedAt { get; set; }
+
+        public DateTime UpdatedAt { get; set; }
 
         public int UserId { get; set; }
 
         public User User { get; set; } = null!;
+
+        public CharacterClass Class { get; set; } = null!;
 
         public ICollection<CharacterArticle> CharacterArticles { get; set; } = [];
 
