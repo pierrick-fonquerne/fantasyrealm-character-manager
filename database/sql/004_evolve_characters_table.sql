@@ -31,3 +31,8 @@ CREATE INDEX idx_characters_gallery ON characters(is_shared, status)
 
 -- Index for filtering by status (moderation views)
 CREATE INDEX idx_characters_status ON characters(status);
+
+-- Record migration
+INSERT INTO migration_history (filename, checksum, execution_time_ms, applied_by)
+VALUES ('004_evolve_characters_table.sql', 'v1', 0, 'manual')
+ON CONFLICT (filename) DO NOTHING;

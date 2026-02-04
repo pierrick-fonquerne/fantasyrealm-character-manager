@@ -20,3 +20,8 @@ CREATE TRIGGER trigger_users_updated_at
     BEFORE UPDATE ON users
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
+
+-- Record migration
+INSERT INTO migration_history (filename, checksum, execution_time_ms, applied_by)
+VALUES ('002_add_user_audit_columns.sql', 'v1', 0, 'manual')
+ON CONFLICT (filename) DO NOTHING;
