@@ -68,16 +68,7 @@ namespace FantasyRealm.Application.Services
         public async Task<Result<IReadOnlyList<CharacterSummaryResponse>>> GetMyCharactersAsync(int userId, CancellationToken cancellationToken)
         {
             var characters = await characterRepository.GetByUserIdAsync(userId, cancellationToken);
-
-            var summaries = characters
-                .Select(c => new CharacterSummaryResponse(
-                    c.Id,
-                    c.Name,
-                    c.Class.Name,
-                    c.Status.ToString(),
-                    c.Gender.ToString()))
-                .ToList() as IReadOnlyList<CharacterSummaryResponse>;
-
+            var summaries = characters.Select(MapToSummaryResponse).ToList().AsReadOnly();
             return Result<IReadOnlyList<CharacterSummaryResponse>>.Success(summaries);
         }
 
@@ -167,6 +158,70 @@ namespace FantasyRealm.Application.Services
             return Result<bool>.Success(!nameExists);
         }
 
+        /// <inheritdoc />
+        public async Task<Result<CharacterResponse>> DuplicateAsync(int characterId, int userId, string newName, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(newName))
+                return Result<CharacterResponse>.Failure("Le nom est requis.", 400);
+
+            var character = await characterRepository.GetByIdAsync(characterId, cancellationToken);
+            if (character is null)
+                return Result<CharacterResponse>.Failure("Personnage introuvable.", 404);
+
+            if (character.UserId != userId)
+                return Result<CharacterResponse>.Failure("Accès non autorisé.", 403);
+
+            if (character.Status != CharacterStatus.Approved)
+                return Result<CharacterResponse>.Failure("Seuls les personnages approuvés peuvent être dupliqués.", 400);
+
+            var nameExists = await characterRepository.ExistsByNameAndUserAsync(newName, userId, null, cancellationToken);
+            if (nameExists)
+                return Result<CharacterResponse>.Failure("Vous avez déjà un personnage avec ce nom.", 409);
+
+            var duplicate = new Character
+            {
+                Name = newName,
+                ClassId = character.ClassId,
+                Gender = character.Gender,
+                Status = CharacterStatus.Draft,
+                SkinColor = character.SkinColor,
+                EyeColor = character.EyeColor,
+                HairColor = character.HairColor,
+                HairStyle = character.HairStyle,
+                EyeShape = character.EyeShape,
+                NoseShape = character.NoseShape,
+                MouthShape = character.MouthShape,
+                FaceShape = character.FaceShape,
+                IsShared = false,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                UserId = userId
+            };
+
+            var created = await characterRepository.CreateAsync(duplicate, cancellationToken);
+            return Result<CharacterResponse>.Success(MapToResponse(created, character.Class.Name));
+        }
+
+        /// <inheritdoc />
+        public async Task<Result<CharacterResponse>> ToggleShareAsync(int characterId, int userId, CancellationToken cancellationToken)
+        {
+            var character = await characterRepository.GetByIdAsync(characterId, cancellationToken);
+            if (character is null)
+                return Result<CharacterResponse>.Failure("Personnage introuvable.", 404);
+
+            if (character.UserId != userId)
+                return Result<CharacterResponse>.Failure("Accès non autorisé.", 403);
+
+            if (character.Status != CharacterStatus.Approved)
+                return Result<CharacterResponse>.Failure("Seuls les personnages approuvés peuvent être partagés.", 400);
+
+            character.IsShared = !character.IsShared;
+            character.UpdatedAt = DateTime.UtcNow;
+
+            await characterRepository.UpdateAsync(character, cancellationToken);
+            return Result<CharacterResponse>.Success(MapToResponse(character, character.Class.Name));
+        }
+
         private static CharacterResponse MapToResponse(Character character, string className)
         {
             return new CharacterResponse(
@@ -187,6 +242,25 @@ namespace FantasyRealm.Application.Services
                 character.IsShared,
                 character.CreatedAt,
                 character.UpdatedAt);
+        }
+
+        private static CharacterSummaryResponse MapToSummaryResponse(Character character)
+        {
+            return new CharacterSummaryResponse(
+                character.Id,
+                character.Name,
+                character.Class.Name,
+                character.Status.ToString(),
+                character.Gender.ToString(),
+                character.IsShared,
+                character.SkinColor,
+                character.HairColor,
+                character.EyeColor,
+                character.FaceShape,
+                character.HairStyle,
+                character.EyeShape,
+                character.NoseShape,
+                character.MouthShape);
         }
     }
 }

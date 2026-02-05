@@ -47,5 +47,24 @@ namespace FantasyRealm.Application.Interfaces
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>True if the name is available, false otherwise.</returns>
         Task<Result<bool>> IsNameAvailableAsync(string name, int userId, int? excludeCharacterId, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Duplicates an approved character with a new name.
+        /// </summary>
+        /// <param name="characterId">The character identifier to duplicate.</param>
+        /// <param name="userId">The user identifier (must be owner).</param>
+        /// <param name="newName">The name for the duplicated character.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>The newly created character in Draft status.</returns>
+        Task<Result<CharacterResponse>> DuplicateAsync(int characterId, int userId, string newName, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Toggles the sharing status of an approved character.
+        /// </summary>
+        /// <param name="characterId">The character identifier.</param>
+        /// <param name="userId">The user identifier (must be owner).</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>The updated character with toggled IsShared value.</returns>
+        Task<Result<CharacterResponse>> ToggleShareAsync(int characterId, int userId, CancellationToken cancellationToken);
     }
 }
