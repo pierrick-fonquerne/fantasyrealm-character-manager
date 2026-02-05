@@ -154,8 +154,9 @@ describe('DuplicateModal', () => {
       await user.clear(input);
       await user.type(input, '  NewCharacter  ');
 
+      // Wait for availability check to complete (not just be called)
       await waitFor(() => {
-        expect(characterService.checkNameAvailability).toHaveBeenCalled();
+        expect(screen.getByText('Ce nom est disponible')).toBeInTheDocument();
       });
 
       await user.click(screen.getByText('Dupliquer'));
