@@ -9,14 +9,9 @@ namespace FantasyRealm.Tests.Integration.Controllers
     /// </summary>
     [Trait("Category", "Integration")]
     [Trait("Category", "ReferenceData")]
-    public class ReferenceDataControllerIntegrationTests : IClassFixture<FantasyRealmWebApplicationFactory>
+    public class ReferenceDataControllerIntegrationTests(FantasyRealmWebApplicationFactory factory) : IClassFixture<FantasyRealmWebApplicationFactory>
     {
-        private readonly HttpClient _client;
-
-        public ReferenceDataControllerIntegrationTests(FantasyRealmWebApplicationFactory factory)
-        {
-            _client = factory.CreateClient();
-        }
+        private readonly HttpClient _client = factory.CreateClient();
 
         private sealed record CharacterClassDto(int Id, string Name, string Description, string? IconUrl);
 

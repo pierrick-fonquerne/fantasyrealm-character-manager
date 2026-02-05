@@ -10,16 +10,10 @@ namespace FantasyRealm.Tests.Integration.Controllers
     /// </summary>
     [Trait("Category", "Integration")]
     [Trait("Category", "Contact")]
-    public class ContactControllerIntegrationTests : IClassFixture<FantasyRealmWebApplicationFactory>
+    public class ContactControllerIntegrationTests(FantasyRealmWebApplicationFactory factory) : IClassFixture<FantasyRealmWebApplicationFactory>
     {
-        private readonly HttpClient _client;
-        private readonly FantasyRealmWebApplicationFactory _factory;
-
-        public ContactControllerIntegrationTests(FantasyRealmWebApplicationFactory factory)
-        {
-            _factory = factory;
-            _client = factory.CreateClient();
-        }
+        private readonly HttpClient _client = factory.CreateClient();
+        private readonly FantasyRealmWebApplicationFactory _factory = factory;
 
         private async Task<string> RegisterUserAsync()
         {

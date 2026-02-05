@@ -293,5 +293,283 @@ namespace FantasyRealm.Tests.Unit.Services
             result.IsSuccess.Should().BeTrue();
             result.Value!.Status.Should().Be("Pending");
         }
+
+        // ── IsNameAvailableAsync ──────────────────────────────────────────
+
+        [Fact]
+        public async Task IsNameAvailableAsync_WhenNameAvailable_ReturnsTrue()
+        {
+            _characterRepoMock
+                .Setup(r => r.ExistsByNameAndUserAsync("NewName", 10, null, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(false);
+
+            var result = await _sut.IsNameAvailableAsync("NewName", 10, null, CancellationToken.None);
+
+            result.IsSuccess.Should().BeTrue();
+            result.Value.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task IsNameAvailableAsync_WhenNameTaken_ReturnsFalse()
+        {
+            _characterRepoMock
+                .Setup(r => r.ExistsByNameAndUserAsync("TakenName", 10, null, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(true);
+
+            var result = await _sut.IsNameAvailableAsync("TakenName", 10, null, CancellationToken.None);
+
+            result.IsSuccess.Should().BeTrue();
+            result.Value.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task IsNameAvailableAsync_WhenNameEmpty_ReturnsFailure()
+        {
+            var result = await _sut.IsNameAvailableAsync("", 10, null, CancellationToken.None);
+
+            result.IsFailure.Should().BeTrue();
+            result.ErrorCode.Should().Be(400);
+        }
+
+        [Fact]
+        public async Task IsNameAvailableAsync_WithExcludeId_ExcludesCharacter()
+        {
+            _characterRepoMock
+                .Setup(r => r.ExistsByNameAndUserAsync("MyName", 10, 5, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(false);
+
+            var result = await _sut.IsNameAvailableAsync("MyName", 10, 5, CancellationToken.None);
+
+            result.IsSuccess.Should().BeTrue();
+            result.Value.Should().BeTrue();
+            _characterRepoMock.Verify(r => r.ExistsByNameAndUserAsync("MyName", 10, 5, It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        // ── DuplicateAsync ────────────────────────────────────────────────
+
+        [Fact]
+        public async Task DuplicateAsync_WhenApproved_CreatesNewDraftCharacter()
+        {
+            var character = CharacterWithClass();
+            character.Status = CharacterStatus.Approved;
+            _characterRepoMock
+                .Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(character);
+            _characterRepoMock
+                .Setup(r => r.ExistsByNameAndUserAsync("NewHero", 10, null, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(false);
+            _characterRepoMock
+                .Setup(r => r.CreateAsync(It.IsAny<Character>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Character c, CancellationToken _) =>
+                {
+                    c.Id = 2;
+                    return c;
+                });
+
+            var result = await _sut.DuplicateAsync(1, 10, "NewHero", CancellationToken.None);
+
+            result.IsSuccess.Should().BeTrue();
+            result.Value!.Name.Should().Be("NewHero");
+            result.Value.Status.Should().Be("Draft");
+            result.Value.Id.Should().Be(2);
+        }
+
+        [Fact]
+        public async Task DuplicateAsync_WhenNameEmpty_ReturnsFailure()
+        {
+            var result = await _sut.DuplicateAsync(1, 10, "", CancellationToken.None);
+
+            result.IsFailure.Should().BeTrue();
+            result.ErrorCode.Should().Be(400);
+            result.Error.Should().Contain("nom");
+        }
+
+        [Fact]
+        public async Task DuplicateAsync_WhenNameAlreadyExists_Returns409()
+        {
+            var character = CharacterWithClass();
+            character.Status = CharacterStatus.Approved;
+            _characterRepoMock
+                .Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(character);
+            _characterRepoMock
+                .Setup(r => r.ExistsByNameAndUserAsync("TakenName", 10, null, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(true);
+
+            var result = await _sut.DuplicateAsync(1, 10, "TakenName", CancellationToken.None);
+
+            result.IsFailure.Should().BeTrue();
+            result.ErrorCode.Should().Be(409);
+        }
+
+        [Fact]
+        public async Task DuplicateAsync_WhenNotApproved_ReturnsFailure()
+        {
+            var character = CharacterWithClass();
+            character.Status = CharacterStatus.Draft;
+            _characterRepoMock
+                .Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(character);
+
+            var result = await _sut.DuplicateAsync(1, 10, "NewHero", CancellationToken.None);
+
+            result.IsFailure.Should().BeTrue();
+            result.ErrorCode.Should().Be(400);
+            result.Error.Should().Contain("approuvés");
+        }
+
+        [Fact]
+        public async Task DuplicateAsync_WhenNotOwner_Returns403()
+        {
+            var character = CharacterWithClass(userId: 99);
+            character.Status = CharacterStatus.Approved;
+            _characterRepoMock
+                .Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(character);
+
+            var result = await _sut.DuplicateAsync(1, 10, "NewHero", CancellationToken.None);
+
+            result.IsFailure.Should().BeTrue();
+            result.ErrorCode.Should().Be(403);
+        }
+
+        [Fact]
+        public async Task DuplicateAsync_WhenNotFound_Returns404()
+        {
+            _characterRepoMock
+                .Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Character?)null);
+
+            var result = await _sut.DuplicateAsync(1, 10, "NewHero", CancellationToken.None);
+
+            result.IsFailure.Should().BeTrue();
+            result.ErrorCode.Should().Be(404);
+        }
+
+        [Fact]
+        public async Task DuplicateAsync_CopiesAllAppearanceProperties()
+        {
+            var character = CharacterWithClass();
+            character.Status = CharacterStatus.Approved;
+            character.SkinColor = "#AABBCC";
+            character.HairColor = "#112233";
+            character.EyeColor = "#445566";
+            character.HairStyle = "long";
+            character.EyeShape = "rond";
+            character.NoseShape = "fin";
+            character.MouthShape = "charnue";
+            character.FaceShape = "carré";
+
+            _characterRepoMock
+                .Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(character);
+            _characterRepoMock
+                .Setup(r => r.ExistsByNameAndUserAsync("CopiedHero", 10, null, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(false);
+
+            Character? createdCharacter = null;
+            _characterRepoMock
+                .Setup(r => r.CreateAsync(It.IsAny<Character>(), It.IsAny<CancellationToken>()))
+                .Callback<Character, CancellationToken>((c, _) => createdCharacter = c)
+                .ReturnsAsync((Character c, CancellationToken _) =>
+                {
+                    c.Id = 2;
+                    return c;
+                });
+
+            await _sut.DuplicateAsync(1, 10, "CopiedHero", CancellationToken.None);
+
+            createdCharacter.Should().NotBeNull();
+            createdCharacter!.SkinColor.Should().Be("#AABBCC");
+            createdCharacter.HairColor.Should().Be("#112233");
+            createdCharacter.EyeColor.Should().Be("#445566");
+            createdCharacter.HairStyle.Should().Be("long");
+            createdCharacter.EyeShape.Should().Be("rond");
+            createdCharacter.NoseShape.Should().Be("fin");
+            createdCharacter.MouthShape.Should().Be("charnue");
+            createdCharacter.FaceShape.Should().Be("carré");
+            createdCharacter.IsShared.Should().BeFalse();
+        }
+
+        // ── ToggleShareAsync ──────────────────────────────────────────────
+
+        [Fact]
+        public async Task ToggleShareAsync_WhenApprovedAndNotShared_SetsSharedTrue()
+        {
+            var character = CharacterWithClass();
+            character.Status = CharacterStatus.Approved;
+            character.IsShared = false;
+            _characterRepoMock
+                .Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(character);
+
+            var result = await _sut.ToggleShareAsync(1, 10, CancellationToken.None);
+
+            result.IsSuccess.Should().BeTrue();
+            result.Value!.IsShared.Should().BeTrue();
+            character.IsShared.Should().BeTrue();
+            _characterRepoMock.Verify(r => r.UpdateAsync(character, It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task ToggleShareAsync_WhenApprovedAndShared_SetsSharedFalse()
+        {
+            var character = CharacterWithClass();
+            character.Status = CharacterStatus.Approved;
+            character.IsShared = true;
+            _characterRepoMock
+                .Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(character);
+
+            var result = await _sut.ToggleShareAsync(1, 10, CancellationToken.None);
+
+            result.IsSuccess.Should().BeTrue();
+            result.Value!.IsShared.Should().BeFalse();
+            character.IsShared.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task ToggleShareAsync_WhenNotApproved_ReturnsFailure()
+        {
+            var character = CharacterWithClass();
+            character.Status = CharacterStatus.Draft;
+            _characterRepoMock
+                .Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(character);
+
+            var result = await _sut.ToggleShareAsync(1, 10, CancellationToken.None);
+
+            result.IsFailure.Should().BeTrue();
+            result.ErrorCode.Should().Be(400);
+            result.Error.Should().Contain("approuvés");
+        }
+
+        [Fact]
+        public async Task ToggleShareAsync_WhenNotOwner_Returns403()
+        {
+            var character = CharacterWithClass(userId: 99);
+            character.Status = CharacterStatus.Approved;
+            _characterRepoMock
+                .Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(character);
+
+            var result = await _sut.ToggleShareAsync(1, 10, CancellationToken.None);
+
+            result.IsFailure.Should().BeTrue();
+            result.ErrorCode.Should().Be(403);
+        }
+
+        [Fact]
+        public async Task ToggleShareAsync_WhenNotFound_Returns404()
+        {
+            _characterRepoMock
+                .Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Character?)null);
+
+            var result = await _sut.ToggleShareAsync(1, 10, CancellationToken.None);
+
+            result.IsFailure.Should().BeTrue();
+            result.ErrorCode.Should().Be(404);
+        }
     }
 }
