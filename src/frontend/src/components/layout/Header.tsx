@@ -98,7 +98,7 @@ const Header = () => {
                       <p className="text-xs text-cream-400 truncate">{user?.email}</p>
                     </div>
                     <Link
-                      to="/profil"
+                      to="/dashboard"
                       className="flex items-center gap-2 px-4 py-2 text-sm text-cream-300 hover:bg-dark-700 hover:text-cream-100 transition-colors"
                       onClick={() => setIsDropdownOpen(false)}
                     >
@@ -237,7 +237,7 @@ const Header = () => {
                     </div>
                   </div>
                   <Link
-                    to="/profil"
+                    to="/dashboard"
                     className="px-4 py-2 text-sm text-cream-300 hover:bg-dark-800 rounded-lg transition-colors"
                     onClick={() => setIsMenuOpen(false)}
                   >

@@ -103,8 +103,38 @@ describe('DashboardPage', () => {
     it('should render character list', async () => {
       const { getMyCharacters } = await import('../services/characterService');
       vi.mocked(getMyCharacters).mockResolvedValue([
-        { id: 1, name: 'Arthas', className: 'Guerrier', status: 'Draft', gender: 'Male' },
-        { id: 2, name: 'Jaina', className: 'Mage', status: 'Approved', gender: 'Female' },
+        {
+          id: 1,
+          name: 'Arthas',
+          className: 'Guerrier',
+          status: 'Draft',
+          gender: 'Male',
+          isShared: false,
+          skinColor: '#C19A6B',
+          hairColor: '#4A3C31',
+          eyeColor: '#4A3C31',
+          faceShape: 'ovale',
+          hairStyle: 'court',
+          eyeShape: 'amande',
+          noseShape: 'droit',
+          mouthShape: 'moyenne',
+        },
+        {
+          id: 2,
+          name: 'Jaina',
+          className: 'Mage',
+          status: 'Approved',
+          gender: 'Female',
+          isShared: true,
+          skinColor: '#FFDFC4',
+          hairColor: '#DAA520',
+          eyeColor: '#2196F3',
+          faceShape: 'ovale',
+          hairStyle: 'long',
+          eyeShape: 'amande',
+          noseShape: 'droit',
+          mouthShape: 'charnue',
+        },
       ]);
 
       renderWithRouter();
