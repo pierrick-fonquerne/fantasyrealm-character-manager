@@ -16,16 +16,10 @@ namespace FantasyRealm.Tests.Integration.Controllers
     /// </summary>
     [Trait("Category", "Integration")]
     [Trait("Category", "Auth")]
-    public class AuthControllerIntegrationTests : IClassFixture<FantasyRealmWebApplicationFactory>
+    public class AuthControllerIntegrationTests(FantasyRealmWebApplicationFactory factory) : IClassFixture<FantasyRealmWebApplicationFactory>
     {
-        private readonly HttpClient _client;
-        private readonly FantasyRealmWebApplicationFactory _factory;
-
-        public AuthControllerIntegrationTests(FantasyRealmWebApplicationFactory factory)
-        {
-            _factory = factory;
-            _client = factory.CreateClient();
-        }
+        private readonly HttpClient _client = factory.CreateClient();
+        private readonly FantasyRealmWebApplicationFactory _factory = factory;
 
         [Fact]
         public async Task Register_WithValidData_ReturnsCreatedAndUserResponse()

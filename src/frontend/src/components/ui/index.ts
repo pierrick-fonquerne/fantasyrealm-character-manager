@@ -93,3 +93,4 @@ export { ShapeSelector, type ShapeSelectorProps, type ShapeOption } from './Shap
 export { ClassSelector } from './ClassSelector';
 export { NameAvailabilityIndicator } from './NameAvailabilityIndicator';
 export { FormStepper, type FormStepperProps, type FormStep } from './FormStepper';
+export { Icon, EditIcon, DuplicateIcon, DeleteIcon, ShareIcon } from './icons';

@@ -12,14 +12,9 @@ namespace FantasyRealm.Tests.Integration.Persistence
     /// </summary>
     [Trait("Category", "Integration")]
     [Trait("Category", "Persistence")]
-    public class FantasyRealmDbContextIntegrationTests : IClassFixture<FantasyRealmWebApplicationFactory>
+    public class FantasyRealmDbContextIntegrationTests(FantasyRealmWebApplicationFactory factory) : IClassFixture<FantasyRealmWebApplicationFactory>
     {
-        private readonly FantasyRealmWebApplicationFactory _factory;
-
-        public FantasyRealmDbContextIntegrationTests(FantasyRealmWebApplicationFactory factory)
-        {
-            _factory = factory;
-        }
+        private readonly FantasyRealmWebApplicationFactory _factory = factory;
 
         private FantasyRealmDbContext CreateDbContext()
         {
@@ -77,6 +72,7 @@ namespace FantasyRealm.Tests.Integration.Persistence
             // Arrange
             using var context = CreateDbContext();
             var role = await context.Roles.FirstAsync(r => r.Label == "User");
+            var characterClass = await context.CharacterClasses.FirstAsync();
 
             var user = new User
             {
@@ -92,15 +88,13 @@ namespace FantasyRealm.Tests.Integration.Persistence
             {
                 Name = "Thorin",
                 Gender = Gender.Male,
+                ClassId = characterClass.Id,
                 SkinColor = "#E8BEAC",
                 EyeColor = "#4A90D9",
                 HairColor = "#2C1810",
-                HairStyle = "court",
                 EyeShape = "almond",
                 NoseShape = "aquiline",
                 MouthShape = "thin",
-                FaceShape = "ovale",
-                ClassId = 1,
                 UserId = user.Id
             };
 
@@ -124,6 +118,7 @@ namespace FantasyRealm.Tests.Integration.Persistence
             // Arrange
             using var context = CreateDbContext();
             var role = await context.Roles.FirstAsync(r => r.Label == "User");
+            var characterClass = await context.CharacterClasses.FirstAsync();
 
             var user = new User
             {
@@ -146,15 +141,13 @@ namespace FantasyRealm.Tests.Integration.Persistence
             {
                 Name = "Warrior",
                 Gender = Gender.Male,
+                ClassId = characterClass.Id,
                 SkinColor = "#E8BEAC",
                 EyeColor = "#4A90D9",
                 HairColor = "#2C1810",
-                HairStyle = "court",
                 EyeShape = "almond",
                 NoseShape = "aquiline",
                 MouthShape = "thin",
-                FaceShape = "rond",
-                ClassId = 1,
                 UserId = user.Id
             };
             context.Characters.Add(character);
@@ -186,6 +179,7 @@ namespace FantasyRealm.Tests.Integration.Persistence
             // Arrange
             using var context = CreateDbContext();
             var role = await context.Roles.FirstAsync(r => r.Label == "User");
+            var characterClass = await context.CharacterClasses.FirstAsync();
 
             var owner = new User
             {
@@ -208,17 +202,14 @@ namespace FantasyRealm.Tests.Integration.Persistence
             {
                 Name = "SharedHero",
                 Gender = Gender.Female,
+                ClassId = characterClass.Id,
                 SkinColor = "#E8BEAC",
                 EyeColor = "#4A90D9",
                 HairColor = "#2C1810",
                 EyeShape = "almond",
                 NoseShape = "aquiline",
                 MouthShape = "thin",
-                HairStyle = "long",
-                FaceShape = "oval",
                 IsShared = true,
-                Status = CharacterStatus.Approved,
-                ClassId = 1,
                 UserId = owner.Id
             };
             context.Characters.Add(character);
@@ -317,6 +308,7 @@ namespace FantasyRealm.Tests.Integration.Persistence
             // Arrange
             using var context = CreateDbContext();
             var role = await context.Roles.FirstAsync(r => r.Label == "User");
+            var characterClass = await context.CharacterClasses.FirstAsync();
 
             var user = new User
             {
@@ -332,17 +324,14 @@ namespace FantasyRealm.Tests.Integration.Persistence
             {
                 Name = "TestChar",
                 Gender = Gender.Male,
+                ClassId = characterClass.Id,
                 SkinColor = "#E8BEAC",
                 EyeColor = "#4A90D9",
                 HairColor = "#2C1810",
                 EyeShape = "almond",
                 NoseShape = "aquiline",
                 MouthShape = "thin",
-                HairStyle = "short",
-                FaceShape = "round",
                 IsShared = true,
-                Status = CharacterStatus.Approved,
-                ClassId = 1,
                 UserId = user.Id
             };
             context.Characters.Add(character);

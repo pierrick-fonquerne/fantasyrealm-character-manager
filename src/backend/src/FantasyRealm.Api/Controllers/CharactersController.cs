@@ -203,6 +203,65 @@ namespace FantasyRealm.Api.Controllers
             return Ok(new { available = result.Value });
         }
 
+        /// <summary>
+        /// Duplicates an approved character with a new name.
+        /// </summary>
+        /// <param name="id">The character identifier to duplicate.</param>
+        /// <param name="request">The duplicate request containing the new name.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>The newly created character in Draft status.</returns>
+        /// <response code="201">Character duplicated successfully.</response>
+        /// <response code="400">Character status does not allow duplication (must be Approved) or invalid name.</response>
+        /// <response code="403">The authenticated user is not the owner.</response>
+        /// <response code="404">Character not found.</response>
+        /// <response code="409">A character with the same name already exists for this user.</response>
+        [HttpPost("{id:int}/duplicate")]
+        [ProducesResponseType(typeof(CharacterResponse), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        public async Task<IActionResult> Duplicate(int id, [FromBody] DuplicateCharacterRequest request, CancellationToken cancellationToken)
+        {
+            if (!TryGetUserId(out var userId))
+                return Unauthorized(new { message = "Token invalide." });
+
+            var result = await characterService.DuplicateAsync(id, userId, request.Name, cancellationToken);
+
+            if (result.IsFailure)
+                return StatusCode(result.ErrorCode ?? 400, new { message = result.Error });
+
+            return CreatedAtAction(nameof(GetById), new { id = result.Value!.Id }, result.Value);
+        }
+
+        /// <summary>
+        /// Toggles the sharing status of an approved character.
+        /// </summary>
+        /// <param name="id">The character identifier.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>The updated character with toggled IsShared value.</returns>
+        /// <response code="200">Sharing status toggled successfully.</response>
+        /// <response code="400">Character status does not allow sharing (must be Approved).</response>
+        /// <response code="403">The authenticated user is not the owner.</response>
+        /// <response code="404">Character not found.</response>
+        [HttpPatch("{id:int}/share")]
+        [ProducesResponseType(typeof(CharacterResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> ToggleShare(int id, CancellationToken cancellationToken)
+        {
+            if (!TryGetUserId(out var userId))
+                return Unauthorized(new { message = "Token invalide." });
+
+            var result = await characterService.ToggleShareAsync(id, userId, cancellationToken);
+
+            if (result.IsFailure)
+                return StatusCode(result.ErrorCode ?? 400, new { message = result.Error });
+
+            return Ok(result.Value);
+        }
+
         private bool TryGetUserId(out int userId)
         {
             userId = 0;

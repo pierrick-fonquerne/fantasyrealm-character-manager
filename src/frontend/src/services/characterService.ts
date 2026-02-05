@@ -42,6 +42,15 @@ export interface CharacterSummary {
   className: string;
   status: string;
   gender: string;
+  isShared: boolean;
+  skinColor: string;
+  hairColor: string;
+  eyeColor: string;
+  faceShape: string;
+  hairStyle: string;
+  eyeShape: string;
+  noseShape: string;
+  mouthShape: string;
 }
 
 export const createCharacter = (
@@ -101,5 +110,25 @@ export const checkNameAvailability = (
 ): Promise<NameAvailabilityResponse> =>
   apiClient.getAuthenticated<NameAvailabilityResponse>(
     `/characters/check-name?name=${encodeURIComponent(name)}`,
+    token
+  );
+
+export const duplicateCharacter = (
+  id: number,
+  newName: string,
+  token: string
+): Promise<CharacterResponse> =>
+  apiClient.postAuthenticated<{ name: string }, CharacterResponse>(
+    `/characters/${id}/duplicate`,
+    { name: newName },
+    token
+  );
+
+export const toggleShareCharacter = (
+  id: number,
+  token: string
+): Promise<CharacterResponse> =>
+  apiClient.patchAuthenticated<CharacterResponse>(
+    `/characters/${id}/share`,
     token
   );
