@@ -163,7 +163,7 @@ namespace FantasyRealm.Tests.Integration.Controllers
         }
 
         [Fact]
-        public async Task GetById_WhenNotOwner_Returns403()
+        public async Task GetById_WhenNotOwnerAndNotShared_Returns404()
         {
             var token1 = await RegisterAndGetTokenAsync();
             var createResponse = await PostAuthenticatedAsync("/api/characters", ValidCharacterPayload(), token1);
@@ -172,7 +172,7 @@ namespace FantasyRealm.Tests.Integration.Controllers
             var token2 = await RegisterAndGetTokenAsync();
             var response = await GetAuthenticatedAsync($"/api/characters/{created!.Id}", token2);
 
-            response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+            response.StatusCode.Should().Be(HttpStatusCode.NotFound);
         }
 
         // ── Submit ──────────────────────────────────────────────────────

@@ -19,6 +19,7 @@ namespace FantasyRealm.Application.DTOs
         string MouthShape,
         string FaceShape,
         bool IsShared,
+        bool IsOwner,
         DateTime CreatedAt,
         DateTime UpdatedAt);
 }
