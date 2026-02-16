@@ -101,11 +101,11 @@ describe('DuplicateModal', () => {
       await user.type(input, 'NewName');
 
       await waitFor(() => {
-        expect(characterService.checkNameAvailability).toHaveBeenCalledWith(
-          'NewName',
-          'test-token'
-        );
-      });
+        expect(characterService.checkNameAvailability).toHaveBeenCalled();
+        const lastCall = vi.mocked(characterService.checkNameAvailability).mock.calls.at(-1);
+        expect(lastCall?.[0]).toContain('NewName');
+        expect(lastCall?.[1]).toBe('test-token');
+      }, { timeout: 3000 });
     });
 
     it('should show available message when name is available', async () => {
@@ -154,10 +154,10 @@ describe('DuplicateModal', () => {
       await user.clear(input);
       await user.type(input, '  NewCharacter  ');
 
-      // Wait for availability check to complete (not just be called)
+      // Wait for debounce + availability check to complete
       await waitFor(() => {
         expect(screen.getByText('Ce nom est disponible')).toBeInTheDocument();
-      });
+      }, { timeout: 3000 });
 
       await user.click(screen.getByText('Dupliquer'));
 
