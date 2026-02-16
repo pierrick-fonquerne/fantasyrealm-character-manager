@@ -113,6 +113,7 @@ namespace FantasyRealm.Api
             app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllers();
+            app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
 
             app.Run();
         }
