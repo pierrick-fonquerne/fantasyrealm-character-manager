@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { Button, Badge } from '../ui';
 import { EditIcon, DuplicateIcon, DeleteIcon, ShareIcon } from '../ui/icons';
 import { MiniPreview } from './MiniPreview';
-import type { CharacterSummary } from '../../services/characterService';
+import type { CharacterSummary } from '../../types';
 
 interface CharacterCardProps {
   character: CharacterSummary;

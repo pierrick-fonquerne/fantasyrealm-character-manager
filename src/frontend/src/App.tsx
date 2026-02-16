@@ -1,5 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
-import { HomePage, RegisterPage, LoginPage, ForgotPasswordPage, DashboardPage, ContactPage, UnauthorizedPage, CreateCharacterPage, EditCharacterPage, CharacterDetailPage, LegalPage } from './pages';
+import { HomePage, RegisterPage, LoginPage, ForgotPasswordPage, DashboardPage, ContactPage, UnauthorizedPage, CreateCharacterPage, EditCharacterPage, CharacterDetailPage, GalleryPage, LegalPage } from './pages';
 import { ProtectedRoute } from './components/auth';
 
 function App() {
@@ -13,6 +13,7 @@ function App() {
       <Route path="/characters/create" element={<ProtectedRoute requiredRole="User"><CreateCharacterPage /></ProtectedRoute>} />
       <Route path="/characters/:id/edit" element={<ProtectedRoute requiredRole="User"><EditCharacterPage /></ProtectedRoute>} />
       <Route path="/characters/:id" element={<CharacterDetailPage />} />
+      <Route path="/galerie" element={<GalleryPage />} />
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/mentions-legales" element={<LegalPage slug="mentions-legales" />} />
       <Route path="/cgu" element={<LegalPage slug="cgu" />} />

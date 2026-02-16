@@ -9,8 +9,8 @@ import {
   deleteCharacter,
   duplicateCharacter,
   toggleShareCharacter,
-  type CharacterSummary,
 } from '../services/characterService';
+import type { CharacterSummary } from '../types';
 
 const DashboardPage = () => {
   const navigate = useNavigate();

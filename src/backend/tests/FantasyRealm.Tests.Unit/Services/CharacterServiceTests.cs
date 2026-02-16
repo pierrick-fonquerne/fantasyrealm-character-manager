@@ -719,5 +719,115 @@ namespace FantasyRealm.Tests.Unit.Services
             result.IsFailure.Should().BeTrue();
             result.ErrorCode.Should().Be(404);
         }
+
+        // ── GetGalleryAsync ────────────────────────────────────────────────
+
+        private static GalleryCharacterResponse GalleryDto(int id, string name, string authorPseudo) =>
+            new(id, name, "Guerrier", "Male", authorPseudo, DateTime.UtcNow,
+                "#E8BEAC", "#2C1810", "#4A90D9", "ovale", "court", "amande", "droit", "fine");
+
+        [Fact]
+        public async Task GetGalleryAsync_ReturnsPagedResults_WithCorrectData()
+        {
+            var items = new List<GalleryCharacterResponse> { GalleryDto(1, "Arthas", "TestUser") };
+            _characterRepoMock
+                .Setup(r => r.GetGalleryAsync(null, null, "recent", 1, 12, It.IsAny<CancellationToken>()))
+                .ReturnsAsync((items.AsReadOnly() as IReadOnlyList<GalleryCharacterResponse>, 1));
+
+            var result = await _sut.GetGalleryAsync(null, null, null, 1, 12, CancellationToken.None);
+
+            result.IsSuccess.Should().BeTrue();
+            result.Value!.Items.Should().HaveCount(1);
+            result.Value.TotalCount.Should().Be(1);
+            result.Value.TotalPages.Should().Be(1);
+            result.Value.Page.Should().Be(1);
+
+            var item = result.Value.Items[0];
+            item.Name.Should().Be("Arthas");
+            item.ClassName.Should().Be("Guerrier");
+            item.AuthorPseudo.Should().Be("TestUser");
+        }
+
+        [Fact]
+        public async Task GetGalleryAsync_WithInvalidPage_ReturnsFailure()
+        {
+            var result = await _sut.GetGalleryAsync(null, null, null, 0, 12, CancellationToken.None);
+
+            result.IsFailure.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task GetGalleryAsync_WithPageExceedingUpperBound_ReturnsFailure()
+        {
+            var result = await _sut.GetGalleryAsync(null, null, null, 1001, 12, CancellationToken.None);
+
+            result.IsFailure.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task GetGalleryAsync_WithInvalidSortBy_FallsBackToRecent()
+        {
+            _characterRepoMock
+                .Setup(r => r.GetGalleryAsync(null, null, "recent", 1, 12, It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Array.Empty<GalleryCharacterResponse>() as IReadOnlyList<GalleryCharacterResponse>, 0));
+
+            var result = await _sut.GetGalleryAsync(null, null, "invalidSort", 1, 12, CancellationToken.None);
+
+            result.IsSuccess.Should().BeTrue();
+            _characterRepoMock.Verify(
+                r => r.GetGalleryAsync(null, null, "recent", 1, 12, It.IsAny<CancellationToken>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task GetGalleryAsync_WithNoResults_ReturnsEmptyItems()
+        {
+            _characterRepoMock
+                .Setup(r => r.GetGalleryAsync(null, null, "recent", 1, 12, It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Array.Empty<GalleryCharacterResponse>() as IReadOnlyList<GalleryCharacterResponse>, 0));
+
+            var result = await _sut.GetGalleryAsync(null, null, null, 1, 12, CancellationToken.None);
+
+            result.IsSuccess.Should().BeTrue();
+            result.Value!.Items.Should().BeEmpty();
+            result.Value.TotalCount.Should().Be(0);
+            result.Value.TotalPages.Should().Be(0);
+        }
+
+        [Theory]
+        [InlineData(0, 1)]
+        [InlineData(-5, 1)]
+        [InlineData(100, 50)]
+        [InlineData(25, 25)]
+        public async Task GetGalleryAsync_ClampsPageSize(int requestedSize, int expectedSize)
+        {
+            _characterRepoMock
+                .Setup(r => r.GetGalleryAsync(null, null, "recent", 1, expectedSize, It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Array.Empty<GalleryCharacterResponse>() as IReadOnlyList<GalleryCharacterResponse>, 0));
+
+            var result = await _sut.GetGalleryAsync(null, null, null, 1, requestedSize, CancellationToken.None);
+
+            result.IsSuccess.Should().BeTrue();
+            _characterRepoMock.Verify(
+                r => r.GetGalleryAsync(null, null, "recent", 1, expectedSize, It.IsAny<CancellationToken>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task GetGalleryAsync_ForwardsGenderAndAuthorToRepository()
+        {
+            _characterRepoMock
+                .Setup(r => r.GetGalleryAsync("Female", "TestUser", "recent", 1, 12, It.IsAny<CancellationToken>()))
+                .ReturnsAsync((new List<GalleryCharacterResponse> { GalleryDto(1, "Jaina", "TestUser") }.AsReadOnly()
+                    as IReadOnlyList<GalleryCharacterResponse>, 1));
+
+            var result = await _sut.GetGalleryAsync("Female", "TestUser", null, 1, 12, CancellationToken.None);
+
+            result.IsSuccess.Should().BeTrue();
+            result.Value!.Items.Should().HaveCount(1);
+            _characterRepoMock.Verify(
+                r => r.GetGalleryAsync("Female", "TestUser", "recent", 1, 12, It.IsAny<CancellationToken>()),
+                Times.Once);
+        }
     }
 }

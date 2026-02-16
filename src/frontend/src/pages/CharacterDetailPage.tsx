@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getCharacterPublic } from '../services/characterService';
-import type { CharacterResponse } from '../services/characterService';
+import type { CharacterResponse } from '../types';
 import { Header, Footer } from '../components/layout';
 import { Button, Badge, Alert } from '../components/ui';
 import { EditIcon, CLASS_ICONS } from '../components/ui/icons';

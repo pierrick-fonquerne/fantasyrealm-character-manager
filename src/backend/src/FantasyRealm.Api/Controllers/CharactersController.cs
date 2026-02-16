@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using FantasyRealm.Application.Common;
 using FantasyRealm.Application.DTOs;
 using FantasyRealm.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -57,6 +58,36 @@ namespace FantasyRealm.Api.Controllers
 
             if (result.IsFailure)
                 return StatusCode(result.ErrorCode ?? 500, new { message = result.Error });
+
+            return Ok(result.Value);
+        }
+
+        /// <summary>
+        /// Returns a paginated list of approved and shared characters for the public gallery.
+        /// </summary>
+        /// <param name="gender">Optional gender filter (Male, Female).</param>
+        /// <param name="author">Optional author pseudo search (case-insensitive).</param>
+        /// <param name="sort">Sort order: recent (default), oldest, nameAsc.</param>
+        /// <param name="page">Page number (1-based, default 1).</param>
+        /// <param name="pageSize">Items per page (default 12, max 50).</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>A paginated list of gallery characters.</returns>
+        /// <response code="200">Gallery characters retrieved successfully.</response>
+        [HttpGet]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(PagedResponse<GalleryCharacterResponse>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetGallery(
+            [FromQuery] string? gender,
+            [FromQuery] string? author,
+            [FromQuery] string? sort,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 12,
+            CancellationToken cancellationToken = default)
+        {
+            var result = await characterService.GetGalleryAsync(gender, author, sort, page, pageSize, cancellationToken);
+
+            if (result.IsFailure)
+                return StatusCode(result.ErrorCode ?? 400, new { message = result.Error });
 
             return Ok(result.Value);
         }

@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import DashboardPage from './DashboardPage';
-import type { CharacterSummary } from '../services/characterService';
+import type { CharacterSummary } from '../types';
 
 expect.extend(toHaveNoViolations);
 

@@ -1,3 +1,4 @@
+using FantasyRealm.Application.DTOs;
 using FantasyRealm.Domain.Entities;
 
 namespace FantasyRealm.Application.Interfaces
@@ -36,5 +37,18 @@ namespace FantasyRealm.Application.Interfaces
         /// Checks whether a character with the given name already exists for a specific user.
         /// </summary>
         Task<bool> ExistsByNameAndUserAsync(string name, int userId, int? excludeCharacterId, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Returns a paginated list of approved and shared characters for the public gallery.
+        /// Uses server-side projection to avoid loading sensitive user data into memory.
+        /// Supports optional filtering by gender and author pseudo, with configurable sorting.
+        /// </summary>
+        Task<(IReadOnlyList<GalleryCharacterResponse> Items, int TotalCount)> GetGalleryAsync(
+            string? gender,
+            string? authorPseudo,
+            string sortBy,
+            int page,
+            int pageSize,
+            CancellationToken cancellationToken);
     }
 }
