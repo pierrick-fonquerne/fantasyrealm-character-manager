@@ -1,6 +1,14 @@
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import Footer from './Footer';
+
+const renderFooter = () =>
+  render(
+    <MemoryRouter>
+      <Footer />
+    </MemoryRouter>
+  );
 
 describe('Footer', () => {
   beforeEach(() => {
@@ -13,62 +21,60 @@ describe('Footer', () => {
   });
 
   it('renders the brand name', () => {
-    render(<Footer />);
+    renderFooter();
     expect(screen.getByText('FantasyRealm')).toBeInTheDocument();
   });
 
   it('renders the brand description', () => {
-    render(<Footer />);
+    renderFooter();
     expect(
       screen.getByText(/Créez et personnalisez vos héros légendaires/)
     ).toBeInTheDocument();
   });
 
   it('renders left footer links', () => {
-    render(<Footer />);
-    expect(screen.getByText('À propos')).toBeInTheDocument();
+    renderFooter();
+    expect(screen.getByText('Mentions légales')).toBeInTheDocument();
     expect(screen.getByText('CGU')).toBeInTheDocument();
-    expect(screen.getByText('Accessibilité')).toBeInTheDocument();
   });
 
   it('renders right footer links', () => {
-    render(<Footer />);
+    renderFooter();
     expect(screen.getByText('Contact')).toBeInTheDocument();
-    expect(screen.getByText('Confidentialité')).toBeInTheDocument();
-    expect(screen.getByText('Aide')).toBeInTheDocument();
+    expect(screen.getByText('Galerie')).toBeInTheDocument();
   });
 
   it('renders social media links with correct aria-labels', () => {
-    render(<Footer />);
+    renderFooter();
     expect(screen.getByLabelText('X (Twitter)')).toBeInTheDocument();
     expect(screen.getByLabelText('Facebook')).toBeInTheDocument();
     expect(screen.getByLabelText('LinkedIn')).toBeInTheDocument();
   });
 
   it('social links open in new tab', () => {
-    render(<Footer />);
+    renderFooter();
     const twitterLink = screen.getByLabelText('X (Twitter)');
     expect(twitterLink).toHaveAttribute('target', '_blank');
     expect(twitterLink).toHaveAttribute('rel', 'noopener noreferrer');
   });
 
   it('renders copyright with current year', () => {
-    render(<Footer />);
+    renderFooter();
     expect(
       screen.getByText(/© 2025 PixelVerse Studios. Tous droits réservés./)
     ).toBeInTheDocument();
   });
 
   it('has correct hrefs for footer links', () => {
-    render(<Footer />);
-    expect(screen.getByText('À propos')).toHaveAttribute('href', '/a-propos');
-    expect(screen.getByText('CGU')).toHaveAttribute('href', '/cgu');
-    expect(screen.getByText('Contact')).toHaveAttribute('href', '/contact');
+    renderFooter();
+    expect(screen.getByText('Mentions légales').closest('a')).toHaveAttribute('href', '/mentions-legales');
+    expect(screen.getByText('CGU').closest('a')).toHaveAttribute('href', '/cgu');
+    expect(screen.getByText('Contact').closest('a')).toHaveAttribute('href', '/contact');
   });
 
   it('brand logo links to homepage', () => {
-    render(<Footer />);
-    const brandLink = screen.getByText('FantasyRealm');
+    renderFooter();
+    const brandLink = screen.getByText('FantasyRealm').closest('a');
     expect(brandLink).toHaveAttribute('href', '/');
   });
 });
