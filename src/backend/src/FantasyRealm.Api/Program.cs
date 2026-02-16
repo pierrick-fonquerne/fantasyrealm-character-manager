@@ -23,7 +23,7 @@ namespace FantasyRealm.Api
 
             // CORS configuration
             var corsOrigins = builder.Configuration["CorsOrigins"]?.Split(',')
-                ?? new[] { "http://localhost:5173" };
+                ?? ["http://localhost:5173"];
 
             builder.Services.AddCors(options =>
             {
@@ -37,7 +37,7 @@ namespace FantasyRealm.Api
                             var pattern = allowedOrigin.Trim();
 
                             // Support wildcard patterns like https://*.vercel.app
-                            if (pattern.Contains("*"))
+                            if (pattern.Contains('*'))
                             {
                                 var regex = new System.Text.RegularExpressions.Regex(
                                     "^" + System.Text.RegularExpressions.Regex.Escape(pattern).Replace("\\*", ".*") + "$");
@@ -84,17 +84,13 @@ namespace FantasyRealm.Api
                 };
             });
 
-            builder.Services.AddAuthorization(options =>
-            {
-                options.AddPolicy("RequireUser", policy =>
-                    policy.RequireRole("User", "Employee", "Admin"));
-
-                options.AddPolicy("RequireEmployee", policy =>
-                    policy.RequireRole("Employee", "Admin"));
-
-                options.AddPolicy("RequireAdmin", policy =>
+            builder.Services.AddAuthorizationBuilder()
+                .AddPolicy("RequireUser", policy =>
+                    policy.RequireRole("User", "Employee", "Admin"))
+                .AddPolicy("RequireEmployee", policy =>
+                    policy.RequireRole("Employee", "Admin"))
+                .AddPolicy("RequireAdmin", policy =>
                     policy.RequireRole("Admin"));
-            });
 
             var app = builder.Build();
 
