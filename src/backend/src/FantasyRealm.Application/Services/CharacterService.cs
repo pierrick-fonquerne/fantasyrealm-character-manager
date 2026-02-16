@@ -82,8 +82,8 @@ namespace FantasyRealm.Application.Services
             if (character.UserId != userId)
                 return Result<CharacterResponse>.Failure("Accès non autorisé.", 403);
 
-            if (character.Status is not (CharacterStatus.Draft or CharacterStatus.Rejected))
-                return Result<CharacterResponse>.Failure("Seuls les personnages en brouillon ou rejetés peuvent être modifiés.", 400);
+            if (character.Status is not (CharacterStatus.Draft or CharacterStatus.Rejected or CharacterStatus.Approved))
+                return Result<CharacterResponse>.Failure("Seuls les personnages en brouillon, rejetés ou approuvés peuvent être modifiés.", 400);
 
             if (!Enum.TryParse<Gender>(request.Gender, true, out var gender))
                 return Result<CharacterResponse>.Failure("Genre invalide. Valeurs acceptées : Male, Female.");
@@ -97,6 +97,8 @@ namespace FantasyRealm.Application.Services
             if (nameExists)
                 return Result<CharacterResponse>.Failure("Vous avez déjà un personnage avec ce nom.", 409);
 
+            var nameChanged = !string.Equals(character.Name, request.Name, StringComparison.Ordinal);
+
             character.Name = request.Name;
             character.ClassId = request.ClassId;
             character.Gender = gender;
@@ -109,6 +111,12 @@ namespace FantasyRealm.Application.Services
             character.MouthShape = request.MouthShape;
             character.FaceShape = request.FaceShape;
             character.UpdatedAt = DateTime.UtcNow;
+
+            if (character.Status == CharacterStatus.Approved && nameChanged)
+            {
+                character.Status = CharacterStatus.Pending;
+                character.IsShared = false;
+            }
 
             await characterRepository.UpdateAsync(character, cancellationToken);
             return Result<CharacterResponse>.Success(MapToResponse(character, characterClass.Name));

@@ -197,7 +197,7 @@ namespace FantasyRealm.Tests.Unit.Services
                 "court", "amande", "droit", "fine", "ovale"), CancellationToken.None);
 
             result.IsFailure.Should().BeTrue();
-            result.Error.Should().Contain("brouillon ou rejetés");
+            result.Error.Should().Contain("brouillon");
         }
 
         [Fact]
@@ -217,6 +217,76 @@ namespace FantasyRealm.Tests.Unit.Services
                 "court", "amande", "droit", "fine", "ovale"), CancellationToken.None);
 
             result.IsSuccess.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task UpdateAsync_WhenApprovedAndNameChanged_SetsStatusToPending()
+        {
+            var character = CharacterWithClass();
+            character.Status = CharacterStatus.Approved;
+            _characterRepoMock
+                .Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(character);
+            _characterRepoMock
+                .Setup(r => r.ExistsByNameAndUserAsync("NewName", 10, 1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(false);
+
+            var request = new UpdateCharacterRequest(
+                "NewName", 1, "Male", "#E8BEAC", "#4A90D9", "#2C1810",
+                "court", "amande", "droit", "fine", "ovale");
+
+            var result = await _sut.UpdateAsync(1, 10, request, CancellationToken.None);
+
+            result.IsSuccess.Should().BeTrue();
+            result.Value!.Status.Should().Be("Pending");
+            character.Status.Should().Be(CharacterStatus.Pending);
+        }
+
+        [Fact]
+        public async Task UpdateAsync_WhenApprovedAndNameUnchanged_KeepsApprovedStatus()
+        {
+            var character = CharacterWithClass();
+            character.Status = CharacterStatus.Approved;
+            _characterRepoMock
+                .Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(character);
+            _characterRepoMock
+                .Setup(r => r.ExistsByNameAndUserAsync("Arthas", 10, 1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(false);
+
+            var request = new UpdateCharacterRequest(
+                "Arthas", 1, "Female", "#FFFFFF", "#000000", "#111111",
+                "long", "rond", "fin", "charnue", "rond");
+
+            var result = await _sut.UpdateAsync(1, 10, request, CancellationToken.None);
+
+            result.IsSuccess.Should().BeTrue();
+            result.Value!.Status.Should().Be("Approved");
+            character.Status.Should().Be(CharacterStatus.Approved);
+        }
+
+        [Fact]
+        public async Task UpdateAsync_WhenApprovedAndNameChanged_ResetsIsShared()
+        {
+            var character = CharacterWithClass();
+            character.Status = CharacterStatus.Approved;
+            character.IsShared = true;
+            _characterRepoMock
+                .Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(character);
+            _characterRepoMock
+                .Setup(r => r.ExistsByNameAndUserAsync("RenamedHero", 10, 1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(false);
+
+            var request = new UpdateCharacterRequest(
+                "RenamedHero", 1, "Male", "#E8BEAC", "#4A90D9", "#2C1810",
+                "court", "amande", "droit", "fine", "ovale");
+
+            var result = await _sut.UpdateAsync(1, 10, request, CancellationToken.None);
+
+            result.IsSuccess.Should().BeTrue();
+            character.IsShared.Should().BeFalse();
+            character.Status.Should().Be(CharacterStatus.Pending);
         }
 
         // ── DeleteAsync ──────────────────────────────────────────────────
