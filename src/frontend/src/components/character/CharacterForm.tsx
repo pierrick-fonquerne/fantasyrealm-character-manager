@@ -56,6 +56,7 @@ interface IdentityStepProps {
   isCheckingName: boolean;
   nameAvailable: boolean | null;
   showNameAvailability: boolean;
+  characterStatus?: string;
   onFieldChange: <K extends keyof CreateCharacterData>(field: K, value: CreateCharacterData[K]) => void;
   onNext: () => void;
 }
@@ -83,6 +84,7 @@ const IdentityStep = ({
   isCheckingName,
   nameAvailable,
   showNameAvailability,
+  characterStatus,
   onFieldChange,
   onNext,
 }: IdentityStepProps) => (
@@ -91,6 +93,11 @@ const IdentityStep = ({
       Étape 1 : Identité
     </h2>
     <div className="space-y-5">
+      {characterStatus === 'Approved' && (
+        <Alert variant="warning" className="text-sm">
+          Modifier le nom d'un personnage approuvé le resoumettra automatiquement à la modération.
+        </Alert>
+      )}
       <div>
         <Input
           label="Nom du personnage"
@@ -281,6 +288,8 @@ const AppearanceStep = ({
 // Main Component Props
 interface CharacterFormProps {
   initialData?: CreateCharacterData;
+  characterId?: number;
+  characterStatus?: string;
   onSaveDraft: (data: CreateCharacterData) => Promise<void>;
   onSubmitToModeration?: (data: CreateCharacterData) => Promise<void>;
   isLoadingDraft: boolean;
@@ -290,6 +299,8 @@ interface CharacterFormProps {
 
 const CharacterForm = ({
   initialData,
+  characterId,
+  characterStatus,
   onSaveDraft,
   onSubmitToModeration,
   isLoadingDraft,
@@ -311,7 +322,7 @@ const CharacterForm = ({
     isAvailable: nameAvailable,
     checkAvailability: checkNameAvailability,
     reset: resetNameCheck,
-  } = useNameAvailability({ token });
+  } = useNameAvailability({ token, excludeId: characterId });
 
   const isLoading = isLoadingDraft || isLoadingSubmit;
 
@@ -529,6 +540,7 @@ const CharacterForm = ({
               isCheckingName={isCheckingName}
               nameAvailable={nameAvailable}
               showNameAvailability={showNameAvailability}
+              characterStatus={characterStatus}
               onFieldChange={updateField}
               onNext={handleNext}
             />

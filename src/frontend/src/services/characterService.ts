@@ -106,10 +106,11 @@ export interface NameAvailabilityResponse {
 
 export const checkNameAvailability = (
   name: string,
-  token: string
+  token: string,
+  excludeId?: number
 ): Promise<NameAvailabilityResponse> =>
   apiClient.getAuthenticated<NameAvailabilityResponse>(
-    `/characters/check-name?name=${encodeURIComponent(name)}`,
+    `/characters/check-name?name=${encodeURIComponent(name)}${excludeId ? `&excludeId=${excludeId}` : ''}`,
     token
   );
 
