@@ -1,8 +1,10 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import DashboardPage from './DashboardPage';
+import type { CharacterSummary } from '../services/characterService';
 
 expect.extend(toHaveNoViolations);
 
@@ -26,7 +28,46 @@ vi.mock('../context/AuthContext', () => ({
 
 vi.mock('../services/characterService', () => ({
   getMyCharacters: vi.fn().mockResolvedValue([]),
+  deleteCharacter: vi.fn().mockResolvedValue(undefined),
+  duplicateCharacter: vi.fn().mockResolvedValue({}),
+  toggleShareCharacter: vi.fn().mockResolvedValue({ isShared: false }),
+  checkNameAvailability: vi.fn().mockResolvedValue({ available: true }),
 }));
+
+const mockCharacters = (): CharacterSummary[] => [
+  {
+    id: 1,
+    name: 'Arthas',
+    className: 'Guerrier',
+    status: 'Draft',
+    gender: 'Male',
+    isShared: false,
+    skinColor: '#C19A6B',
+    hairColor: '#4A3C31',
+    eyeColor: '#4A3C31',
+    faceShape: 'ovale',
+    hairStyle: 'court',
+    eyeShape: 'amande',
+    noseShape: 'droit',
+    mouthShape: 'moyenne',
+  },
+  {
+    id: 2,
+    name: 'Jaina',
+    className: 'Mage',
+    status: 'Approved',
+    gender: 'Female',
+    isShared: true,
+    skinColor: '#FFDFC4',
+    hairColor: '#DAA520',
+    eyeColor: '#2196F3',
+    faceShape: 'ovale',
+    hairStyle: 'long',
+    eyeShape: 'amande',
+    noseShape: 'droit',
+    mouthShape: 'charnue',
+  },
+];
 
 const renderWithRouter = () => {
   return render(
@@ -34,6 +75,13 @@ const renderWithRouter = () => {
       <DashboardPage />
     </MemoryRouter>
   );
+};
+
+const setupWithCharacters = async () => {
+  const { getMyCharacters } = await import('../services/characterService');
+  vi.mocked(getMyCharacters).mockResolvedValue(mockCharacters());
+  renderWithRouter();
+  await screen.findByText('Arthas');
 };
 
 describe('DashboardPage', () => {
@@ -101,48 +149,200 @@ describe('DashboardPage', () => {
 
   describe('with characters', () => {
     it('should render character list', async () => {
-      const { getMyCharacters } = await import('../services/characterService');
-      vi.mocked(getMyCharacters).mockResolvedValue([
-        {
-          id: 1,
-          name: 'Arthas',
-          className: 'Guerrier',
-          status: 'Draft',
-          gender: 'Male',
-          isShared: false,
-          skinColor: '#C19A6B',
-          hairColor: '#4A3C31',
-          eyeColor: '#4A3C31',
-          faceShape: 'ovale',
-          hairStyle: 'court',
-          eyeShape: 'amande',
-          noseShape: 'droit',
-          mouthShape: 'moyenne',
-        },
-        {
-          id: 2,
-          name: 'Jaina',
-          className: 'Mage',
-          status: 'Approved',
-          gender: 'Female',
-          isShared: true,
-          skinColor: '#FFDFC4',
-          hairColor: '#DAA520',
-          eyeColor: '#2196F3',
-          faceShape: 'ovale',
-          hairStyle: 'long',
-          eyeShape: 'amande',
-          noseShape: 'droit',
-          mouthShape: 'charnue',
-        },
-      ]);
+      await setupWithCharacters();
 
-      renderWithRouter();
-
-      expect(await screen.findByText('Arthas')).toBeInTheDocument();
+      expect(screen.getByText('Arthas')).toBeInTheDocument();
       expect(screen.getByText('Jaina')).toBeInTheDocument();
       expect(screen.getByText('Brouillon')).toBeInTheDocument();
       expect(screen.getByText('Approuvé')).toBeInTheDocument();
+    });
+  });
+
+  describe('statistics', () => {
+    it('should display correct counts', async () => {
+      await setupWithCharacters();
+
+      const stats = screen.getByLabelText('Statistiques');
+      expect(stats).toHaveTextContent('2');
+      expect(stats).toHaveTextContent('1');
+      expect(stats).toHaveTextContent('0');
+    });
+  });
+
+  describe('delete action', () => {
+    it('should open delete modal when clicking delete button', async () => {
+      await setupWithCharacters();
+
+      fireEvent.click(screen.getByRole('button', { name: /supprimer jaina/i }));
+
+      const dialog = screen.getByRole('dialog');
+      expect(dialog).toBeInTheDocument();
+      expect(screen.getByText(/voulez-vous vraiment supprimer/i)).toBeInTheDocument();
+      expect(within(dialog).getByText('Jaina')).toBeInTheDocument();
+    });
+
+    it('should delete character and remove from list on confirm', async () => {
+      const { deleteCharacter } = await import('../services/characterService');
+      await setupWithCharacters();
+
+      fireEvent.click(screen.getByRole('button', { name: /supprimer jaina/i }));
+
+      const dialog = screen.getByRole('dialog');
+      fireEvent.click(
+        Array.from(dialog.querySelectorAll('button')).find(
+          (btn) => btn.textContent === 'Supprimer'
+        )!
+      );
+
+      await waitFor(() => {
+        expect(deleteCharacter).toHaveBeenCalledWith(2, 'fake-token');
+      });
+
+      await waitFor(() => {
+        expect(screen.queryByText('Jaina')).not.toBeInTheDocument();
+      });
+      expect(screen.getByText('Arthas')).toBeInTheDocument();
+    });
+
+    it('should show error when delete fails', async () => {
+      const { deleteCharacter } = await import('../services/characterService');
+      vi.mocked(deleteCharacter).mockRejectedValueOnce(new Error('fail'));
+      await setupWithCharacters();
+
+      fireEvent.click(screen.getByRole('button', { name: /supprimer jaina/i }));
+      const dialog = screen.getByRole('dialog');
+      fireEvent.click(
+        Array.from(dialog.querySelectorAll('button')).find(
+          (btn) => btn.textContent === 'Supprimer'
+        )!
+      );
+
+      await waitFor(() => {
+        expect(screen.getByRole('alert')).toHaveTextContent('Impossible de supprimer le personnage.');
+      });
+    });
+  });
+
+  describe('share toggle action', () => {
+    it('should toggle share status on click', async () => {
+      const { toggleShareCharacter } = await import('../services/characterService');
+      vi.mocked(toggleShareCharacter).mockResolvedValueOnce({
+        id: 2,
+        name: 'Jaina',
+        classId: 2,
+        className: 'Mage',
+        status: 'Approved',
+        gender: 'Female',
+        isShared: false,
+        isOwner: true,
+        skinColor: '#FFDFC4',
+        hairColor: '#DAA520',
+        eyeColor: '#2196F3',
+        faceShape: 'ovale',
+        hairStyle: 'long',
+        eyeShape: 'amande',
+        noseShape: 'droit',
+        mouthShape: 'charnue',
+        createdAt: '',
+        updatedAt: '',
+      });
+      await setupWithCharacters();
+
+      expect(screen.getByText('Partagé')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: /rendre jaina privé/i }));
+
+      await waitFor(() => {
+        expect(toggleShareCharacter).toHaveBeenCalledWith(2, 'fake-token');
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('Privé')).toBeInTheDocument();
+      });
+    });
+
+    it('should show error when toggle fails', async () => {
+      const { toggleShareCharacter } = await import('../services/characterService');
+      vi.mocked(toggleShareCharacter).mockRejectedValueOnce(new Error('fail'));
+      await setupWithCharacters();
+
+      fireEvent.click(screen.getByRole('button', { name: /rendre jaina privé/i }));
+
+      await waitFor(() => {
+        expect(screen.getByRole('alert')).toHaveTextContent('Impossible de modifier le partage.');
+      });
+    });
+  });
+
+  describe('duplicate action', () => {
+    it('should open duplicate modal when clicking duplicate button', async () => {
+      await setupWithCharacters();
+
+      fireEvent.click(screen.getByRole('button', { name: /dupliquer jaina/i }));
+
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(screen.getByLabelText(/nom du nouveau personnage/i)).toBeInTheDocument();
+    });
+
+    it('should call duplicateCharacter and refresh list on confirm', async () => {
+      const user = userEvent.setup();
+      const { duplicateCharacter, getMyCharacters } = await import('../services/characterService');
+      vi.mocked(duplicateCharacter).mockResolvedValueOnce({
+        id: 3,
+        name: 'Jaina (copie)',
+        classId: 2,
+        className: 'Mage',
+        status: 'Draft',
+        gender: 'Female',
+        isShared: false,
+        isOwner: true,
+        skinColor: '#FFDFC4',
+        hairColor: '#DAA520',
+        eyeColor: '#2196F3',
+        faceShape: 'ovale',
+        hairStyle: 'long',
+        eyeShape: 'amande',
+        noseShape: 'droit',
+        mouthShape: 'charnue',
+        createdAt: '',
+        updatedAt: '',
+      });
+      await setupWithCharacters();
+
+      fireEvent.click(screen.getByRole('button', { name: /dupliquer jaina/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText('Ce nom est disponible')).toBeInTheDocument();
+      }, { timeout: 3000 });
+
+      await user.click(screen.getByRole('button', { name: /^dupliquer$/i }));
+
+      await waitFor(() => {
+        expect(duplicateCharacter).toHaveBeenCalledWith(2, 'Jaina (copie)', 'fake-token');
+      });
+
+      await waitFor(() => {
+        expect(vi.mocked(getMyCharacters).mock.calls.length).toBeGreaterThanOrEqual(2);
+      });
+    });
+
+    it('should show error when duplicate fails', async () => {
+      const user = userEvent.setup();
+      const { duplicateCharacter } = await import('../services/characterService');
+      vi.mocked(duplicateCharacter).mockRejectedValueOnce(new Error('fail'));
+      await setupWithCharacters();
+
+      fireEvent.click(screen.getByRole('button', { name: /dupliquer jaina/i }));
+
+      await waitFor(() => {
+        expect(screen.getByText('Ce nom est disponible')).toBeInTheDocument();
+      }, { timeout: 3000 });
+
+      await user.click(screen.getByRole('button', { name: /^dupliquer$/i }));
+
+      await waitFor(() => {
+        expect(screen.getByRole('alert')).toHaveTextContent('Impossible de dupliquer le personnage.');
+      });
     });
   });
 
