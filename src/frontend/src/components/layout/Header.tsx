@@ -119,16 +119,19 @@ const Header = () => {
                       Paramètres
                     </Link>
                     {(user?.role === 'Employee' || user?.role === 'Admin') && (
-                      <Link
-                        to="/moderation"
-                        className="flex items-center gap-2 px-4 py-2 text-sm text-cream-300 hover:bg-dark-700 hover:text-cream-100 transition-colors"
-                        onClick={() => setIsDropdownOpen(false)}
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Modération
-                      </Link>
+                      <>
+                        <div className="border-t border-dark-700 my-1" />
+                        <Link
+                          to="/moderation"
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-cream-300 hover:bg-dark-700 hover:text-cream-100 transition-colors"
+                          onClick={() => setIsDropdownOpen(false)}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Modération
+                        </Link>
+                      </>
                     )}
                     {user?.role === 'Admin' && (
                       <Link
@@ -251,13 +254,16 @@ const Header = () => {
                     Paramètres
                   </Link>
                   {(user?.role === 'Employee' || user?.role === 'Admin') && (
-                    <Link
-                      to="/moderation"
-                      className="px-4 py-2 text-sm text-cream-300 hover:bg-dark-800 rounded-lg transition-colors"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      Modération
-                    </Link>
+                    <>
+                      <div className="border-t border-dark-700 my-1" />
+                      <Link
+                        to="/moderation"
+                        className="px-4 py-2 text-sm text-cream-300 hover:bg-dark-800 rounded-lg transition-colors"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Modération
+                      </Link>
+                    </>
                   )}
                   {user?.role === 'Admin' && (
                     <Link
@@ -268,6 +274,7 @@ const Header = () => {
                       Administration
                     </Link>
                   )}
+                  <div className="border-t border-dark-700 my-1" />
                   <button
                     type="button"
                     onClick={handleLogout}

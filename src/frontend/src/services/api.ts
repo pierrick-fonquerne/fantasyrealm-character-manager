@@ -5,6 +5,8 @@ interface ApiError {
   status: number;
 }
 
+type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+
 class ApiClient {
   private baseUrl: string;
 
@@ -12,19 +14,29 @@ class ApiClient {
     this.baseUrl = baseUrl;
   }
 
-  async post<TRequest, TResponse>(
+  private async request(
     endpoint: string,
-    data: TRequest
-  ): Promise<TResponse> {
+    method: HttpMethod,
+    token?: string,
+    body?: unknown
+  ): Promise<Response> {
+    const headers: Record<string, string> = {};
+
+    if (method !== 'DELETE') {
+      headers['Content-Type'] = 'application/json';
+    }
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     let response: Response;
 
     try {
       response = await fetch(`${this.baseUrl}${endpoint}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
+        method,
+        headers,
+        body: body !== undefined ? JSON.stringify(body) : undefined,
       });
     } catch {
       throw {
@@ -42,6 +54,27 @@ class ApiClient {
       throw error;
     }
 
+    return response;
+  }
+
+  async get<TResponse>(endpoint: string): Promise<TResponse> {
+    const response = await this.request(endpoint, 'GET');
+    return response.json();
+  }
+
+  async getAuthenticated<TResponse>(
+    endpoint: string,
+    token: string
+  ): Promise<TResponse> {
+    const response = await this.request(endpoint, 'GET', token);
+    return response.json();
+  }
+
+  async post<TRequest, TResponse>(
+    endpoint: string,
+    data: TRequest
+  ): Promise<TResponse> {
+    const response = await this.request(endpoint, 'POST', undefined, data);
     return response.json();
   }
 
@@ -50,95 +83,7 @@ class ApiClient {
     data: TRequest,
     token: string
   ): Promise<TResponse> {
-    let response: Response;
-
-    try {
-      response = await fetch(`${this.baseUrl}${endpoint}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(data),
-      });
-    } catch {
-      throw {
-        message: 'Impossible de contacter le serveur. Vérifiez votre connexion internet.',
-        status: 0,
-      } as ApiError;
-    }
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      const error: ApiError = {
-        message: errorData.message || 'Une erreur est survenue',
-        status: response.status,
-      };
-      throw error;
-    }
-
-    return response.json();
-  }
-
-  async get<TResponse>(endpoint: string): Promise<TResponse> {
-    let response: Response;
-
-    try {
-      response = await fetch(`${this.baseUrl}${endpoint}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-    } catch {
-      throw {
-        message: 'Impossible de contacter le serveur. Vérifiez votre connexion internet.',
-        status: 0,
-      } as ApiError;
-    }
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      const error: ApiError = {
-        message: errorData.message || 'Une erreur est survenue',
-        status: response.status,
-      };
-      throw error;
-    }
-
-    return response.json();
-  }
-
-  async getAuthenticated<TResponse>(
-    endpoint: string,
-    token: string
-  ): Promise<TResponse> {
-    let response: Response;
-
-    try {
-      response = await fetch(`${this.baseUrl}${endpoint}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-    } catch {
-      throw {
-        message: 'Impossible de contacter le serveur. Vérifiez votre connexion internet.',
-        status: 0,
-      } as ApiError;
-    }
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      const error: ApiError = {
-        message: errorData.message || 'Une erreur est survenue',
-        status: response.status,
-      };
-      throw error;
-    }
-
+    const response = await this.request(endpoint, 'POST', token, data);
     return response.json();
   }
 
@@ -147,33 +92,7 @@ class ApiClient {
     data: TRequest,
     token: string
   ): Promise<TResponse> {
-    let response: Response;
-
-    try {
-      response = await fetch(`${this.baseUrl}${endpoint}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(data),
-      });
-    } catch {
-      throw {
-        message: 'Impossible de contacter le serveur. Vérifiez votre connexion internet.',
-        status: 0,
-      } as ApiError;
-    }
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      const error: ApiError = {
-        message: errorData.message || 'Une erreur est survenue',
-        status: response.status,
-      };
-      throw error;
-    }
-
+    const response = await this.request(endpoint, 'PUT', token, data);
     return response.json();
   }
 
@@ -181,62 +100,23 @@ class ApiClient {
     endpoint: string,
     token: string
   ): Promise<void> {
-    let response: Response;
-
-    try {
-      response = await fetch(`${this.baseUrl}${endpoint}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-    } catch {
-      throw {
-        message: 'Impossible de contacter le serveur. Vérifiez votre connexion internet.',
-        status: 0,
-      } as ApiError;
-    }
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      const error: ApiError = {
-        message: errorData.message || 'Une erreur est survenue',
-        status: response.status,
-      };
-      throw error;
-    }
+    await this.request(endpoint, 'DELETE', token);
   }
 
   async patchAuthenticated<TResponse>(
     endpoint: string,
     token: string
   ): Promise<TResponse> {
-    let response: Response;
+    const response = await this.request(endpoint, 'PATCH', token);
+    return response.json();
+  }
 
-    try {
-      response = await fetch(`${this.baseUrl}${endpoint}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-    } catch {
-      throw {
-        message: 'Impossible de contacter le serveur. Vérifiez votre connexion internet.',
-        status: 0,
-      } as ApiError;
-    }
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      const error: ApiError = {
-        message: errorData.message || 'Une erreur est survenue',
-        status: response.status,
-      };
-      throw error;
-    }
-
+  async patchAuthenticatedWithBody<TRequest, TResponse>(
+    endpoint: string,
+    data: TRequest,
+    token: string
+  ): Promise<TResponse> {
+    const response = await this.request(endpoint, 'PATCH', token, data);
     return response.json();
   }
 }
