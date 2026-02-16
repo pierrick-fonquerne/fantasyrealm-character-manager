@@ -380,6 +380,66 @@ namespace FantasyRealm.Tests.Integration.Controllers
             characters![0].IsShared.Should().BeFalse();
         }
 
+        // ── Gallery ──────────────────────────────────────────────────────
+
+        [Fact]
+        public async Task Gallery_ReturnsEmptyList_WhenNoSharedCharacters()
+        {
+            var response = await _client.GetAsync("/api/characters");
+
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            var gallery = await response.Content.ReadFromJsonAsync<GalleryResult>();
+            gallery!.Items.Should().BeEmpty();
+            gallery.TotalCount.Should().Be(0);
+        }
+
+        [Fact]
+        public async Task Gallery_DoesNotReturnDraftCharacters()
+        {
+            var token = await RegisterAndGetTokenAsync();
+            await PostAuthenticatedAsync("/api/characters", ValidCharacterPayload("DraftHero"), token);
+
+            var response = await _client.GetAsync("/api/characters");
+
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            var gallery = await response.Content.ReadFromJsonAsync<GalleryResult>();
+            gallery!.Items.Should().BeEmpty();
+        }
+
+        [Fact]
+        public async Task Gallery_ReturnsPaginationMetadata()
+        {
+            var response = await _client.GetAsync("/api/characters?page=1&pageSize=12");
+
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            var gallery = await response.Content.ReadFromJsonAsync<GalleryResult>();
+            gallery!.Page.Should().Be(1);
+            gallery.PageSize.Should().Be(12);
+        }
+
+        [Fact]
+        public async Task Gallery_WithInvalidPage_Returns400()
+        {
+            var response = await _client.GetAsync("/api/characters?page=0");
+
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        }
+
         private sealed record NameAvailabilityResult(bool Available);
+
+        private sealed record GalleryItem(
+            int Id,
+            string Name,
+            string ClassName,
+            string Gender,
+            string AuthorPseudo,
+            DateTime CreatedAt);
+
+        private sealed record GalleryResult(
+            IReadOnlyList<GalleryItem> Items,
+            int Page,
+            int PageSize,
+            int TotalCount,
+            int TotalPages);
     }
 }

@@ -67,5 +67,22 @@ namespace FantasyRealm.Application.Interfaces
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>The updated character with toggled IsShared value.</returns>
         Task<Result<CharacterResponse>> ToggleShareAsync(int characterId, int userId, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Returns a paginated list of approved and shared characters for the public gallery.
+        /// </summary>
+        /// <param name="gender">Optional gender filter (Male, Female).</param>
+        /// <param name="authorPseudo">Optional author pseudo search (case-insensitive).</param>
+        /// <param name="sortBy">Sort order: recent (default), oldest, nameAsc.</param>
+        /// <param name="page">Page number (1-based).</param>
+        /// <param name="pageSize">Number of items per page.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        Task<Result<PagedResponse<GalleryCharacterResponse>>> GetGalleryAsync(
+            string? gender,
+            string? authorPseudo,
+            string? sortBy,
+            int page,
+            int pageSize,
+            CancellationToken cancellationToken);
     }
 }

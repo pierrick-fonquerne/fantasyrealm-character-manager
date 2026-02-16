@@ -232,6 +232,37 @@ namespace FantasyRealm.Application.Services
             return Result<CharacterResponse>.Success(MapToResponse(character, character.Class.Name, true));
         }
 
+        /// <inheritdoc />
+        public async Task<Result<PagedResponse<GalleryCharacterResponse>>> GetGalleryAsync(
+            string? gender,
+            string? authorPseudo,
+            string? sortBy,
+            int page,
+            int pageSize,
+            CancellationToken cancellationToken)
+        {
+            if (page < 1)
+                return Result<PagedResponse<GalleryCharacterResponse>>.Failure("Le numéro de page doit être supérieur à 0.");
+
+            if (page > 1000)
+                return Result<PagedResponse<GalleryCharacterResponse>>.Failure("Le numéro de page ne peut pas dépasser 1000.");
+
+            pageSize = Math.Clamp(pageSize, 1, 50);
+
+            var allowedSortValues = new[] { "recent", "oldest", "nameAsc" };
+            var sort = allowedSortValues.Contains(sortBy) ? sortBy! : "recent";
+
+            var sanitizedAuthor = SanitizeLikePattern(authorPseudo);
+
+            var (items, totalCount) = await characterRepository.GetGalleryAsync(
+                gender, sanitizedAuthor, sort, page, pageSize, cancellationToken);
+
+            var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+
+            return Result<PagedResponse<GalleryCharacterResponse>>.Success(
+                new PagedResponse<GalleryCharacterResponse>(items, page, pageSize, totalCount, totalPages));
+        }
+
         private static CharacterResponse MapToResponse(Character character, string className, bool isOwner)
         {
             return new CharacterResponse(
@@ -272,6 +303,21 @@ namespace FantasyRealm.Application.Services
                 character.EyeShape,
                 character.NoseShape,
                 character.MouthShape);
+        }
+
+        /// <summary>
+        /// Escapes LIKE-pattern metacharacters (<c>%</c>, <c>_</c>, <c>\</c>) in a search term
+        /// to prevent wildcard injection in PostgreSQL ILike queries.
+        /// </summary>
+        private static string? SanitizeLikePattern(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return value;
+
+            return value
+                .Replace(@"\", @"\\")
+                .Replace("%", @"\%")
+                .Replace("_", @"\_");
         }
     }
 }
