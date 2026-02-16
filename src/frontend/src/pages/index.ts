@@ -10,3 +10,4 @@ export { default as EditCharacterPage } from './EditCharacterPage';
 export { default as CharacterDetailPage } from './CharacterDetailPage';
 export { default as GalleryPage } from './GalleryPage';
 export { default as LegalPage } from './LegalPage';
+export { default as ModerationPage } from './ModerationPage';
