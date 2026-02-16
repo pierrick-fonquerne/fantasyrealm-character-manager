@@ -1,16 +1,16 @@
+import { Link } from 'react-router-dom';
+
 const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   const footerLinks = {
     left: [
-      { label: 'À propos', href: '/a-propos' },
-      { label: 'CGU', href: '/cgu' },
-      { label: 'Accessibilité', href: '/accessibilite' },
+      { label: 'Mentions légales', to: '/mentions-legales' },
+      { label: 'CGU', to: '/cgu' },
     ],
     right: [
-      { label: 'Contact', href: '/contact' },
-      { label: 'Confidentialité', href: '/confidentialite' },
-      { label: 'Aide', href: '/aide' },
+      { label: 'Contact', to: '/contact' },
+      { label: 'Galerie', to: '/galerie' },
     ],
   };
 
@@ -47,54 +47,49 @@ const Footer = () => {
   return (
     <footer className="bg-dark-900 border-t border-dark-700">
       <div className="max-w-7xl mx-auto px-4 lg:px-8 py-12">
-        {/* Main Footer Content */}
         <div className="grid md:grid-cols-3 gap-8 mb-8">
-          {/* Brand */}
           <div>
-            <a
-              href="/"
+            <Link
+              to="/"
               className="font-display text-xl font-semibold text-gold-400 hover:text-gold-300 transition-colors"
             >
               FantasyRealm
-            </a>
+            </Link>
             <p className="mt-3 text-sm text-dark-300">
               Créez et personnalisez vos héros légendaires dans l'univers de FantasyRealm Online.
             </p>
           </div>
 
-          {/* Links */}
           <div className="grid grid-cols-2 gap-8 md:col-span-2">
             <ul className="space-y-3">
               {footerLinks.left.map((link) => (
-                <li key={link.href}>
-                  <a
-                    href={link.href}
+                <li key={link.to}>
+                  <Link
+                    to={link.to}
                     className="text-sm text-cream-300 hover:text-cream-100 transition-colors"
                   >
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
             <ul className="space-y-3">
               {footerLinks.right.map((link) => (
-                <li key={link.href}>
-                  <a
-                    href={link.href}
+                <li key={link.to}>
+                  <Link
+                    to={link.to}
                     className="text-sm text-cream-300 hover:text-cream-100 transition-colors"
                   >
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
           </div>
         </div>
 
-        {/* Divider */}
         <div className="border-t border-dark-700 pt-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            {/* Social Links */}
             <div className="flex items-center gap-4">
               {socialLinks.map((social) => (
                 <a
@@ -110,7 +105,6 @@ const Footer = () => {
               ))}
             </div>
 
-            {/* Copyright */}
             <p className="text-sm text-dark-400">
               © {currentYear} PixelVerse Studios. Tous droits réservés.
             </p>

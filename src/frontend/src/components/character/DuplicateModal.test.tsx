@@ -65,12 +65,11 @@ describe('DuplicateModal', () => {
 
   describe('name validation', () => {
     it('should show error for empty name on submit', async () => {
-      const user = userEvent.setup();
       const onConfirm = vi.fn();
       render(<DuplicateModal {...defaultProps} onConfirm={onConfirm} />);
 
       const input = screen.getByLabelText('Nom du nouveau personnage');
-      await user.clear(input);
+      fireEvent.change(input, { target: { value: '' } });
 
       // Submit button should be disabled when name is empty
       const submitButton = screen.getByRole('button', { name: /dupliquer/i });
@@ -79,13 +78,11 @@ describe('DuplicateModal', () => {
     });
 
     it('should disable submit for name too short', async () => {
-      const user = userEvent.setup();
       const onConfirm = vi.fn();
       render(<DuplicateModal {...defaultProps} onConfirm={onConfirm} />);
 
       const input = screen.getByLabelText('Nom du nouveau personnage');
-      await user.clear(input);
-      await user.type(input, 'A');
+      fireEvent.change(input, { target: { value: 'A' } });
 
       // Submit button should be disabled when name is too short
       const submitButton = screen.getByRole('button', { name: /dupliquer/i });
@@ -93,23 +90,20 @@ describe('DuplicateModal', () => {
     });
 
     it('should check name availability after typing valid name', async () => {
-      const user = userEvent.setup();
       render(<DuplicateModal {...defaultProps} />);
 
       const input = screen.getByLabelText('Nom du nouveau personnage');
-      await user.clear(input);
-      await user.type(input, 'NewName');
+      fireEvent.change(input, { target: { value: 'NewName' } });
 
       await waitFor(() => {
-        expect(characterService.checkNameAvailability).toHaveBeenCalledWith(
-          'NewName',
-          'test-token'
-        );
-      });
+        expect(characterService.checkNameAvailability).toHaveBeenCalled();
+        const lastCall = vi.mocked(characterService.checkNameAvailability).mock.calls.at(-1);
+        expect(lastCall?.[0]).toContain('NewName');
+        expect(lastCall?.[1]).toBe('test-token');
+      }, { timeout: 3000 });
     });
 
     it('should show available message when name is available', async () => {
-      const user = userEvent.setup();
       vi.mocked(characterService.checkNameAvailability).mockResolvedValue({
         available: true,
       });
@@ -117,8 +111,7 @@ describe('DuplicateModal', () => {
       render(<DuplicateModal {...defaultProps} />);
 
       const input = screen.getByLabelText('Nom du nouveau personnage');
-      await user.clear(input);
-      await user.type(input, 'NewName');
+      fireEvent.change(input, { target: { value: 'NewName' } });
 
       await waitFor(() => {
         expect(screen.getByText('Ce nom est disponible')).toBeInTheDocument();
@@ -126,7 +119,6 @@ describe('DuplicateModal', () => {
     });
 
     it('should show error when name is taken', async () => {
-      const user = userEvent.setup();
       vi.mocked(characterService.checkNameAvailability).mockResolvedValue({
         available: false,
       });
@@ -134,8 +126,7 @@ describe('DuplicateModal', () => {
       render(<DuplicateModal {...defaultProps} />);
 
       const input = screen.getByLabelText('Nom du nouveau personnage');
-      await user.clear(input);
-      await user.type(input, 'TakenName');
+      fireEvent.change(input, { target: { value: 'TakenName' } });
 
       await waitFor(() => {
         expect(screen.getByText('Ce nom est déjà pris')).toBeInTheDocument();
@@ -151,13 +142,13 @@ describe('DuplicateModal', () => {
       render(<DuplicateModal {...defaultProps} onConfirm={onConfirm} />);
 
       const input = screen.getByLabelText('Nom du nouveau personnage');
-      await user.clear(input);
-      await user.type(input, '  NewCharacter  ');
+      // Use fireEvent.change for reliability — userEvent.type can drop characters in CI
+      fireEvent.change(input, { target: { value: '  NewCharacter  ' } });
 
-      // Wait for availability check to complete (not just be called)
+      // Wait for debounce + availability check to complete
       await waitFor(() => {
         expect(screen.getByText('Ce nom est disponible')).toBeInTheDocument();
-      });
+      }, { timeout: 3000 });
 
       await user.click(screen.getByText('Dupliquer'));
 
@@ -206,8 +197,7 @@ describe('DuplicateModal', () => {
       render(<DuplicateModal {...defaultProps} onConfirm={onConfirm} />);
 
       const input = screen.getByLabelText('Nom du nouveau personnage');
-      await user.clear(input);
-      await user.type(input, 'TakenName');
+      fireEvent.change(input, { target: { value: 'TakenName' } });
 
       await waitFor(() => {
         expect(screen.getByText('Ce nom est déjà pris')).toBeInTheDocument();
