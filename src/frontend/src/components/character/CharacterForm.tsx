@@ -15,7 +15,7 @@ import {
   FormStepper,
 } from '../ui';
 import { fetchCharacterClasses, type CharacterClass } from '../../services/referenceDataService';
-import { type CreateCharacterData } from '../../services/characterService';
+import type { CreateCharacterData } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { useNameAvailability, validateCharacterName } from '../../hooks';
 import {

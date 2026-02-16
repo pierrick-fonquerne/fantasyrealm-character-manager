@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header, Footer } from '../components/layout';
 import { CharacterForm } from '../components/character';
-import { createCharacter, submitCharacter, type CreateCharacterData } from '../services/characterService';
+import { createCharacter, submitCharacter } from '../services/characterService';
+import type { CreateCharacterData } from '../types';
 import { useAuth } from '../context/AuthContext';
 
 const CreateCharacterPage = () => {

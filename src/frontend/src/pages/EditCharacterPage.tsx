@@ -2,13 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Header, Footer } from '../components/layout';
 import { CharacterForm } from '../components/character';
-import {
-  getCharacter,
-  updateCharacter,
-  submitCharacter,
-  type CreateCharacterData,
-  type CharacterResponse,
-} from '../services/characterService';
+import { getCharacter, updateCharacter, submitCharacter } from '../services/characterService';
+import type { CreateCharacterData, CharacterResponse } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { Alert, Button } from '../components/ui';
 

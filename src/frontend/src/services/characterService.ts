@@ -1,58 +1,14 @@
 import { apiClient } from './api';
-
-export interface CreateCharacterData {
-  name: string;
-  classId: number;
-  gender: string;
-  skinColor: string;
-  eyeColor: string;
-  hairColor: string;
-  hairStyle: string;
-  eyeShape: string;
-  noseShape: string;
-  mouthShape: string;
-  faceShape: string;
-}
-
-export type UpdateCharacterData = CreateCharacterData;
-
-export interface CharacterResponse {
-  id: number;
-  name: string;
-  classId: number;
-  className: string;
-  gender: string;
-  status: string;
-  skinColor: string;
-  eyeColor: string;
-  hairColor: string;
-  hairStyle: string;
-  eyeShape: string;
-  noseShape: string;
-  mouthShape: string;
-  faceShape: string;
-  isShared: boolean;
-  isOwner: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CharacterSummary {
-  id: number;
-  name: string;
-  className: string;
-  status: string;
-  gender: string;
-  isShared: boolean;
-  skinColor: string;
-  hairColor: string;
-  eyeColor: string;
-  faceShape: string;
-  hairStyle: string;
-  eyeShape: string;
-  noseShape: string;
-  mouthShape: string;
-}
+import type {
+  CreateCharacterData,
+  UpdateCharacterData,
+  CharacterResponse,
+  CharacterSummary,
+  NameAvailabilityResponse,
+  GalleryCharacter,
+  GalleryFilters,
+  PagedResponse,
+} from '../types';
 
 export const createCharacter = (
   data: CreateCharacterData,
@@ -109,10 +65,6 @@ export const submitCharacter = (
     token
   );
 
-export interface NameAvailabilityResponse {
-  available: boolean;
-}
-
 export const checkNameAvailability = (
   name: string,
   token: string,
@@ -142,3 +94,17 @@ export const toggleShareCharacter = (
     `/characters/${id}/share`,
     token
   );
+
+export const getGallery = (
+  filters: GalleryFilters = {}
+): Promise<PagedResponse<GalleryCharacter>> => {
+  const params = new URLSearchParams();
+  if (filters.gender) params.set('gender', filters.gender);
+  if (filters.author) params.set('author', filters.author);
+  if (filters.sort) params.set('sort', filters.sort);
+  params.set('page', String(filters.page ?? 1));
+  params.set('pageSize', '12');
+  return apiClient.get<PagedResponse<GalleryCharacter>>(
+    `/characters?${params.toString()}`
+  );
+};

@@ -4,6 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import EditCharacterPage from './EditCharacterPage';
 import * as characterService from '../services/characterService';
+import type { CharacterResponse } from '../types';
 
 expect.extend(toHaveNoViolations);
 
@@ -29,7 +30,7 @@ vi.mock('../services/characterService', () => ({
   checkNameAvailability: vi.fn().mockResolvedValue({ available: true }),
 }));
 
-const mockCharacter: characterService.CharacterResponse = {
+const mockCharacter: CharacterResponse = {
   id: 1,
   name: 'Arthas',
   classId: 1,

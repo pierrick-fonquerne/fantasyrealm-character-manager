@@ -3,7 +3,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi } from 'vitest';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { CharacterCard } from './CharacterCard';
-import type { CharacterSummary } from '../../services/characterService';
+import type { CharacterSummary } from '../../types';
 
 expect.extend(toHaveNoViolations);
 
