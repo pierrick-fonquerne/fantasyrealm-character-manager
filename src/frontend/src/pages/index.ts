@@ -7,4 +7,5 @@ export { default as ContactPage } from './ContactPage';
 export { default as UnauthorizedPage } from './UnauthorizedPage';
 export { default as CreateCharacterPage } from './CreateCharacterPage';
 export { default as EditCharacterPage } from './EditCharacterPage';
+export { default as CharacterDetailPage } from './CharacterDetailPage';
 export { default as LegalPage } from './LegalPage';

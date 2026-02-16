@@ -103,7 +103,7 @@ const RegisterForm = ({ onSuccess }: RegisterFormProps) => {
         <Input
           type="text"
           label="Pseudo"
-          placeholder="Votre pseudo de héros"
+          placeholder="Pseudonyme de votre compte"
           value={formData.pseudo}
           onChange={handleChange('pseudo')}
           error={errors.pseudo}
