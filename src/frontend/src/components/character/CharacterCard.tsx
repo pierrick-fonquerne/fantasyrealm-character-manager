@@ -43,7 +43,7 @@ export function CharacterCard({
   const badge = STATUS_BADGE[character.status] ?? STATUS_BADGE.Draft;
   const genderLabel = GENDER_LABELS[character.gender] ?? character.gender;
   const isApproved = character.status === 'Approved';
-  const canEdit = character.status === 'Draft' || character.status === 'Rejected';
+  const canEdit = character.status === 'Draft' || character.status === 'Rejected' || character.status === 'Approved';
 
   const hasActions =
     (canEdit && onEdit) ||

@@ -114,10 +114,10 @@ describe('CharacterCard', () => {
       expect(screen.getByText('Modifier')).toBeInTheDocument();
     });
 
-    it('should not show Edit button for Approved status', () => {
+    it('should show Edit button for Approved status', () => {
       const onEdit = vi.fn();
       renderCard(approvedCharacter, { onEdit });
-      expect(screen.queryByText('Modifier')).not.toBeInTheDocument();
+      expect(screen.getByText('Modifier')).toBeInTheDocument();
     });
 
     it('should not show Edit button for Pending status', () => {

@@ -5,6 +5,7 @@ import { NAME_ERRORS, NAME_MIN_LENGTH, NAME_MAX_LENGTH } from '../constants';
 interface UseNameAvailabilityOptions {
   token: string | null;
   debounceMs?: number;
+  excludeId?: number;
 }
 
 interface UseNameAvailabilityReturn {
@@ -40,6 +41,7 @@ export const validateCharacterName = (name: string): string => {
 export const useNameAvailability = ({
   token,
   debounceMs = 500,
+  excludeId,
 }: UseNameAvailabilityOptions): UseNameAvailabilityReturn => {
   const [isChecking, setIsChecking] = useState(false);
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
@@ -92,7 +94,7 @@ export const useNameAvailability = ({
       // Debounce API call
       debounceRef.current = setTimeout(async () => {
         try {
-          const response = await checkNameAvailability(name.trim(), token);
+          const response = await checkNameAvailability(name.trim(), token, excludeId);
           setIsAvailable(response.available);
           if (!response.available) {
             setError(NAME_ERRORS.ALREADY_TAKEN);
@@ -106,7 +108,7 @@ export const useNameAvailability = ({
         }
       }, debounceMs);
     },
-    [token, debounceMs]
+    [token, debounceMs, excludeId]
   );
 
   return {
