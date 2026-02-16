@@ -14,9 +14,10 @@ namespace FantasyRealm.Application.Interfaces
         Task<Result<CharacterResponse>> CreateAsync(int userId, CreateCharacterRequest request, CancellationToken cancellationToken);
 
         /// <summary>
-        /// Returns a character by its identifier if the user is the owner.
+        /// Returns a character by its identifier.
+        /// Owner access: any status. Public access: approved and shared only.
         /// </summary>
-        Task<Result<CharacterResponse>> GetByIdAsync(int characterId, int userId, CancellationToken cancellationToken);
+        Task<Result<CharacterResponse>> GetByIdAsync(int characterId, int? userId, CancellationToken cancellationToken);
 
         /// <summary>
         /// Returns all characters belonging to the specified user.

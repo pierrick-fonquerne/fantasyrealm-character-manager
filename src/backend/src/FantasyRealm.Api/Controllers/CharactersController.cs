@@ -63,23 +63,23 @@ namespace FantasyRealm.Api.Controllers
 
         /// <summary>
         /// Returns a character by its identifier.
+        /// Authenticated owners see all their characters. Anonymous users see only approved shared characters.
         /// </summary>
         /// <param name="id">The character identifier.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>The full character details.</returns>
         /// <response code="200">Character retrieved successfully.</response>
-        /// <response code="403">The authenticated user is not the owner.</response>
-        /// <response code="404">Character not found.</response>
+        /// <response code="404">Character not found or not accessible.</response>
         [HttpGet("{id:int}")]
+        [AllowAnonymous]
         [ProducesResponseType(typeof(CharacterResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
         {
-            if (!TryGetUserId(out var userId))
-                return Unauthorized(new { message = "Token invalide." });
+            TryGetUserId(out var userId);
+            int? nullableUserId = userId > 0 ? userId : null;
 
-            var result = await characterService.GetByIdAsync(id, userId, cancellationToken);
+            var result = await characterService.GetByIdAsync(id, nullableUserId, cancellationToken);
 
             if (result.IsFailure)
                 return StatusCode(result.ErrorCode ?? 500, new { message = result.Error });

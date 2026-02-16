@@ -48,20 +48,22 @@ namespace FantasyRealm.Application.Services
             };
 
             var created = await characterRepository.CreateAsync(character, cancellationToken);
-            return Result<CharacterResponse>.Success(MapToResponse(created, characterClass.Name));
+            return Result<CharacterResponse>.Success(MapToResponse(created, characterClass.Name, true));
         }
 
         /// <inheritdoc />
-        public async Task<Result<CharacterResponse>> GetByIdAsync(int characterId, int userId, CancellationToken cancellationToken)
+        public async Task<Result<CharacterResponse>> GetByIdAsync(int characterId, int? userId, CancellationToken cancellationToken)
         {
             var character = await characterRepository.GetByIdAsync(characterId, cancellationToken);
             if (character is null)
                 return Result<CharacterResponse>.Failure("Personnage introuvable.", 404);
 
-            if (character.UserId != userId)
-                return Result<CharacterResponse>.Failure("Accès non autorisé.", 403);
+            var isOwner = userId.HasValue && character.UserId == userId.Value;
 
-            return Result<CharacterResponse>.Success(MapToResponse(character, character.Class.Name));
+            if (!isOwner && !(character.Status == CharacterStatus.Approved && character.IsShared))
+                return Result<CharacterResponse>.Failure("Personnage introuvable.", 404);
+
+            return Result<CharacterResponse>.Success(MapToResponse(character, character.Class.Name, isOwner));
         }
 
         /// <inheritdoc />
@@ -119,7 +121,7 @@ namespace FantasyRealm.Application.Services
             }
 
             await characterRepository.UpdateAsync(character, cancellationToken);
-            return Result<CharacterResponse>.Success(MapToResponse(character, characterClass.Name));
+            return Result<CharacterResponse>.Success(MapToResponse(character, characterClass.Name, true));
         }
 
         /// <inheritdoc />
@@ -153,7 +155,7 @@ namespace FantasyRealm.Application.Services
             character.UpdatedAt = DateTime.UtcNow;
 
             await characterRepository.UpdateAsync(character, cancellationToken);
-            return Result<CharacterResponse>.Success(MapToResponse(character, character.Class.Name));
+            return Result<CharacterResponse>.Success(MapToResponse(character, character.Class.Name, true));
         }
 
         /// <inheritdoc />
@@ -207,7 +209,7 @@ namespace FantasyRealm.Application.Services
             };
 
             var created = await characterRepository.CreateAsync(duplicate, cancellationToken);
-            return Result<CharacterResponse>.Success(MapToResponse(created, character.Class.Name));
+            return Result<CharacterResponse>.Success(MapToResponse(created, character.Class.Name, true));
         }
 
         /// <inheritdoc />
@@ -227,10 +229,10 @@ namespace FantasyRealm.Application.Services
             character.UpdatedAt = DateTime.UtcNow;
 
             await characterRepository.UpdateAsync(character, cancellationToken);
-            return Result<CharacterResponse>.Success(MapToResponse(character, character.Class.Name));
+            return Result<CharacterResponse>.Success(MapToResponse(character, character.Class.Name, true));
         }
 
-        private static CharacterResponse MapToResponse(Character character, string className)
+        private static CharacterResponse MapToResponse(Character character, string className, bool isOwner)
         {
             return new CharacterResponse(
                 character.Id,
@@ -248,6 +250,7 @@ namespace FantasyRealm.Application.Services
                 character.MouthShape,
                 character.FaceShape,
                 character.IsShared,
+                isOwner,
                 character.CreatedAt,
                 character.UpdatedAt);
         }

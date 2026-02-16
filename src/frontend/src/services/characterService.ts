@@ -32,6 +32,7 @@ export interface CharacterResponse {
   mouthShape: string;
   faceShape: string;
   isShared: boolean;
+  isOwner: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -73,6 +74,14 @@ export const getCharacter = (
   token: string
 ): Promise<CharacterResponse> =>
   apiClient.getAuthenticated<CharacterResponse>(`/characters/${id}`, token);
+
+export const getCharacterPublic = (
+  id: number,
+  token: string | null
+): Promise<CharacterResponse> =>
+  token
+    ? apiClient.getAuthenticated<CharacterResponse>(`/characters/${id}`, token)
+    : apiClient.get<CharacterResponse>(`/characters/${id}`);
 
 export const updateCharacter = (
   id: number,

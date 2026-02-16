@@ -122,7 +122,7 @@ namespace FantasyRealm.Tests.Unit.Services
         // ── GetByIdAsync ─────────────────────────────────────────────────
 
         [Fact]
-        public async Task GetByIdAsync_WhenOwner_ReturnsSuccess()
+        public async Task GetByIdAsync_WhenOwner_ReturnsSuccessWithIsOwnerTrue()
         {
             _characterRepoMock
                 .Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
@@ -132,10 +132,72 @@ namespace FantasyRealm.Tests.Unit.Services
 
             result.IsSuccess.Should().BeTrue();
             result.Value!.Id.Should().Be(1);
+            result.Value.IsOwner.Should().BeTrue();
         }
 
         [Fact]
-        public async Task GetByIdAsync_WhenNotOwner_Returns403()
+        public async Task GetByIdAsync_WhenOwnerAndApprovedNotShared_ReturnsSuccess()
+        {
+            var character = CharacterWithClass();
+            character.Status = CharacterStatus.Approved;
+            character.IsShared = false;
+            _characterRepoMock
+                .Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(character);
+
+            var result = await _sut.GetByIdAsync(1, 10, CancellationToken.None);
+
+            result.IsSuccess.Should().BeTrue();
+            result.Value!.IsOwner.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task GetByIdAsync_WhenAnonymousAndApprovedShared_ReturnsSuccessWithIsOwnerFalse()
+        {
+            var character = CharacterWithClass();
+            character.Status = CharacterStatus.Approved;
+            character.IsShared = true;
+            _characterRepoMock
+                .Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(character);
+
+            var result = await _sut.GetByIdAsync(1, null, CancellationToken.None);
+
+            result.IsSuccess.Should().BeTrue();
+            result.Value!.IsOwner.Should().BeFalse();
+        }
+
+        [Fact]
+        public async Task GetByIdAsync_WhenAnonymousAndDraft_Returns404()
+        {
+            _characterRepoMock
+                .Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(CharacterWithClass());
+
+            var result = await _sut.GetByIdAsync(1, null, CancellationToken.None);
+
+            result.IsFailure.Should().BeTrue();
+            result.ErrorCode.Should().Be(404);
+        }
+
+        [Fact]
+        public async Task GetByIdAsync_WhenAnonymousAndApprovedNotShared_Returns404()
+        {
+            var character = CharacterWithClass();
+            character.Status = CharacterStatus.Approved;
+            character.IsShared = false;
+            _characterRepoMock
+                .Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(character);
+
+            var result = await _sut.GetByIdAsync(1, null, CancellationToken.None);
+
+            result.IsFailure.Should().BeTrue();
+            result.ErrorCode.Should().Be(404);
+        }
+
+        [Fact]
+        public async Task GetByIdAsync_WhenNotOwnerAndPrivate_Returns404()
         {
             _characterRepoMock
                 .Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
@@ -144,7 +206,23 @@ namespace FantasyRealm.Tests.Unit.Services
             var result = await _sut.GetByIdAsync(1, 10, CancellationToken.None);
 
             result.IsFailure.Should().BeTrue();
-            result.ErrorCode.Should().Be(403);
+            result.ErrorCode.Should().Be(404);
+        }
+
+        [Fact]
+        public async Task GetByIdAsync_WhenNotOwnerAndApprovedShared_ReturnsSuccessWithIsOwnerFalse()
+        {
+            var character = CharacterWithClass(userId: 99);
+            character.Status = CharacterStatus.Approved;
+            character.IsShared = true;
+            _characterRepoMock
+                .Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(character);
+
+            var result = await _sut.GetByIdAsync(1, 10, CancellationToken.None);
+
+            result.IsSuccess.Should().BeTrue();
+            result.Value!.IsOwner.Should().BeFalse();
         }
 
         [Fact]
