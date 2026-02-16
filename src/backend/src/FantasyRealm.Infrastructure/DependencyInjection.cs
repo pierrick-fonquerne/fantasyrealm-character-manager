@@ -49,16 +49,18 @@ namespace FantasyRealm.Infrastructure
 
             services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
             services.AddSingleton<IJwtService, JwtService>();
-
-            services.AddScoped<IUserRepository, UserRepository>();
             services.AddSingleton<IPasswordHasher, Argon2PasswordHasher>();
             services.AddSingleton<IPasswordGenerator, SecurePasswordGenerator>();
-            services.AddScoped<IAuthService, AuthService>();
-            services.AddScoped<IContactService, ContactService>();
-            services.AddScoped<IReferenceDataRepository, ReferenceDataRepository>();
-            services.AddScoped<IReferenceDataService, ReferenceDataService>();
+
             services.AddScoped<ICharacterRepository, CharacterRepository>();
+            services.AddScoped<IReferenceDataRepository, ReferenceDataRepository>();
+            services.AddScoped<IUserRepository, UserRepository>();
+
+            services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ICharacterService, CharacterService>();
+            services.AddScoped<IContactService, ContactService>();
+            services.AddScoped<IModerationService, ModerationService>();
+            services.AddScoped<IReferenceDataService, ReferenceDataService>();
 
             return services;
         }

@@ -50,5 +50,21 @@ namespace FantasyRealm.Application.Interfaces
             int page,
             int pageSize,
             CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Returns a character by its identifier, including the related class and owner.
+        /// Used by moderation workflows that need access to the owner's email and pseudo.
+        /// </summary>
+        Task<Character?> GetByIdWithUserAsync(int id, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Returns a paginated list of characters pending moderation review.
+        /// Uses server-side projection to avoid loading sensitive user data into memory.
+        /// Results are ordered by submission date (oldest first).
+        /// </summary>
+        Task<(IReadOnlyList<PendingCharacterResponse> Items, int TotalCount)> GetPendingForModerationAsync(
+            int page,
+            int pageSize,
+            CancellationToken cancellationToken);
     }
 }

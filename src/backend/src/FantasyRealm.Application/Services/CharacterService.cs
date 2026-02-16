@@ -1,6 +1,7 @@
 using FantasyRealm.Application.Common;
 using FantasyRealm.Application.DTOs;
 using FantasyRealm.Application.Interfaces;
+using FantasyRealm.Application.Mapping;
 using FantasyRealm.Domain.Entities;
 using FantasyRealm.Domain.Enums;
 
@@ -48,7 +49,7 @@ namespace FantasyRealm.Application.Services
             };
 
             var created = await characterRepository.CreateAsync(character, cancellationToken);
-            return Result<CharacterResponse>.Success(MapToResponse(created, characterClass.Name, true));
+            return Result<CharacterResponse>.Success(CharacterMapper.ToResponse(created, characterClass.Name, true));
         }
 
         /// <inheritdoc />
@@ -63,7 +64,7 @@ namespace FantasyRealm.Application.Services
             if (!isOwner && !(character.Status == CharacterStatus.Approved && character.IsShared))
                 return Result<CharacterResponse>.Failure("Personnage introuvable.", 404);
 
-            return Result<CharacterResponse>.Success(MapToResponse(character, character.Class.Name, isOwner));
+            return Result<CharacterResponse>.Success(CharacterMapper.ToResponse(character, character.Class.Name, isOwner));
         }
 
         /// <inheritdoc />
@@ -121,7 +122,7 @@ namespace FantasyRealm.Application.Services
             }
 
             await characterRepository.UpdateAsync(character, cancellationToken);
-            return Result<CharacterResponse>.Success(MapToResponse(character, characterClass.Name, true));
+            return Result<CharacterResponse>.Success(CharacterMapper.ToResponse(character, characterClass.Name, true));
         }
 
         /// <inheritdoc />
@@ -155,7 +156,7 @@ namespace FantasyRealm.Application.Services
             character.UpdatedAt = DateTime.UtcNow;
 
             await characterRepository.UpdateAsync(character, cancellationToken);
-            return Result<CharacterResponse>.Success(MapToResponse(character, character.Class.Name, true));
+            return Result<CharacterResponse>.Success(CharacterMapper.ToResponse(character, character.Class.Name, true));
         }
 
         /// <inheritdoc />
@@ -209,7 +210,7 @@ namespace FantasyRealm.Application.Services
             };
 
             var created = await characterRepository.CreateAsync(duplicate, cancellationToken);
-            return Result<CharacterResponse>.Success(MapToResponse(created, character.Class.Name, true));
+            return Result<CharacterResponse>.Success(CharacterMapper.ToResponse(created, character.Class.Name, true));
         }
 
         /// <inheritdoc />
@@ -229,7 +230,7 @@ namespace FantasyRealm.Application.Services
             character.UpdatedAt = DateTime.UtcNow;
 
             await characterRepository.UpdateAsync(character, cancellationToken);
-            return Result<CharacterResponse>.Success(MapToResponse(character, character.Class.Name, true));
+            return Result<CharacterResponse>.Success(CharacterMapper.ToResponse(character, character.Class.Name, true));
         }
 
         /// <inheritdoc />
@@ -261,29 +262,6 @@ namespace FantasyRealm.Application.Services
 
             return Result<PagedResponse<GalleryCharacterResponse>>.Success(
                 new PagedResponse<GalleryCharacterResponse>(items, page, pageSize, totalCount, totalPages));
-        }
-
-        private static CharacterResponse MapToResponse(Character character, string className, bool isOwner)
-        {
-            return new CharacterResponse(
-                character.Id,
-                character.Name,
-                character.ClassId,
-                className,
-                character.Gender.ToString(),
-                character.Status.ToString(),
-                character.SkinColor,
-                character.EyeColor,
-                character.HairColor,
-                character.HairStyle,
-                character.EyeShape,
-                character.NoseShape,
-                character.MouthShape,
-                character.FaceShape,
-                character.IsShared,
-                isOwner,
-                character.CreatedAt,
-                character.UpdatedAt);
         }
 
         private static CharacterSummaryResponse MapToSummaryResponse(Character character)

@@ -114,5 +114,49 @@ namespace FantasyRealm.Infrastructure.Repositories
 
             return (items, totalCount);
         }
+
+        /// <inheritdoc />
+        public async Task<Character?> GetByIdWithUserAsync(int id, CancellationToken cancellationToken)
+        {
+            return await context.Characters
+                .Include(c => c.Class)
+                .Include(c => c.User)
+                .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+        }
+
+        /// <inheritdoc />
+        public async Task<(IReadOnlyList<PendingCharacterResponse> Items, int TotalCount)> GetPendingForModerationAsync(
+            int page,
+            int pageSize,
+            CancellationToken cancellationToken)
+        {
+            var query = context.Characters
+                .Where(c => c.Status == CharacterStatus.Pending)
+                .OrderBy(c => c.UpdatedAt);
+
+            var totalCount = await query.CountAsync(cancellationToken);
+
+            var items = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(c => new PendingCharacterResponse(
+                    c.Id,
+                    c.Name,
+                    c.Class.Name,
+                    c.Gender.ToString(),
+                    c.SkinColor,
+                    c.EyeColor,
+                    c.HairColor,
+                    c.HairStyle,
+                    c.EyeShape,
+                    c.NoseShape,
+                    c.MouthShape,
+                    c.FaceShape,
+                    c.User.Pseudo,
+                    c.UpdatedAt))
+                .ToListAsync(cancellationToken);
+
+            return (items, totalCount);
+        }
     }
 }
