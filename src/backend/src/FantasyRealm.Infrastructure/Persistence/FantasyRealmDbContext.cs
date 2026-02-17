@@ -180,6 +180,7 @@ namespace FantasyRealm.Infrastructure.Persistence
                       .HasMaxLength(20)
                       .HasDefaultValue(CommentStatus.Pending);
                 entity.Property(e => e.CommentedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(e => e.RejectionReason).HasMaxLength(500);
 
                 entity.HasIndex(e => new { e.CharacterId, e.AuthorId }).IsUnique();
                 entity.HasIndex(e => e.Status);
@@ -193,6 +194,11 @@ namespace FantasyRealm.Infrastructure.Persistence
                       .WithMany(u => u.Comments)
                       .HasForeignKey(e => e.AuthorId)
                       .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.ReviewedBy)
+                      .WithMany()
+                      .HasForeignKey(e => e.ReviewedById)
+                      .OnDelete(DeleteBehavior.SetNull);
             });
         }
 

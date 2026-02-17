@@ -24,6 +24,25 @@ namespace FantasyRealm.Application.Mapping
                 comment.CommentedAt,
                 comment.CharacterId,
                 comment.AuthorId,
+                comment.Author.Pseudo,
+                comment.RejectionReason);
+        }
+
+        /// <summary>
+        /// Maps a <see cref="Comment"/> entity to a <see cref="PendingCommentResponse"/> DTO for moderation.
+        /// </summary>
+        /// <param name="comment">The comment entity. Must include <see cref="Comment.Author"/> and <see cref="Comment.Character"/> navigation properties.</param>
+        /// <returns>A fully populated <see cref="PendingCommentResponse"/>.</returns>
+        public static PendingCommentResponse ToPendingResponse(Comment comment)
+        {
+            return new PendingCommentResponse(
+                comment.Id,
+                comment.Rating,
+                comment.Text,
+                comment.CommentedAt,
+                comment.CharacterId,
+                comment.Character.Name,
+                comment.AuthorId,
                 comment.Author.Pseudo);
         }
 

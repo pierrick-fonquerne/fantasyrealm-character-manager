@@ -1,16 +1,15 @@
 namespace FantasyRealm.Application.DTOs
 {
     /// <summary>
-    /// Comment details returned by the API.
+    /// Represents a comment pending moderation review.
     /// </summary>
-    public sealed record CommentResponse(
+    public sealed record PendingCommentResponse(
         int Id,
         int Rating,
         string Text,
-        string Status,
         DateTime CommentedAt,
         int CharacterId,
+        string CharacterName,
         int AuthorId,
-        string AuthorPseudo,
-        string? RejectionReason = null);
+        string AuthorPseudo);
 }
