@@ -6,6 +6,7 @@ namespace FantasyRealm.Domain.Enums
     public enum CommentStatus
     {
         Pending,
-        Approved
+        Approved,
+        Rejected
     }
 }

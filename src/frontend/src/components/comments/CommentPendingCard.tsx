@@ -29,6 +29,17 @@ export function CommentPendingCard({ comment }: CommentPendingCardProps) {
       </div>
 
       <p className="text-cream-300 text-sm leading-relaxed">{comment.text}</p>
+
+      {comment.status === 'Rejected' && comment.rejectionReason && (
+        <div className="mt-3 p-3 bg-error-500/10 border border-error-500/20 rounded-lg flex gap-2">
+          <svg className="w-4 h-4 text-error-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p className="text-sm text-error-400">
+            <span className="font-medium">Motif :</span> {comment.rejectionReason}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

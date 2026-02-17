@@ -16,6 +16,7 @@ namespace FantasyRealm.Infrastructure.Repositories
         {
             return await context.Comments
                 .Include(c => c.Author)
+                .Include(c => c.Character)
                 .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
         }
 
@@ -52,6 +53,38 @@ namespace FantasyRealm.Infrastructure.Repositories
         public async Task DeleteAsync(Comment comment, CancellationToken cancellationToken)
         {
             context.Comments.Remove(comment);
+            await context.SaveChangesAsync(cancellationToken);
+        }
+
+        /// <inheritdoc />
+        public async Task<(IReadOnlyList<Comment> Items, int TotalCount)> GetPendingAsync(int page, int pageSize, CancellationToken cancellationToken)
+        {
+            var totalCount = await context.Comments
+                .CountAsync(c => c.Status == CommentStatus.Pending, cancellationToken);
+
+            var items = await context.Comments
+                .Include(c => c.Author)
+                .Include(c => c.Character)
+                .Where(c => c.Status == CommentStatus.Pending)
+                .OrderBy(c => c.CommentedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(cancellationToken);
+
+            return (items, totalCount);
+        }
+
+        /// <inheritdoc />
+        public async Task<int> CountPendingAsync(CancellationToken cancellationToken)
+        {
+            return await context.Comments
+                .CountAsync(c => c.Status == CommentStatus.Pending, cancellationToken);
+        }
+
+        /// <inheritdoc />
+        public async Task UpdateAsync(Comment comment, CancellationToken cancellationToken)
+        {
+            context.Comments.Update(comment);
             await context.SaveChangesAsync(cancellationToken);
         }
     }

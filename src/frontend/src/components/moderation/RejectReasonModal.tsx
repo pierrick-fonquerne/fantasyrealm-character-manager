@@ -3,7 +3,9 @@ import { Modal, ModalHeader, ModalBody, ModalFooter, Button } from '../ui';
 
 interface RejectReasonModalProps {
   isOpen: boolean;
-  characterName: string;
+  /** @deprecated Use targetName instead */
+  characterName?: string;
+  targetName?: string;
   onConfirm: (reason: string) => void;
   onClose: () => void;
   isSubmitting: boolean;
@@ -15,10 +17,12 @@ const MAX_LENGTH = 500;
 export function RejectReasonModal({
   isOpen,
   characterName,
+  targetName,
   onConfirm,
   onClose,
   isSubmitting,
 }: RejectReasonModalProps) {
+  const displayName = targetName ?? characterName ?? '';
   const [reason, setReason] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
 
@@ -42,7 +46,7 @@ export function RejectReasonModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="md">
       <ModalHeader onClose={onClose}>
-        Rejeter {characterName}
+        Rejeter {displayName}
       </ModalHeader>
       <ModalBody>
         <label htmlFor="reject-reason" className="block text-sm font-medium text-cream-300 mb-2">
@@ -58,7 +62,7 @@ export function RejectReasonModal({
           }}
           maxLength={MAX_LENGTH}
           rows={4}
-          placeholder="Expliquez pourquoi ce personnage est rejeté…"
+          placeholder="Expliquez le motif du rejet…"
           className="w-full px-3 py-2 bg-dark-900 border border-dark-600 rounded-lg text-cream-200 placeholder-cream-600 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent resize-vertical"
           aria-describedby={validationError ? 'reject-reason-error' : undefined}
           aria-invalid={validationError ? 'true' : undefined}

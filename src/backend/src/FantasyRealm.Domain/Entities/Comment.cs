@@ -21,8 +21,16 @@ namespace FantasyRealm.Domain.Entities
 
         public Character Character { get; set; } = null!;
 
+        public string? RejectionReason { get; set; }
+
+        public DateTime? ReviewedAt { get; set; }
+
         public int AuthorId { get; set; }
 
         public User Author { get; set; } = null!;
+
+        public int? ReviewedById { get; set; }
+
+        public User? ReviewedBy { get; set; }
     }
 }

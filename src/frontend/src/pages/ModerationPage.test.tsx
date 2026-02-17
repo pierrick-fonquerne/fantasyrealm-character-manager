@@ -5,7 +5,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import ModerationPage from './ModerationPage';
 import * as moderationService from '../services/moderationService';
-import type { PendingCharacter, PagedResponse } from '../types';
+import type { PendingCharacter, PendingComment, PagedResponse } from '../types';
 
 expect.extend(toHaveNoViolations);
 
@@ -22,6 +22,9 @@ vi.mock('../services/moderationService', () => ({
   getPendingCharacters: vi.fn(),
   approveCharacter: vi.fn(),
   rejectCharacter: vi.fn(),
+  getPendingComments: vi.fn(),
+  approveComment: vi.fn(),
+  rejectComment: vi.fn(),
 }));
 
 const mockPendingCharacters = (): PendingCharacter[] => [
@@ -88,9 +91,18 @@ const setupWithCharacters = async (data?: PagedResponse<PendingCharacter>) => {
   await screen.findByText('Arthas');
 };
 
+const emptyCommentsResponse = (): PagedResponse<never> => ({
+  items: [],
+  page: 1,
+  pageSize: 12,
+  totalCount: 0,
+  totalPages: 0,
+});
+
 describe('ModerationPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(moderationService.getPendingComments).mockResolvedValue(emptyCommentsResponse());
   });
 
   describe('loading state', () => {
@@ -115,8 +127,9 @@ describe('ModerationPage', () => {
     it('should display pending count in stats', async () => {
       await setupWithCharacters();
 
-      expect(screen.getByText('2')).toBeInTheDocument();
-      expect(screen.getByText('En attente')).toBeInTheDocument();
+      const statsLabel = screen.getByText('Personnages en attente');
+      const statsBlock = statsLabel.closest('div')!;
+      expect(within(statsBlock).getByText('2')).toBeInTheDocument();
     });
 
     it('should render a semantic list', async () => {
@@ -275,6 +288,178 @@ describe('ModerationPage', () => {
 
       const results = await axe(container);
       expect(results).toHaveNoViolations();
+    });
+  });
+
+  describe('tabs', () => {
+    it('should display both tabs with correct labels', async () => {
+      await setupWithCharacters();
+
+      expect(screen.getByRole('tab', { name: /personnages/i })).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: /commentaires/i })).toBeInTheDocument();
+    });
+
+    it('should show characters tab as active by default', async () => {
+      await setupWithCharacters();
+
+      expect(screen.getByRole('tab', { name: /personnages/i })).toHaveAttribute('aria-selected', 'true');
+      expect(screen.getByRole('tab', { name: /commentaires/i })).toHaveAttribute('aria-selected', 'false');
+    });
+  });
+
+  describe('comments tab', () => {
+    const mockPendingComments = (): PendingComment[] => [
+      {
+        id: 10,
+        rating: 4,
+        text: 'Un personnage vraiment bien réalisé !',
+        commentedAt: new Date(Date.now() - 86400000).toISOString(),
+        characterId: 1,
+        characterName: 'Gandalf',
+        authorId: 5,
+        authorPseudo: 'Frodon',
+      },
+      {
+        id: 11,
+        rating: 2,
+        text: 'Bof, pas terrible comme personnage.',
+        commentedAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+        characterId: 2,
+        characterName: 'Legolas',
+        authorId: 6,
+        authorPseudo: 'Sam',
+      },
+    ];
+
+    const commentPagedResponse = (
+      items: PendingComment[] = mockPendingComments(),
+      totalCount?: number,
+      totalPages?: number
+    ): PagedResponse<PendingComment> => ({
+      items,
+      page: 1,
+      pageSize: 12,
+      totalCount: totalCount ?? items.length,
+      totalPages: totalPages ?? 1,
+    });
+
+    const switchToCommentsTab = async () => {
+      const user = userEvent.setup();
+      const commentsTab = screen.getByRole('tab', { name: /commentaires/i });
+      await user.click(commentsTab);
+    };
+
+    const setupWithComments = async (data?: PagedResponse<PendingComment>) => {
+      vi.mocked(moderationService.getPendingCharacters).mockResolvedValue(
+        pagedResponse([], 0, 0)
+      );
+      vi.mocked(moderationService.getPendingComments).mockResolvedValue(
+        data ?? commentPagedResponse()
+      );
+      renderPage();
+      await waitFor(() => {
+        expect(moderationService.getPendingComments).toHaveBeenCalled();
+      });
+      await switchToCommentsTab();
+    };
+
+    it('should display pending comments after switching tab', async () => {
+      await setupWithComments();
+
+      expect(screen.getByText('Frodon')).toBeInTheDocument();
+      expect(screen.getByText('Sam')).toBeInTheDocument();
+      expect(screen.getByText(/gandalf/i)).toBeInTheDocument();
+      expect(screen.getByText(/legolas/i)).toBeInTheDocument();
+    });
+
+    it('should display comment count in stats', async () => {
+      await setupWithComments();
+
+      const statsLabel = screen.getByText('Commentaires en attente');
+      const statsBlock = statsLabel.closest('div')!;
+      expect(within(statsBlock).getByText('2')).toBeInTheDocument();
+    });
+
+    it('should show empty message when no pending comments', async () => {
+      await setupWithComments(commentPagedResponse([], 0, 0));
+
+      expect(
+        screen.getByText(/aucun commentaire en attente de modération/i)
+      ).toBeInTheDocument();
+    });
+
+    it('should call approveComment and remove card', async () => {
+      vi.mocked(moderationService.approveComment).mockResolvedValue({
+        id: 10, rating: 4, text: 'Un personnage vraiment bien réalisé !',
+        status: 'Approved', commentedAt: '', characterId: 1, authorId: 5, authorPseudo: 'Frodon',
+      });
+      await setupWithComments();
+
+      const user = userEvent.setup();
+      const approveButton = screen.getByRole('button', { name: /approuver l'avis de frodon/i });
+      await user.click(approveButton);
+
+      await waitFor(() => {
+        expect(moderationService.approveComment).toHaveBeenCalledWith(10, 'fake-employee-token');
+      });
+
+      await waitFor(() => {
+        expect(screen.queryByText('Frodon')).not.toBeInTheDocument();
+      });
+      expect(screen.getByText('Sam')).toBeInTheDocument();
+    });
+
+    it('should open reject modal and call rejectComment', async () => {
+      vi.mocked(moderationService.rejectComment).mockResolvedValue({
+        id: 10, rating: 4, text: 'Un personnage vraiment bien réalisé !',
+        status: 'Rejected', commentedAt: '', characterId: 1, authorId: 5, authorPseudo: 'Frodon',
+        rejectionReason: 'Langage inapproprié dans le commentaire',
+      });
+      await setupWithComments();
+
+      const user = userEvent.setup();
+      await user.click(screen.getByRole('button', { name: /rejeter l'avis de frodon/i }));
+
+      expect(screen.getByText(/rejeter l'avis de frodon/i)).toBeInTheDocument();
+
+      const textarea = screen.getByLabelText(/motif du rejet/i);
+      await user.type(textarea, 'Langage inapproprié dans le commentaire');
+      await user.click(screen.getByRole('button', { name: /confirmer le rejet/i }));
+
+      await waitFor(() => {
+        expect(moderationService.rejectComment).toHaveBeenCalledWith(
+          10,
+          'Langage inapproprié dans le commentaire',
+          'fake-employee-token'
+        );
+      });
+
+      await waitFor(() => {
+        expect(screen.queryByText('Frodon')).not.toBeInTheDocument();
+      });
+    });
+
+    it('should show error when comment fetch fails', async () => {
+      vi.mocked(moderationService.getPendingCharacters).mockResolvedValue(
+        pagedResponse([], 0, 0)
+      );
+      vi.mocked(moderationService.getPendingComments).mockRejectedValue(
+        new Error('fail')
+      );
+      renderPage();
+      await switchToCommentsTab();
+
+      expect(
+        await screen.findByText(/impossible de charger les commentaires/i)
+      ).toBeInTheDocument();
+    });
+
+    it('should render a semantic list of comments', async () => {
+      await setupWithComments();
+
+      const list = screen.getByRole('list', { name: /commentaires en attente/i });
+      const items = within(list).getAllByRole('listitem');
+      expect(items).toHaveLength(2);
     });
   });
 });
