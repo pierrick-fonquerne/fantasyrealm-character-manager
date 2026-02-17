@@ -53,11 +53,13 @@ namespace FantasyRealm.Infrastructure
             services.AddSingleton<IPasswordGenerator, SecurePasswordGenerator>();
 
             services.AddScoped<ICharacterRepository, CharacterRepository>();
+            services.AddScoped<ICommentRepository, CommentRepository>();
             services.AddScoped<IReferenceDataRepository, ReferenceDataRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
 
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ICharacterService, CharacterService>();
+            services.AddScoped<ICommentService, CommentService>();
             services.AddScoped<IContactService, ContactService>();
             services.AddScoped<IModerationService, ModerationService>();
             services.AddScoped<IReferenceDataService, ReferenceDataService>();

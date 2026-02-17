@@ -7,6 +7,7 @@ import { Header, Footer } from '../components/layout';
 import { Button, Badge, Alert } from '../components/ui';
 import { EditIcon, CLASS_ICONS } from '../components/ui/icons';
 import { CharacterPreview } from '../components/character/CharacterPreview';
+import { CommentSection } from '../components/comments';
 
 const STATUS_CONFIG: Record<string, { label: string; variant: 'default' | 'info' | 'success' | 'warning' | 'error' }> = {
   Draft: { label: 'Brouillon', variant: 'default' },
@@ -259,6 +260,10 @@ export default function CharacterDetailPage() {
                   </div>
                 </div>
               </div>
+
+              {character.status === 'Approved' && (
+                <CommentSection characterId={character.id} isOwner={character.isOwner} />
+              )}
             </>
           )}
         </div>
