@@ -95,5 +95,18 @@ namespace FantasyRealm.Application.Interfaces
         /// Returns the number of currently suspended users.
         /// </summary>
         Task<int> CountSuspendedAsync(CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Retrieves a paginated list of employees with optional search and suspension filter.
+        /// Only returns users with the "Employee" role.
+        /// </summary>
+        /// <param name="page">The page number (1-based).</param>
+        /// <param name="pageSize">The number of items per page.</param>
+        /// <param name="search">Optional search term to filter by pseudo or email.</param>
+        /// <param name="isSuspended">Optional filter by suspension status.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>A tuple containing the employee list and total count.</returns>
+        Task<(IReadOnlyList<User> Items, int TotalCount)> GetEmployeesAsync(
+            int page, int pageSize, string? search, bool? isSuspended, CancellationToken cancellationToken = default);
     }
 }

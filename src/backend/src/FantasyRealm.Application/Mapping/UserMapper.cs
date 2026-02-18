@@ -23,5 +23,20 @@ namespace FantasyRealm.Application.Mapping
                 user.CreatedAt,
                 user.Characters.Count);
         }
+
+        /// <summary>
+        /// Maps a <see cref="User"/> entity to an <see cref="EmployeeManagementResponse"/> DTO.
+        /// </summary>
+        /// <param name="user">The user entity with the Employee role.</param>
+        /// <returns>A fully populated <see cref="EmployeeManagementResponse"/>.</returns>
+        public static EmployeeManagementResponse ToEmployeeResponse(User user)
+        {
+            return new EmployeeManagementResponse(
+                user.Id,
+                user.Pseudo,
+                user.Email,
+                user.IsSuspended,
+                user.CreatedAt);
+        }
     }
 }
