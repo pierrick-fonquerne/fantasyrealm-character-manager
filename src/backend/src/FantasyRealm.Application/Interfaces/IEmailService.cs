@@ -87,6 +87,24 @@ namespace FantasyRealm.Application.Interfaces
         Task SendAccountSuspendedEmailAsync(string toEmail, string pseudo, string reason, CancellationToken cancellationToken = default);
 
         /// <summary>
+        /// Sends a notification when a suspended account has been reactivated.
+        /// </summary>
+        /// <param name="toEmail">The recipient's email address.</param>
+        /// <param name="pseudo">The user's display name.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        Task SendAccountReactivatedEmailAsync(string toEmail, string pseudo, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Sends a notification when a user account has been permanently deleted.
+        /// </summary>
+        /// <param name="toEmail">The recipient's email address.</param>
+        /// <param name="pseudo">The user's display name.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        Task SendAccountDeletedEmailAsync(string toEmail, string pseudo, CancellationToken cancellationToken = default);
+
+        /// <summary>
         /// Sends a contact form notification email to the site administrator.
         /// </summary>
         /// <param name="fromEmail">The sender's email address.</param>

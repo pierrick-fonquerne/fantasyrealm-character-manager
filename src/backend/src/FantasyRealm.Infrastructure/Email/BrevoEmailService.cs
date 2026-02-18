@@ -92,8 +92,24 @@ namespace FantasyRealm.Infrastructure.Email
         /// <inheritdoc />
         public async Task SendAccountSuspendedEmailAsync(string toEmail, string pseudo, string reason, CancellationToken cancellationToken = default)
         {
-            var subject = "Your FantasyRealm account has been suspended";
+            var subject = "Votre compte FantasyRealm a été suspendu";
             var body = EmailTemplates.GetAccountSuspendedTemplate(pseudo, reason);
+            await SendEmailAsync(toEmail, subject, body, cancellationToken);
+        }
+
+        /// <inheritdoc />
+        public async Task SendAccountReactivatedEmailAsync(string toEmail, string pseudo, CancellationToken cancellationToken = default)
+        {
+            var subject = "Votre compte FantasyRealm a été réactivé";
+            var body = EmailTemplates.GetAccountReactivatedTemplate(pseudo);
+            await SendEmailAsync(toEmail, subject, body, cancellationToken);
+        }
+
+        /// <inheritdoc />
+        public async Task SendAccountDeletedEmailAsync(string toEmail, string pseudo, CancellationToken cancellationToken = default)
+        {
+            var subject = "Votre compte FantasyRealm a été supprimé";
+            var body = EmailTemplates.GetAccountDeletedTemplate(pseudo);
             await SendEmailAsync(toEmail, subject, body, cancellationToken);
         }
 

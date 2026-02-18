@@ -63,6 +63,7 @@ namespace FantasyRealm.Infrastructure
             services.AddScoped<ICommentModerationService, CommentModerationService>();
             services.AddScoped<IContactService, ContactService>();
             services.AddScoped<IModerationService, ModerationService>();
+            services.AddScoped<IUserModerationService, UserModerationService>();
             services.AddScoped<IReferenceDataService, ReferenceDataService>();
 
             return services;
