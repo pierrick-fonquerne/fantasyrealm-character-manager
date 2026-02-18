@@ -7,3 +7,11 @@ export interface AdminStats {
   totalComments: number;
   pendingComments: number;
 }
+
+export interface EmployeeManagement {
+  id: number;
+  pseudo: string;
+  email: string;
+  isSuspended: boolean;
+  createdAt: string;
+}

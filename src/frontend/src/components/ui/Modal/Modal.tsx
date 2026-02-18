@@ -103,7 +103,7 @@ const ModalHeader = forwardRef<HTMLDivElement, ModalHeaderProps>(
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-lg text-dark-200 hover:text-cream-200 hover:bg-dark-700 transition-colors"
+            className="p-2 rounded-lg text-dark-200 hover:text-cream-200 hover:bg-dark-700 transition-colors cursor-pointer"
             aria-label="Fermer"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
