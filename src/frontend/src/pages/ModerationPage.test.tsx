@@ -5,7 +5,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import ModerationPage from './ModerationPage';
 import * as moderationService from '../services/moderationService';
-import type { PendingCharacter, PendingComment, PagedResponse } from '../types';
+import type { PendingCharacter, PendingComment, UserManagement, PagedResponse } from '../types';
 
 expect.extend(toHaveNoViolations);
 
@@ -25,6 +25,11 @@ vi.mock('../services/moderationService', () => ({
   getPendingComments: vi.fn(),
   approveComment: vi.fn(),
   rejectComment: vi.fn(),
+  getUsers: vi.fn(),
+  getUsersCount: vi.fn(),
+  suspendUser: vi.fn(),
+  reactivateUser: vi.fn(),
+  deleteUser: vi.fn(),
 }));
 
 const mockPendingCharacters = (): PendingCharacter[] => [
@@ -91,7 +96,7 @@ const setupWithCharacters = async (data?: PagedResponse<PendingCharacter>) => {
   await screen.findByText('Arthas');
 };
 
-const emptyCommentsResponse = (): PagedResponse<never> => ({
+const emptyResponse = <T,>(): PagedResponse<T> => ({
   items: [],
   page: 1,
   pageSize: 12,
@@ -102,7 +107,9 @@ const emptyCommentsResponse = (): PagedResponse<never> => ({
 describe('ModerationPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(moderationService.getPendingComments).mockResolvedValue(emptyCommentsResponse());
+    vi.mocked(moderationService.getPendingComments).mockResolvedValue(emptyResponse());
+    vi.mocked(moderationService.getUsers).mockResolvedValue(emptyResponse());
+    vi.mocked(moderationService.getUsersCount).mockResolvedValue(0);
   });
 
   describe('loading state', () => {
@@ -292,11 +299,12 @@ describe('ModerationPage', () => {
   });
 
   describe('tabs', () => {
-    it('should display both tabs with correct labels', async () => {
+    it('should display three tabs with correct labels', async () => {
       await setupWithCharacters();
 
       expect(screen.getByRole('tab', { name: /personnages/i })).toBeInTheDocument();
       expect(screen.getByRole('tab', { name: /commentaires/i })).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: /utilisateurs/i })).toBeInTheDocument();
     });
 
     it('should show characters tab as active by default', async () => {
@@ -304,6 +312,7 @@ describe('ModerationPage', () => {
 
       expect(screen.getByRole('tab', { name: /personnages/i })).toHaveAttribute('aria-selected', 'true');
       expect(screen.getByRole('tab', { name: /commentaires/i })).toHaveAttribute('aria-selected', 'false');
+      expect(screen.getByRole('tab', { name: /utilisateurs/i })).toHaveAttribute('aria-selected', 'false');
     });
   });
 
@@ -460,6 +469,182 @@ describe('ModerationPage', () => {
       const list = screen.getByRole('list', { name: /commentaires en attente/i });
       const items = within(list).getAllByRole('listitem');
       expect(items).toHaveLength(2);
+    });
+  });
+
+  describe('users tab', () => {
+    const mockUsers = (): UserManagement[] => [
+      {
+        id: 10,
+        pseudo: 'Frodon',
+        email: 'frodon@example.com',
+        isSuspended: false,
+        createdAt: new Date(Date.now() - 86400000 * 30).toISOString(),
+        characterCount: 3,
+      },
+      {
+        id: 11,
+        pseudo: 'Sauron',
+        email: 'sauron@example.com',
+        isSuspended: true,
+        createdAt: new Date(Date.now() - 86400000 * 90).toISOString(),
+        characterCount: 1,
+      },
+    ];
+
+    const userPagedResponse = (
+      items: UserManagement[] = mockUsers(),
+      totalCount?: number,
+      totalPages?: number
+    ): PagedResponse<UserManagement> => ({
+      items,
+      page: 1,
+      pageSize: 12,
+      totalCount: totalCount ?? items.length,
+      totalPages: totalPages ?? 1,
+    });
+
+    const switchToUsersTab = async () => {
+      const user = userEvent.setup();
+      const usersTab = screen.getByRole('tab', { name: /utilisateurs/i });
+      await user.click(usersTab);
+    };
+
+    const setupWithUsers = async (data?: PagedResponse<UserManagement>) => {
+      vi.mocked(moderationService.getPendingCharacters).mockResolvedValue(
+        pagedResponse([], 0, 0)
+      );
+      vi.mocked(moderationService.getUsers).mockResolvedValue(
+        data ?? userPagedResponse()
+      );
+      vi.mocked(moderationService.getUsersCount).mockResolvedValue(2);
+      renderPage();
+      await waitFor(() => {
+        expect(moderationService.getUsers).toHaveBeenCalled();
+      });
+      await switchToUsersTab();
+    };
+
+    it('should display users after switching tab', async () => {
+      await setupWithUsers();
+
+      expect(screen.getByText('Frodon')).toBeInTheDocument();
+      expect(screen.getByText('Sauron')).toBeInTheDocument();
+      expect(screen.getByText('frodon@example.com')).toBeInTheDocument();
+      expect(screen.getByText('sauron@example.com')).toBeInTheDocument();
+    });
+
+    it('should display user count in stats', async () => {
+      await setupWithUsers();
+
+      const allUtilisateurs = screen.getAllByText('Utilisateurs');
+      const statsLabel = allUtilisateurs.find(
+        (el) => el.tagName === 'P' && el.classList.contains('text-sm')
+      )!;
+      const statsBlock = statsLabel.closest('div')!;
+      expect(within(statsBlock).getByText('2')).toBeInTheDocument();
+    });
+
+    it('should display active and suspended badges', async () => {
+      await setupWithUsers();
+
+      expect(screen.getByText('Actif')).toBeInTheDocument();
+      expect(screen.getByText('Suspendu')).toBeInTheDocument();
+    });
+
+    it('should show suspend button for active users', async () => {
+      await setupWithUsers();
+
+      expect(screen.getByRole('button', { name: /suspendre le compte de frodon/i })).toBeInTheDocument();
+    });
+
+    it('should show reactivate button for suspended users', async () => {
+      await setupWithUsers();
+
+      expect(screen.getByRole('button', { name: /réactiver le compte de sauron/i })).toBeInTheDocument();
+    });
+
+    it('should open suspend modal and call suspendUser', async () => {
+      const updatedUser: UserManagement = {
+        id: 10, pseudo: 'Frodon', email: 'frodon@example.com',
+        isSuspended: true, createdAt: new Date().toISOString(), characterCount: 3,
+      };
+      vi.mocked(moderationService.suspendUser).mockResolvedValue(updatedUser);
+      await setupWithUsers();
+
+      const user = userEvent.setup();
+      await user.click(screen.getByRole('button', { name: /suspendre le compte de frodon/i }));
+
+      expect(screen.getByText(/suspendre frodon/i)).toBeInTheDocument();
+
+      const textarea = screen.getByLabelText(/motif de la suspension/i);
+      await user.type(textarea, 'Comportement inapproprié envers les joueurs');
+      await user.click(screen.getByRole('button', { name: /confirmer la suspension/i }));
+
+      await waitFor(() => {
+        expect(moderationService.suspendUser).toHaveBeenCalledWith(
+          10,
+          'Comportement inapproprié envers les joueurs',
+          'fake-employee-token'
+        );
+      });
+    });
+
+    it('should call reactivateUser on click', async () => {
+      const updatedUser: UserManagement = {
+        id: 11, pseudo: 'Sauron', email: 'sauron@example.com',
+        isSuspended: false, createdAt: new Date().toISOString(), characterCount: 1,
+      };
+      vi.mocked(moderationService.reactivateUser).mockResolvedValue(updatedUser);
+      await setupWithUsers();
+
+      const user = userEvent.setup();
+      await user.click(screen.getByRole('button', { name: /réactiver le compte de sauron/i }));
+
+      await waitFor(() => {
+        expect(moderationService.reactivateUser).toHaveBeenCalledWith(11, 'fake-employee-token');
+      });
+    });
+
+    it('should open delete modal and call deleteUser', async () => {
+      vi.mocked(moderationService.deleteUser).mockResolvedValue();
+      await setupWithUsers();
+
+      const user = userEvent.setup();
+      const deleteButtons = screen.getAllByRole('button', { name: /supprimer le compte de/i });
+      await user.click(deleteButtons[0]);
+
+      expect(screen.getByText(/supprimer frodon/i)).toBeInTheDocument();
+      expect(screen.getByText(/irréversible/i)).toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: /supprimer définitivement/i }));
+
+      await waitFor(() => {
+        expect(moderationService.deleteUser).toHaveBeenCalledWith(10, 'fake-employee-token');
+      });
+    });
+
+    it('should show empty message when no users match search', async () => {
+      await setupWithUsers(userPagedResponse([], 0, 0));
+
+      expect(
+        screen.getByText(/aucun utilisateur/i)
+      ).toBeInTheDocument();
+    });
+
+    it('should render a semantic list of users', async () => {
+      await setupWithUsers();
+
+      const list = screen.getByRole('list', { name: /liste des utilisateurs/i });
+      const items = within(list).getAllByRole('listitem');
+      expect(items).toHaveLength(2);
+    });
+
+    it('should have search input and filter select', async () => {
+      await setupWithUsers();
+
+      expect(screen.getByLabelText(/rechercher un utilisateur/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/filtrer par statut/i)).toBeInTheDocument();
     });
   });
 });

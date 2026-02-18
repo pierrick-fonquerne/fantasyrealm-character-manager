@@ -7,10 +7,23 @@ import {
   getPendingComments,
   approveComment,
   rejectComment,
+  getUsers,
+  getUsersCount,
+  suspendUser,
+  reactivateUser,
+  deleteUser,
 } from '../services/moderationService';
-import type { PendingCharacter, PendingComment, PagedResponse } from '../types';
+import type { PendingCharacter, PendingComment, UserManagement, PagedResponse } from '../types';
 import { Header, Footer } from '../components/layout';
-import { ModerationCard, CommentModerationCard, RejectReasonModal, ModerationStats } from '../components/moderation';
+import {
+  ModerationCard,
+  CommentModerationCard,
+  UserModerationCard,
+  RejectReasonModal,
+  SuspendReasonModal,
+  ConfirmDeleteModal,
+  ModerationStats,
+} from '../components/moderation';
 import { Alert, Pagination } from '../components/ui';
 import { Tabs, TabsList, Tab, TabsPanel } from '../components/ui/Tabs/Tabs';
 
@@ -41,6 +54,21 @@ export default function ModerationPage() {
   const commentTotalPages = commentData?.totalPages ?? 0;
   const commentTotalCount = commentData?.totalCount ?? 0;
 
+  // ── Users state ──────────────────────────────────────────────────
+  const [userData, setUserData] = useState<PagedResponse<UserManagement> | null>(null);
+  const [userLoading, setUserLoading] = useState(true);
+  const [userError, setUserError] = useState<string | null>(null);
+  const [userPage, setUserPage] = useState(1);
+  const [userSearch, setUserSearch] = useState('');
+  const [userFilter, setUserFilter] = useState<'all' | 'active' | 'suspended'>('all');
+  const [userProcessingId, setUserProcessingId] = useState<number | null>(null);
+  const [usersCount, setUsersCount] = useState(0);
+  const userRequestIdRef = useRef(0);
+
+  const users = userData?.items ?? [];
+  const userTotalPages = userData?.totalPages ?? 0;
+
+  // ── Reject modal (characters + comments) ─────────────────────────
   const [rejectModal, setRejectModal] = useState<{
     isOpen: boolean;
     type: 'character' | 'comment';
@@ -49,6 +77,24 @@ export default function ModerationPage() {
   }>({ isOpen: false, type: 'character', id: null, targetName: '' });
   const [isRejecting, setIsRejecting] = useState(false);
 
+  // ── Suspend modal ────────────────────────────────────────────────
+  const [suspendModal, setSuspendModal] = useState<{
+    isOpen: boolean;
+    id: number | null;
+    targetName: string;
+  }>({ isOpen: false, id: null, targetName: '' });
+  const [isSuspending, setIsSuspending] = useState(false);
+  const suspendKeyRef = useRef(0);
+
+  // ── Delete modal ─────────────────────────────────────────────────
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    id: number | null;
+    targetName: string;
+  }>({ isOpen: false, id: null, targetName: '' });
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // ── Fetch characters ─────────────────────────────────────────────
   const fetchCharacters = useCallback(async () => {
     if (!token) return;
     const currentRequestId = ++charRequestIdRef.current;
@@ -72,6 +118,7 @@ export default function ModerationPage() {
     fetchCharacters();
   }, [fetchCharacters]);
 
+  // ── Fetch comments ───────────────────────────────────────────────
   const fetchComments = useCallback(async () => {
     if (!token) return;
     const currentRequestId = ++commentRequestIdRef.current;
@@ -95,6 +142,47 @@ export default function ModerationPage() {
     fetchComments();
   }, [fetchComments]);
 
+  // ── Fetch users ──────────────────────────────────────────────────
+  const isSuspendedFilter = userFilter === 'all' ? null : userFilter === 'suspended';
+
+  const fetchUsers = useCallback(async () => {
+    if (!token) return;
+    const currentRequestId = ++userRequestIdRef.current;
+    setUserError(null);
+    setUserLoading(true);
+    try {
+      const result = await getUsers(userPage, userSearch, isSuspendedFilter, token);
+      if (currentRequestId !== userRequestIdRef.current) return;
+      setUserData(result);
+    } catch {
+      if (currentRequestId !== userRequestIdRef.current) return;
+      setUserError('Impossible de charger les utilisateurs.');
+    } finally {
+      if (currentRequestId === userRequestIdRef.current) {
+        setUserLoading(false);
+      }
+    }
+  }, [userPage, userSearch, isSuspendedFilter, token]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
+  const fetchUsersCount = useCallback(async () => {
+    if (!token) return;
+    try {
+      const count = await getUsersCount(token);
+      setUsersCount(count);
+    } catch {
+      // Silently fail for count
+    }
+  }, [token]);
+
+  useEffect(() => {
+    fetchUsersCount();
+  }, [fetchUsersCount]);
+
+  // ── Character handlers ───────────────────────────────────────────
   const handleCharApprove = async (id: number) => {
     if (!token) return;
     setCharApprovingId(id);
@@ -118,6 +206,7 @@ export default function ModerationPage() {
     setRejectModal({ isOpen: true, type: 'character', id, targetName: character?.name ?? '' });
   };
 
+  // ── Comment handlers ─────────────────────────────────────────────
   const handleCommentApprove = async (id: number) => {
     if (!token) return;
     setCommentApprovingId(id);
@@ -185,6 +274,76 @@ export default function ModerationPage() {
     }
   };
 
+  // ── User handlers ────────────────────────────────────────────────
+  const handleSuspendOpen = (id: number) => {
+    const user = users.find((u) => u.id === id);
+    suspendKeyRef.current += 1;
+    setSuspendModal({ isOpen: true, id, targetName: user?.pseudo ?? '' });
+  };
+
+  const handleSuspendClose = () => {
+    setSuspendModal({ isOpen: false, id: null, targetName: '' });
+  };
+
+  const handleSuspendConfirm = async (reason: string) => {
+    if (!token || suspendModal.id === null) return;
+    setIsSuspending(true);
+    setUserError(null);
+    try {
+      await suspendUser(suspendModal.id, reason, token);
+      handleSuspendClose();
+      await fetchUsers();
+    } catch {
+      setUserError('Erreur lors de la suspension du compte.');
+    } finally {
+      setIsSuspending(false);
+    }
+  };
+
+  const handleReactivate = async (id: number) => {
+    if (!token) return;
+    setUserProcessingId(id);
+    setUserError(null);
+    try {
+      await reactivateUser(id, token);
+      await fetchUsers();
+    } catch {
+      setUserError('Erreur lors de la réactivation du compte.');
+    } finally {
+      setUserProcessingId(null);
+    }
+  };
+
+  const handleDeleteOpen = (id: number) => {
+    const user = users.find((u) => u.id === id);
+    setDeleteModal({ isOpen: true, id, targetName: user?.pseudo ?? '' });
+  };
+
+  const handleDeleteClose = () => {
+    setDeleteModal({ isOpen: false, id: null, targetName: '' });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!token || deleteModal.id === null) return;
+    setIsDeleting(true);
+    setUserError(null);
+    try {
+      await deleteUser(deleteModal.id, token);
+      setUserData((prev) => {
+        if (!prev) return prev;
+        const filtered = prev.items.filter((u) => u.id !== deleteModal.id);
+        return { ...prev, items: filtered, totalCount: prev.totalCount - 1 };
+      });
+      setUsersCount((prev) => Math.max(0, prev - 1));
+      handleDeleteClose();
+    } catch {
+      setUserError('Erreur lors de la suppression du compte.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // ── Auto-fallback to previous page when empty ────────────────────
   useEffect(() => {
     if (!charLoading && charData && charData.items.length === 0 && charPage > 1) {
       setCharPage(charPage - 1);
@@ -196,6 +355,17 @@ export default function ModerationPage() {
       setCommentPage(commentPage - 1);
     }
   }, [commentData, commentLoading, commentPage]);
+
+  useEffect(() => {
+    if (!userLoading && userData && userData.items.length === 0 && userPage > 1) {
+      setUserPage(userPage - 1);
+    }
+  }, [userData, userLoading, userPage]);
+
+  // ── Search debounce: reset page when search/filter changes ───────
+  useEffect(() => {
+    setUserPage(1);
+  }, [userSearch, userFilter]);
 
   return (
     <div className="min-h-screen bg-dark-950 flex flex-col">
@@ -215,14 +385,15 @@ export default function ModerationPage() {
               Modération
             </h1>
             <p className="mt-2 text-cream-400">
-              Gérez les personnages et commentaires en attente de validation.
+              Gérez les personnages, commentaires et comptes utilisateurs.
             </p>
           </div>
 
           <ModerationStats
             pendingCharactersCount={charTotalCount}
             pendingCommentsCount={commentTotalCount}
-            isLoading={charLoading || commentLoading}
+            usersCount={usersCount}
+            isLoading={charLoading || commentLoading || userLoading}
           />
 
           <Tabs defaultTab="characters">
@@ -250,6 +421,18 @@ export default function ModerationPage() {
                 }
               >
                 Commentaires
+              </Tab>
+              <Tab
+                value="users"
+                badge={
+                  !userLoading && usersCount > 0 ? (
+                    <span className="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 text-xs font-bold rounded-full bg-dark-600 text-cream-300">
+                      {usersCount}
+                    </span>
+                  ) : undefined
+                }
+              >
+                Utilisateurs
               </Tab>
             </TabsList>
 
@@ -374,6 +557,103 @@ export default function ModerationPage() {
                 </div>
               )}
             </TabsPanel>
+
+            {/* ── Users Panel ───────────────────────────────────────── */}
+            <TabsPanel value="users">
+              <div className="flex flex-col sm:flex-row gap-3 mb-6">
+                <div className="relative flex-1">
+                  <svg
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cream-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <input
+                    type="search"
+                    value={userSearch}
+                    onChange={(e) => setUserSearch(e.target.value)}
+                    placeholder="Rechercher par pseudo ou email…"
+                    className="w-full pl-10 pr-4 py-2 bg-dark-900 border border-dark-600 rounded-lg text-cream-200 placeholder-cream-600 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent text-sm"
+                    aria-label="Rechercher un utilisateur"
+                  />
+                </div>
+                <select
+                  value={userFilter}
+                  onChange={(e) => setUserFilter(e.target.value as 'all' | 'active' | 'suspended')}
+                  className="px-3 py-2 bg-dark-900 border border-dark-600 rounded-lg text-cream-200 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent text-sm"
+                  aria-label="Filtrer par statut"
+                >
+                  <option value="all">Tous les statuts</option>
+                  <option value="active">Actifs</option>
+                  <option value="suspended">Suspendus</option>
+                </select>
+              </div>
+
+              {userError && (
+                <Alert variant="error" className="mb-6">
+                  <div className="flex items-center justify-between">
+                    <span>{userError}</span>
+                    <button
+                      type="button"
+                      onClick={fetchUsers}
+                      className="ml-4 text-sm font-medium underline hover:no-underline"
+                    >
+                      Réessayer
+                    </button>
+                  </div>
+                </Alert>
+              )}
+
+              {userLoading && (
+                <div className="flex justify-center py-20" role="status" aria-label="Chargement">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gold-500" />
+                </div>
+              )}
+
+              {!userLoading && !userError && users.length === 0 && (
+                <div className="text-center py-20">
+                  <svg className="w-16 h-16 mx-auto text-cream-700 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                  </svg>
+                  <p className="text-cream-500 text-lg">
+                    {userSearch || userFilter !== 'all'
+                      ? 'Aucun utilisateur ne correspond à votre recherche.'
+                      : 'Aucun utilisateur enregistré.'}
+                  </p>
+                </div>
+              )}
+
+              {!userLoading && !userError && users.length > 0 && (
+                <ul
+                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 list-none p-0 m-0"
+                  aria-label="Liste des utilisateurs"
+                >
+                  {users.map((user) => (
+                    <li key={user.id}>
+                      <UserModerationCard
+                        user={user}
+                        onSuspend={handleSuspendOpen}
+                        onReactivate={handleReactivate}
+                        onDelete={handleDeleteOpen}
+                        isProcessing={userProcessingId === user.id}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {userTotalPages > 1 && (
+                <div className="mt-8 flex justify-center">
+                  <Pagination
+                    currentPage={userPage}
+                    totalPages={userTotalPages}
+                    onChange={setUserPage}
+                  />
+                </div>
+              )}
+            </TabsPanel>
           </Tabs>
         </div>
       </main>
@@ -387,6 +667,24 @@ export default function ModerationPage() {
         onConfirm={handleRejectConfirm}
         onClose={handleRejectClose}
         isSubmitting={isRejecting}
+      />
+
+      <SuspendReasonModal
+        key={`suspend-${suspendKeyRef.current}`}
+        isOpen={suspendModal.isOpen}
+        targetName={suspendModal.targetName}
+        onConfirm={handleSuspendConfirm}
+        onClose={handleSuspendClose}
+        isSubmitting={isSuspending}
+      />
+
+      <ConfirmDeleteModal
+        key={`delete-${deleteModal.id}`}
+        isOpen={deleteModal.isOpen}
+        targetName={deleteModal.targetName}
+        onConfirm={handleDeleteConfirm}
+        onClose={handleDeleteClose}
+        isSubmitting={isDeleting}
       />
     </div>
   );

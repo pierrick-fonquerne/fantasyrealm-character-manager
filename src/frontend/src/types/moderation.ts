@@ -14,3 +14,12 @@ export interface PendingCharacter {
   ownerPseudo: string;
   submittedAt: string;
 }
+
+export interface UserManagement {
+  id: number;
+  pseudo: string;
+  email: string;
+  isSuspended: boolean;
+  createdAt: string;
+  characterCount: number;
+}
