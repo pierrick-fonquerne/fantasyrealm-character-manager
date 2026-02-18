@@ -87,5 +87,11 @@ namespace FantasyRealm.Infrastructure.Repositories
             context.Comments.Update(comment);
             await context.SaveChangesAsync(cancellationToken);
         }
+
+        /// <inheritdoc />
+        public async Task<int> CountAllAsync(CancellationToken cancellationToken)
+        {
+            return await context.Comments.CountAsync(cancellationToken);
+        }
     }
 }
