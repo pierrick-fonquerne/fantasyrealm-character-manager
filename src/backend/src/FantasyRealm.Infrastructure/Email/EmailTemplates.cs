@@ -402,6 +402,75 @@ namespace FantasyRealm.Infrastructure.Email
         }
 
         /// <summary>
+        /// Generates an account reactivated email template.
+        /// </summary>
+        /// <param name="pseudo">The user's display name.</param>
+        /// <returns>The HTML email body.</returns>
+        public static string GetAccountReactivatedTemplate(string pseudo)
+        {
+            return WrapInLayout(
+                "Compte réactivé",
+                $@"
+                <div style=""text-align: center; margin-bottom: 30px;"">
+                    <div style=""font-size: 48px; margin-bottom: 10px;"">✅</div>
+                    <h1 style=""color: #22C55E; font-size: 24px; margin: 0; font-weight: 700;"">
+                        Compte réactivé
+                    </h1>
+                </div>
+
+                <div style=""background: {CardBg}; border: 1px solid {CardBorder}; border-radius: 12px; padding: 25px; margin-bottom: 25px;"">
+                    <p style=""color: {TextLight}; margin: 0 0 15px 0; font-size: 16px;"">
+                        Bonjour <strong style=""color: {GoldPrimary};"">{Encode(pseudo)}</strong>,
+                    </p>
+                    <p style=""color: {TextLight}; margin: 0; font-size: 16px; line-height: 1.7;"">
+                        Bonne nouvelle ! Votre compte FantasyRealm a été réactivé. Vous pouvez à nouveau vous connecter et accéder à vos personnages.
+                    </p>
+                </div>
+
+                <div style=""background: rgba(34, 197, 94, 0.1); border: 1px solid #166534; border-radius: 8px; padding: 15px;"">
+                    <p style=""color: {TextMuted}; margin: 0; font-size: 13px; line-height: 1.6;"">
+                        🎮 Connectez-vous dès maintenant pour retrouver vos aventures !<br>
+                        📧 N'hésitez pas à contacter notre équipe si vous avez des questions.
+                    </p>
+                </div>
+            ");
+        }
+
+        /// <summary>
+        /// Generates an account deleted email template.
+        /// </summary>
+        /// <param name="pseudo">The user's display name.</param>
+        /// <returns>The HTML email body.</returns>
+        public static string GetAccountDeletedTemplate(string pseudo)
+        {
+            return WrapInLayout(
+                "Compte supprimé",
+                $@"
+                <div style=""text-align: center; margin-bottom: 30px;"">
+                    <div style=""font-size: 48px; margin-bottom: 10px;"">🗑️</div>
+                    <h1 style=""color: #EF4444; font-size: 24px; margin: 0; font-weight: 700;"">
+                        Compte supprimé
+                    </h1>
+                </div>
+
+                <div style=""background: {CardBg}; border: 1px solid {CardBorder}; border-radius: 12px; padding: 25px; margin-bottom: 25px;"">
+                    <p style=""color: {TextLight}; margin: 0 0 15px 0; font-size: 16px;"">
+                        Bonjour <strong style=""color: {GoldPrimary};"">{Encode(pseudo)}</strong>,
+                    </p>
+                    <p style=""color: {TextLight}; margin: 0; font-size: 16px; line-height: 1.7;"">
+                        Votre compte FantasyRealm a été définitivement supprimé par un modérateur. Tous vos personnages et commentaires associés ont été retirés.
+                    </p>
+                </div>
+
+                <div style=""background: rgba(212, 175, 55, 0.1); border: 1px solid {GoldDark}; border-radius: 8px; padding: 15px;"">
+                    <p style=""color: {TextMuted}; margin: 0; font-size: 13px; line-height: 1.6;"">
+                        📧 Si vous pensez qu'il s'agit d'une erreur, veuillez contacter notre équipe de support.
+                    </p>
+                </div>
+            ");
+        }
+
+        /// <summary>
         /// Generates a contact form notification email template for the administrator.
         /// </summary>
         /// <param name="fromEmail">The sender's email address.</param>

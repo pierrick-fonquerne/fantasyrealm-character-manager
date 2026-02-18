@@ -76,5 +76,50 @@ namespace FantasyRealm.Infrastructure.Repositories
             await context.SaveChangesAsync(cancellationToken);
             return user;
         }
+
+        /// <inheritdoc />
+        public async Task<(IReadOnlyList<User> Items, int TotalCount)> GetUsersAsync(
+            int page, int pageSize, string? search, bool? isSuspended, CancellationToken cancellationToken = default)
+        {
+            var query = context.Users
+                .Include(u => u.Role)
+                .Include(u => u.Characters)
+                .Where(u => u.Role.Label == "User");
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var pattern = $"%{search.Trim()}%";
+                query = query.Where(u =>
+                    EF.Functions.ILike(u.Pseudo, pattern) ||
+                    EF.Functions.ILike(u.Email, pattern));
+            }
+
+            if (isSuspended.HasValue)
+                query = query.Where(u => u.IsSuspended == isSuspended.Value);
+
+            var totalCount = await query.CountAsync(cancellationToken);
+
+            var items = await query
+                .OrderByDescending(u => u.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(cancellationToken);
+
+            return (items, totalCount);
+        }
+
+        /// <inheritdoc />
+        public async Task<int> CountByRoleAsync(string roleLabel, CancellationToken cancellationToken = default)
+        {
+            return await context.Users
+                .CountAsync(u => u.Role.Label == roleLabel, cancellationToken);
+        }
+
+        /// <inheritdoc />
+        public async Task DeleteAsync(User user, CancellationToken cancellationToken = default)
+        {
+            context.Users.Remove(user);
+            await context.SaveChangesAsync(cancellationToken);
+        }
     }
 }

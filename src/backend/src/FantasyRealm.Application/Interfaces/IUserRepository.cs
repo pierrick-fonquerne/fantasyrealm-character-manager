@@ -61,5 +61,34 @@ namespace FantasyRealm.Application.Interfaces
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>The updated user entity.</returns>
         Task<User> UpdateAsync(User user, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Retrieves a paginated list of users with optional search and suspension filter.
+        /// Only returns users with the "user" role.
+        /// </summary>
+        /// <param name="page">The page number (1-based).</param>
+        /// <param name="pageSize">The number of items per page.</param>
+        /// <param name="search">Optional search term to filter by pseudo or email.</param>
+        /// <param name="isSuspended">Optional filter by suspension status.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>A tuple containing the user list and total count.</returns>
+        Task<(IReadOnlyList<User> Items, int TotalCount)> GetUsersAsync(
+            int page, int pageSize, string? search, bool? isSuspended, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Counts users matching the specified role label.
+        /// </summary>
+        /// <param name="roleLabel">The role label to filter by (e.g. "user").</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>The number of matching users.</returns>
+        Task<int> CountByRoleAsync(string roleLabel, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Permanently deletes a user from the database.
+        /// Associated characters and comments are removed via cascade.
+        /// </summary>
+        /// <param name="user">The user entity to delete.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        Task DeleteAsync(User user, CancellationToken cancellationToken = default);
     }
 }
