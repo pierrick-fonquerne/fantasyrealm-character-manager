@@ -66,5 +66,15 @@ namespace FantasyRealm.Application.Interfaces
             int page,
             int pageSize,
             CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Returns the total number of characters in the system.
+        /// </summary>
+        Task<int> CountAllAsync(CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Returns the number of characters currently pending moderation.
+        /// </summary>
+        Task<int> CountPendingAsync(CancellationToken cancellationToken);
     }
 }

@@ -158,5 +158,18 @@ namespace FantasyRealm.Infrastructure.Repositories
 
             return (items, totalCount);
         }
+
+        /// <inheritdoc />
+        public async Task<int> CountAllAsync(CancellationToken cancellationToken)
+        {
+            return await context.Characters.CountAsync(cancellationToken);
+        }
+
+        /// <inheritdoc />
+        public async Task<int> CountPendingAsync(CancellationToken cancellationToken)
+        {
+            return await context.Characters
+                .CountAsync(c => c.Status == CharacterStatus.Pending, cancellationToken);
+        }
     }
 }

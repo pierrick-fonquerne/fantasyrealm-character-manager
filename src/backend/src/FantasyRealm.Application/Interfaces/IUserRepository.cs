@@ -90,5 +90,10 @@ namespace FantasyRealm.Application.Interfaces
         /// <param name="user">The user entity to delete.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         Task DeleteAsync(User user, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Returns the number of currently suspended users.
+        /// </summary>
+        Task<int> CountSuspendedAsync(CancellationToken cancellationToken = default);
     }
 }

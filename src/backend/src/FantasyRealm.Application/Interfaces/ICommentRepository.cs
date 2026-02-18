@@ -48,5 +48,10 @@ namespace FantasyRealm.Application.Interfaces
         /// Persists changes to an existing comment.
         /// </summary>
         Task UpdateAsync(Comment comment, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Returns the total number of comments in the system.
+        /// </summary>
+        Task<int> CountAllAsync(CancellationToken cancellationToken);
     }
 }

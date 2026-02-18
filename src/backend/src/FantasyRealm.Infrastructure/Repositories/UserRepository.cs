@@ -121,5 +121,12 @@ namespace FantasyRealm.Infrastructure.Repositories
             context.Users.Remove(user);
             await context.SaveChangesAsync(cancellationToken);
         }
+
+        /// <inheritdoc />
+        public async Task<int> CountSuspendedAsync(CancellationToken cancellationToken = default)
+        {
+            return await context.Users
+                .CountAsync(u => u.IsSuspended, cancellationToken);
+        }
     }
 }
