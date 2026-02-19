@@ -37,6 +37,7 @@ namespace FantasyRealm.Tests.Integration
         {
             var sqlDirectory = FindSqlDirectory();
             var sqlFiles = Directory.GetFiles(sqlDirectory, "*.sql")
+                .Where(f => !Path.GetFileName(f).Contains("seed", StringComparison.OrdinalIgnoreCase))
                 .OrderBy(f => f)
                 .ToList();
 

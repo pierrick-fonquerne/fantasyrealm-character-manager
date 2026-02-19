@@ -27,6 +27,8 @@ namespace FantasyRealm.Infrastructure.Persistence
 
         public DbSet<EquipmentSlot> EquipmentSlots { get; set; } = null!;
 
+        public DbSet<Domain.Entities.ArticleType> ArticleTypes { get; set; } = null!;
+
         protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
         {
             base.ConfigureConventions(configurationBuilder);
@@ -47,6 +49,7 @@ namespace FantasyRealm.Infrastructure.Persistence
             ConfigureComment(modelBuilder);
             ConfigureCharacterClass(modelBuilder);
             ConfigureEquipmentSlot(modelBuilder);
+            ConfigureArticleType(modelBuilder);
 
             modelBuilder.ApplySnakeCaseNamingConvention();
         }
@@ -135,16 +138,21 @@ namespace FantasyRealm.Infrastructure.Persistence
             {
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Name).HasMaxLength(100).IsRequired();
-                entity.Property(e => e.Type)
-                      .HasConversion(
-                          v => v.ToString().ToLowerInvariant(),
-                          v => Enum.Parse<ArticleType>(v, true))
-                      .HasMaxLength(20)
-                      .IsRequired();
                 entity.Property(e => e.IsActive).HasDefaultValue(true);
 
-                entity.HasIndex(e => e.Type);
+                entity.HasIndex(e => e.TypeId);
                 entity.HasIndex(e => e.IsActive);
+                entity.HasIndex(e => e.SlotId);
+
+                entity.HasOne(e => e.Type)
+                      .WithMany(t => t.Articles)
+                      .HasForeignKey(e => e.TypeId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.Slot)
+                      .WithMany(s => s.Articles)
+                      .HasForeignKey(e => e.SlotId)
+                      .OnDelete(DeleteBehavior.Restrict);
             });
         }
 
@@ -210,6 +218,17 @@ namespace FantasyRealm.Infrastructure.Persistence
                 entity.Property(e => e.Name).HasMaxLength(20).IsRequired();
                 entity.Property(e => e.Description).IsRequired();
                 entity.Property(e => e.IconUrl).HasMaxLength(255);
+
+                entity.HasIndex(e => e.Name).IsUnique();
+            });
+        }
+
+        private static void ConfigureArticleType(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Domain.Entities.ArticleType>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Name).HasMaxLength(50).IsRequired();
 
                 entity.HasIndex(e => e.Name).IsUnique();
             });

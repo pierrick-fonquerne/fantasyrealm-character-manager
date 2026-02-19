@@ -119,6 +119,8 @@ namespace FantasyRealm.Tests.Integration.Persistence
             using var context = CreateDbContext();
             var role = await context.Roles.FirstAsync(r => r.Label == "User");
             var characterClass = await context.CharacterClasses.FirstAsync();
+            var weaponSlot = await context.EquipmentSlots.FirstAsync(s => s.Name == "Main droite");
+            var weaponType = await context.ArticleTypes.FirstAsync(t => t.Name == "Weapon");
 
             var user = new User
             {
@@ -132,7 +134,8 @@ namespace FantasyRealm.Tests.Integration.Persistence
             var article = new Article
             {
                 Name = "Iron Sword",
-                Type = ArticleType.Weapon
+                TypeId = weaponType.Id,
+                SlotId = weaponSlot.Id
             };
             context.Articles.Add(article);
             await context.SaveChangesAsync();
