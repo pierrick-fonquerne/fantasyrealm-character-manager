@@ -7,6 +7,7 @@ const Footer = () => {
     left: [
       { label: 'Mentions légales', to: '/mentions-legales' },
       { label: 'CGU', to: '/cgu' },
+      { label: 'Confidentialité', to: '/politique-de-confidentialite' },
     ],
     right: [
       { label: 'Contact', to: '/contact' },

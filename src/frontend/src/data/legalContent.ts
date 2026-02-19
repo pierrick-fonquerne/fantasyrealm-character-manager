@@ -166,4 +166,141 @@ export const legalDocuments: Record<string, LegalDocument> = {
       },
     ],
   },
+
+  'politique-de-confidentialite': {
+    title: 'Politique de confidentialité',
+    lastUpdated: '2025-01-01',
+    sections: [
+      {
+        title: 'Responsable du traitement',
+        content: `
+          <p><strong>PixelVerse Studios SAS</strong> (société fictive)</p>
+          <ul>
+            <li>Siège social : 42 rue du Pixel, 75001 Paris, France</li>
+            <li>Contact DPO : contact@pixelverse-studios.com</li>
+          </ul>
+          <p>PixelVerse Studios, en tant que responsable du traitement, s'engage à protéger la vie privée des utilisateurs de la plateforme FantasyRealm Character Manager, conformément au Règlement Général sur la Protection des Données (RGPD — Règlement UE 2016/679) et à la loi Informatique et Libertés du 6 janvier 1978 modifiée.</p>
+        `,
+      },
+      {
+        title: 'Données collectées',
+        content: `
+          <p>Dans le cadre de l'utilisation du service, les données personnelles suivantes sont collectées :</p>
+          <ul>
+            <li><strong>Adresse email</strong> : utilisée pour l'inscription, la connexion, la réinitialisation de mot de passe et les notifications</li>
+            <li><strong>Pseudo</strong> : identifiant public choisi lors de l'inscription</li>
+            <li><strong>Mot de passe</strong> : stocké uniquement sous forme de hash sécurisé (algorithme Argon2id), jamais en clair</li>
+            <li><strong>Personnages créés</strong> : données de personnalisation (nom, genre, traits faciaux, accessoires)</li>
+            <li><strong>Commentaires</strong> : contenus textuels publiés sur les fiches de personnages</li>
+            <li><strong>Journaux d'activité</strong> : actions de modération et d'administration (stockés dans MongoDB)</li>
+          </ul>
+          <p>Aucune donnée sensible au sens de l'article 9 du RGPD n'est collectée (origines, opinions politiques, données de santé, etc.).</p>
+        `,
+      },
+      {
+        title: 'Finalités du traitement',
+        content: `
+          <p>Les données personnelles sont traitées pour les finalités suivantes :</p>
+          <ul>
+            <li><strong>Gestion des comptes utilisateurs</strong> : inscription, authentification, gestion du profil</li>
+            <li><strong>Fourniture du service</strong> : création et gestion de personnages, publication de commentaires</li>
+            <li><strong>Modération</strong> : vérification des contenus créés par les utilisateurs (personnages, commentaires)</li>
+            <li><strong>Sécurité</strong> : détection des comportements abusifs, traçabilité des actions d'administration</li>
+            <li><strong>Communication</strong> : envoi d'emails transactionnels (confirmation, réinitialisation, notifications de modération)</li>
+          </ul>
+        `,
+      },
+      {
+        title: 'Base légale des traitements',
+        content: `
+          <p>Les traitements de données reposent sur les bases légales suivantes :</p>
+          <ul>
+            <li><strong>Consentement</strong> (article 6.1.a du RGPD) : lors de l'inscription, l'utilisateur consent au traitement de ses données</li>
+            <li><strong>Exécution du contrat</strong> (article 6.1.b) : les données sont nécessaires à la fourniture du service (création de personnages, commentaires)</li>
+            <li><strong>Intérêt légitime</strong> (article 6.1.f) : la modération des contenus et la sécurité de la plateforme</li>
+          </ul>
+        `,
+      },
+      {
+        title: 'Durée de conservation des données',
+        content: `
+          <p>Les données personnelles sont conservées selon les durées suivantes :</p>
+          <ul>
+            <li><strong>Comptes actifs</strong> : les données sont conservées tant que le compte utilisateur est actif</li>
+            <li><strong>Suppression de compte</strong> : en cas de suppression du compte (par l'utilisateur ou par un modérateur), toutes les données personnelles sont supprimées immédiatement et définitivement (email, pseudo, mot de passe hashé, personnages, commentaires)</li>
+            <li><strong>Journaux d'activité</strong> (MongoDB) : conservés 12 mois à des fins d'audit de sécurité, puis supprimés automatiquement</li>
+            <li><strong>Messages de contact</strong> : les messages envoyés via le formulaire de contact sont conservés 6 mois</li>
+            <li><strong>Comptes suspendus</strong> : les données sont conservées pendant la durée de la suspension. L'utilisateur peut demander la suppression de son compte à tout moment</li>
+          </ul>
+        `,
+      },
+      {
+        title: 'Destinataires des données',
+        content: `
+          <p>Les données personnelles ne sont transmises à aucun tiers à des fins commerciales ou publicitaires.</p>
+          <p>Les seuls destinataires sont les prestataires techniques nécessaires au fonctionnement du service :</p>
+          <ul>
+            <li><strong>Vercel Inc.</strong> (États-Unis) : hébergement du frontend</li>
+            <li><strong>Railway Corp.</strong> (États-Unis) : hébergement du backend et de la base de données PostgreSQL</li>
+            <li><strong>MongoDB, Inc.</strong> (États-Unis) : hébergement de la base de données des journaux d'activité</li>
+            <li><strong>Brevo (Sendinblue)</strong> (France) : envoi d'emails transactionnels</li>
+          </ul>
+          <p>Ces prestataires agissent en qualité de sous-traitants au sens du RGPD et sont soumis à des obligations contractuelles de protection des données.</p>
+        `,
+      },
+      {
+        title: 'Vos droits',
+        content: `
+          <p>Conformément au RGPD et à la loi Informatique et Libertés, vous disposez des droits suivants sur vos données personnelles :</p>
+          <ul>
+            <li><strong>Droit d'accès</strong> (article 15) : obtenir la confirmation que vos données sont traitées et en recevoir une copie</li>
+            <li><strong>Droit de rectification</strong> (article 16) : corriger vos données inexactes ou incomplètes</li>
+            <li><strong>Droit à l'effacement</strong> (article 17) : demander la suppression de vos données. Vous pouvez supprimer votre compte directement depuis la page Paramètres</li>
+            <li><strong>Droit à la portabilité</strong> (article 20) : recevoir vos données dans un format structuré et lisible par machine</li>
+            <li><strong>Droit à la limitation</strong> (article 18) : demander la limitation du traitement de vos données</li>
+            <li><strong>Droit d'opposition</strong> (article 21) : vous opposer au traitement de vos données</li>
+          </ul>
+          <p>Pour exercer ces droits, vous pouvez :</p>
+          <ul>
+            <li>Supprimer votre compte directement depuis la page <strong>Paramètres</strong> de votre espace personnel</li>
+            <li>Nous contacter par email à <strong>contact@pixelverse-studios.com</strong></li>
+            <li>Utiliser le <strong>formulaire de contact</strong> disponible sur le site</li>
+          </ul>
+          <p>Nous nous engageons à répondre à votre demande dans un délai d'un mois. En cas de réclamation, vous pouvez également contacter la CNIL (Commission Nationale de l'Informatique et des Libertés) : <strong>www.cnil.fr</strong>.</p>
+        `,
+      },
+      {
+        title: 'Mesures de sécurité',
+        content: `
+          <p>PixelVerse Studios met en œuvre les mesures techniques et organisationnelles suivantes pour protéger vos données :</p>
+          <ul>
+            <li><strong>Hachage des mots de passe</strong> : algorithme Argon2id avec paramètres conformes aux recommandations OWASP (sel de 16 octets, hash de 32 octets, 65 536 KiB de mémoire, 3 itérations)</li>
+            <li><strong>Chiffrement des communications</strong> : toutes les communications sont chiffrées via HTTPS (TLS)</li>
+            <li><strong>Authentification sécurisée</strong> : jetons JWT avec expiration, transmis uniquement via des connexions sécurisées</li>
+            <li><strong>Contrôle d'accès</strong> : système de rôles (Utilisateur, Employé, Administrateur) avec autorisations granulaires</li>
+            <li><strong>Politique de mots de passe</strong> : minimum 12 caractères, 1 majuscule, 1 minuscule, 1 chiffre, 1 caractère spécial (conforme aux recommandations CNIL)</li>
+          </ul>
+        `,
+      },
+      {
+        title: 'Cookies et traceurs',
+        content: `
+          <p>Ce site <strong>n'utilise aucun cookie</strong> de traçage, publicitaire ou analytique.</p>
+          <p>Le seul mécanisme de stockage local utilisé est le <strong>localStorage</strong> du navigateur, qui contient :</p>
+          <ul>
+            <li>Un jeton d'authentification (JWT) pour maintenir la session de l'utilisateur connecté</li>
+            <li>La préférence de fermeture du bandeau d'information cookies</li>
+          </ul>
+          <p>Ces données sont stockées uniquement sur votre appareil et ne sont jamais transmises à des tiers. Elles sont automatiquement supprimées lors de la déconnexion ou du nettoyage des données du navigateur.</p>
+        `,
+      },
+      {
+        title: 'Modification de cette politique',
+        content: `
+          <p>PixelVerse Studios se réserve le droit de modifier la présente politique de confidentialité à tout moment. En cas de modification substantielle, les utilisateurs seront informés par email.</p>
+          <p>La date de dernière mise à jour est indiquée en haut de cette page.</p>
+        `,
+      },
+    ],
+  },
 };
