@@ -1,6 +1,6 @@
 # FantasyRealm Character Manager
 
-Système de gestion de personnages pour le MMORPG fictif **FantasyRealm Online**, développé par le studio  **PixelVerse Studios**.
+Système de gestion de personnages pour le MMORPG **FantasyRealm Online**, développé par le studio  **PixelVerse Studios**.
 
 ## Sommaire
 
