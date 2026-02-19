@@ -58,15 +58,12 @@ namespace FantasyRealm.Application.Services
                 return Result<RegisterResponse>.Failure("Configuration error: default role not found.", 500);
             }
 
-            var user = new User
-            {
-                Email = request.Email.ToLowerInvariant().Trim(),
-                Pseudo = request.Pseudo.Trim(),
-                PasswordHash = passwordHasher.Hash(request.Password),
-                RoleId = role.Id,
-                IsSuspended = false,
-                MustChangePassword = false
-            };
+            var hashedPassword = passwordHasher.Hash(request.Password);
+            var user = User.CreateUser(
+                request.Email.ToLowerInvariant().Trim(),
+                request.Pseudo.Trim(),
+                hashedPassword,
+                role);
 
             var createdUser = await userRepository.CreateAsync(user, cancellationToken);
 
@@ -153,8 +150,7 @@ namespace FantasyRealm.Application.Services
             }
 
             var temporaryPassword = passwordGenerator.GenerateSecurePassword();
-            user.PasswordHash = passwordHasher.Hash(temporaryPassword);
-            user.MustChangePassword = true;
+            user.SetTemporaryPassword(passwordHasher.Hash(temporaryPassword));
 
             await userRepository.UpdateAsync(user, cancellationToken);
 
@@ -216,8 +212,7 @@ namespace FantasyRealm.Application.Services
                 return Result<ChangePasswordResponse>.Failure("Le nouveau mot de passe doit être différent de l'ancien.", 400);
             }
 
-            user.PasswordHash = passwordHasher.Hash(request.NewPassword);
-            user.MustChangePassword = false;
+            user.ChangePassword(passwordHasher.Hash(request.NewPassword));
 
             await userRepository.UpdateAsync(user, cancellationToken);
 

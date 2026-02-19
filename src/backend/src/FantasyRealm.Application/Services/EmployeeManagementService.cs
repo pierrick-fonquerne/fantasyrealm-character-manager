@@ -4,6 +4,7 @@ using FantasyRealm.Application.Interfaces;
 using FantasyRealm.Application.Mapping;
 using FantasyRealm.Domain.Entities;
 using FantasyRealm.Domain.Enums;
+using FantasyRealm.Domain.Exceptions;
 using Microsoft.Extensions.Logging;
 
 namespace FantasyRealm.Application.Services
@@ -73,26 +74,21 @@ namespace FantasyRealm.Application.Services
                 return Result<EmployeeManagementResponse>.Failure("Le rôle Employee est introuvable.", 500);
 
             var hashedPassword = passwordHasher.Hash(request.Password);
-
-            var employee = new User
-            {
-                Email = normalizedEmail,
-                Pseudo = derivedPseudo,
-                PasswordHash = hashedPassword,
-                MustChangePassword = false,
-                IsSuspended = false,
-                RoleId = role.Id,
-                Role = role,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
+            var employee = User.CreateEmployee(normalizedEmail, derivedPseudo, hashedPassword, role);
 
             var created = await userRepository.CreateAsync(employee, cancellationToken);
 
             logger.LogInformation("Employee {EmployeeId} created by admin {AdminId}", created.Id, adminId);
 
-            try { await activityLogService.LogAsync(ActivityAction.EmployeeCreated, "User", created.Id, created.Pseudo, null, cancellationToken); }
-            catch (Exception ex) { logger.LogWarning(ex, "Failed to log activity for employee creation {EmployeeId}", created.Id); }
+            try
+            {
+                await activityLogService.LogAsync(
+                    ActivityAction.EmployeeCreated, "User", created.Id, created.Pseudo, null, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to log activity for employee creation {EmployeeId}", created.Id);
+            }
 
             return Result<EmployeeManagementResponse>.Success(UserMapper.ToEmployeeResponse(created));
         }
@@ -121,16 +117,28 @@ namespace FantasyRealm.Application.Services
             if (employee.Role.Label != EmployeeRoleLabel)
                 return Result<EmployeeManagementResponse>.Failure("Seuls les comptes employés peuvent être suspendus depuis cet espace.", 403);
 
-            if (employee.IsSuspended)
-                return Result<EmployeeManagementResponse>.Failure("Ce compte est déjà suspendu.", 400);
+            try
+            {
+                employee.Suspend();
+            }
+            catch (DomainException ex)
+            {
+                return Result<EmployeeManagementResponse>.Failure(ex.Message, ex.StatusCode);
+            }
 
-            employee.IsSuspended = true;
             var updated = await userRepository.UpdateAsync(employee, cancellationToken);
 
             logger.LogInformation("Employee {EmployeeId} suspended by admin {AdminId}", employeeId, adminId);
 
-            try { await activityLogService.LogAsync(ActivityAction.EmployeeSuspended, "User", employeeId, employee.Pseudo, reason.Trim(), cancellationToken); }
-            catch (Exception ex) { logger.LogWarning(ex, "Failed to log activity for employee suspension {EmployeeId}", employeeId); }
+            try
+            {
+                await activityLogService.LogAsync(
+                    ActivityAction.EmployeeSuspended, "User", employeeId, employee.Pseudo, reason.Trim(), cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to log activity for employee suspension {EmployeeId}", employeeId);
+            }
 
             try
             {
@@ -159,16 +167,28 @@ namespace FantasyRealm.Application.Services
             if (employee.Role.Label != EmployeeRoleLabel)
                 return Result<EmployeeManagementResponse>.Failure("Seuls les comptes employés peuvent être réactivés depuis cet espace.", 403);
 
-            if (!employee.IsSuspended)
-                return Result<EmployeeManagementResponse>.Failure("Ce compte n'est pas suspendu.", 400);
+            try
+            {
+                employee.Reactivate();
+            }
+            catch (DomainException ex)
+            {
+                return Result<EmployeeManagementResponse>.Failure(ex.Message, ex.StatusCode);
+            }
 
-            employee.IsSuspended = false;
             var updated = await userRepository.UpdateAsync(employee, cancellationToken);
 
             logger.LogInformation("Employee {EmployeeId} reactivated by admin {AdminId}", employeeId, adminId);
 
-            try { await activityLogService.LogAsync(ActivityAction.EmployeeReactivated, "User", employeeId, employee.Pseudo, null, cancellationToken); }
-            catch (Exception ex) { logger.LogWarning(ex, "Failed to log activity for employee reactivation {EmployeeId}", employeeId); }
+            try
+            {
+                await activityLogService.LogAsync(
+                    ActivityAction.EmployeeReactivated, "User", employeeId, employee.Pseudo, null, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to log activity for employee reactivation {EmployeeId}", employeeId);
+            }
 
             try
             {
@@ -198,15 +218,21 @@ namespace FantasyRealm.Application.Services
                 return Result<Unit>.Failure("Seuls les mots de passe des comptes employés peuvent être réinitialisés depuis cet espace.", 403);
 
             var temporaryPassword = passwordGenerator.GenerateSecurePassword();
-            employee.PasswordHash = passwordHasher.Hash(temporaryPassword);
-            employee.MustChangePassword = true;
+            employee.SetTemporaryPassword(passwordHasher.Hash(temporaryPassword));
 
             await userRepository.UpdateAsync(employee, cancellationToken);
 
             logger.LogInformation("Employee {EmployeeId} password reset by admin {AdminId}", employeeId, adminId);
 
-            try { await activityLogService.LogAsync(ActivityAction.EmployeePasswordReset, "User", employeeId, employee.Pseudo, null, cancellationToken); }
-            catch (Exception ex) { logger.LogWarning(ex, "Failed to log activity for employee password reset {EmployeeId}", employeeId); }
+            try
+            {
+                await activityLogService.LogAsync(
+                    ActivityAction.EmployeePasswordReset, "User", employeeId, employee.Pseudo, null, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to log activity for employee password reset {EmployeeId}", employeeId);
+            }
 
             try
             {
@@ -249,8 +275,15 @@ namespace FantasyRealm.Application.Services
 
             logger.LogInformation("Employee {EmployeeId} deleted by admin {AdminId}", employeeId, adminId);
 
-            try { await activityLogService.LogAsync(ActivityAction.EmployeeDeleted, "User", employeeId, employee.Pseudo, null, cancellationToken); }
-            catch (Exception ex) { logger.LogWarning(ex, "Failed to log activity for employee deletion {EmployeeId}", employeeId); }
+            try
+            {
+                await activityLogService.LogAsync(
+                    ActivityAction.EmployeeDeleted, "User", employeeId, employee.Pseudo, null, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to log activity for employee deletion {EmployeeId}", employeeId);
+            }
 
             return Result<Unit>.Success(Unit.Value);
         }

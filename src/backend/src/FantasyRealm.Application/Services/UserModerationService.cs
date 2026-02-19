@@ -3,6 +3,7 @@ using FantasyRealm.Application.DTOs;
 using FantasyRealm.Application.Interfaces;
 using FantasyRealm.Application.Mapping;
 using FantasyRealm.Domain.Enums;
+using FantasyRealm.Domain.Exceptions;
 using Microsoft.Extensions.Logging;
 
 namespace FantasyRealm.Application.Services
@@ -74,16 +75,28 @@ namespace FantasyRealm.Application.Services
             if (user.Role.Label != UserRoleLabel)
                 return Result<UserManagementResponse>.Failure("Seuls les comptes utilisateurs peuvent être suspendus.", 403);
 
-            if (user.IsSuspended)
-                return Result<UserManagementResponse>.Failure("Ce compte est déjà suspendu.", 400);
+            try
+            {
+                user.Suspend();
+            }
+            catch (DomainException ex)
+            {
+                return Result<UserManagementResponse>.Failure(ex.Message, ex.StatusCode);
+            }
 
-            user.IsSuspended = true;
             var updated = await userRepository.UpdateAsync(user, cancellationToken);
 
             logger.LogInformation("User {UserId} suspended by reviewer {ReviewerId}", userId, reviewerId);
 
-            try { await activityLogService.LogAsync(ActivityAction.UserSuspended, "User", userId, user.Pseudo, reason.Trim(), cancellationToken); }
-            catch (Exception ex) { logger.LogWarning(ex, "Failed to log activity for user suspension {UserId}", userId); }
+            try
+            {
+                await activityLogService.LogAsync(
+                    ActivityAction.UserSuspended, "User", userId, user.Pseudo, reason.Trim(), cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to log activity for user suspension {UserId}", userId);
+            }
 
             try
             {
@@ -113,16 +126,28 @@ namespace FantasyRealm.Application.Services
             if (user.Role.Label != UserRoleLabel)
                 return Result<UserManagementResponse>.Failure("Seuls les comptes utilisateurs peuvent être réactivés.", 403);
 
-            if (!user.IsSuspended)
-                return Result<UserManagementResponse>.Failure("Ce compte n'est pas suspendu.", 400);
+            try
+            {
+                user.Reactivate();
+            }
+            catch (DomainException ex)
+            {
+                return Result<UserManagementResponse>.Failure(ex.Message, ex.StatusCode);
+            }
 
-            user.IsSuspended = false;
             var updated = await userRepository.UpdateAsync(user, cancellationToken);
 
             logger.LogInformation("User {UserId} reactivated by reviewer {ReviewerId}", userId, reviewerId);
 
-            try { await activityLogService.LogAsync(ActivityAction.UserReactivated, "User", userId, user.Pseudo, null, cancellationToken); }
-            catch (Exception ex) { logger.LogWarning(ex, "Failed to log activity for user reactivation {UserId}", userId); }
+            try
+            {
+                await activityLogService.LogAsync(
+                    ActivityAction.UserReactivated, "User", userId, user.Pseudo, null, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to log activity for user reactivation {UserId}", userId);
+            }
 
             try
             {
@@ -166,8 +191,15 @@ namespace FantasyRealm.Application.Services
 
             logger.LogInformation("User {UserId} deleted by reviewer {ReviewerId}", userId, reviewerId);
 
-            try { await activityLogService.LogAsync(ActivityAction.UserDeleted, "User", userId, user.Pseudo, null, cancellationToken); }
-            catch (Exception ex) { logger.LogWarning(ex, "Failed to log activity for user deletion {UserId}", userId); }
+            try
+            {
+                await activityLogService.LogAsync(
+                    ActivityAction.UserDeleted, "User", userId, user.Pseudo, null, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to log activity for user deletion {UserId}", userId);
+            }
 
             return Result<Unit>.Success(Unit.Value);
         }

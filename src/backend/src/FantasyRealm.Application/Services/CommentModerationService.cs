@@ -3,6 +3,7 @@ using FantasyRealm.Application.DTOs;
 using FantasyRealm.Application.Interfaces;
 using FantasyRealm.Application.Mapping;
 using FantasyRealm.Domain.Enums;
+using FantasyRealm.Domain.Exceptions;
 using Microsoft.Extensions.Logging;
 
 namespace FantasyRealm.Application.Services
@@ -50,12 +51,14 @@ namespace FantasyRealm.Application.Services
             if (comment is null)
                 return Result<CommentResponse>.Failure("Commentaire introuvable.", 404);
 
-            if (comment.Status is not CommentStatus.Pending)
-                return Result<CommentResponse>.Failure("Seuls les commentaires en attente peuvent être approuvés.", 400);
-
-            comment.Status = CommentStatus.Approved;
-            comment.ReviewedAt = DateTime.UtcNow;
-            comment.ReviewedById = reviewerId;
+            try
+            {
+                comment.Approve(reviewerId);
+            }
+            catch (DomainException ex)
+            {
+                return Result<CommentResponse>.Failure(ex.Message, ex.StatusCode);
+            }
 
             await commentRepository.UpdateAsync(comment, cancellationToken);
 
@@ -69,8 +72,15 @@ namespace FantasyRealm.Application.Services
                 logger.LogWarning(ex, "Failed to send approval email for comment {CommentId}", commentId);
             }
 
-            try { await activityLogService.LogAsync(ActivityAction.CommentApproved, "Comment", commentId, comment.Author.Pseudo, null, cancellationToken); }
-            catch (Exception ex) { logger.LogWarning(ex, "Failed to log activity for comment approval {CommentId}", commentId); }
+            try
+            {
+                await activityLogService.LogAsync(
+                    ActivityAction.CommentApproved, "Comment", commentId, comment.Author.Pseudo, null, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to log activity for comment approval {CommentId}", commentId);
+            }
 
             return Result<CommentResponse>.Success(CommentMapper.ToResponse(comment));
         }
@@ -82,27 +92,19 @@ namespace FantasyRealm.Application.Services
             int reviewerId,
             CancellationToken cancellationToken)
         {
-            if (string.IsNullOrWhiteSpace(reason))
-                return Result<CommentResponse>.Failure("Le motif de rejet est obligatoire.", 400);
-
-            if (reason.Trim().Length < 10)
-                return Result<CommentResponse>.Failure("Le motif de rejet doit contenir au moins 10 caractères.", 400);
-
-            if (reason.Trim().Length > 500)
-                return Result<CommentResponse>.Failure("Le motif de rejet ne peut pas dépasser 500 caractères.", 400);
-
             var comment = await commentRepository.GetByIdAsync(commentId, cancellationToken);
 
             if (comment is null)
                 return Result<CommentResponse>.Failure("Commentaire introuvable.", 404);
 
-            if (comment.Status is not CommentStatus.Pending)
-                return Result<CommentResponse>.Failure("Seuls les commentaires en attente peuvent être rejetés.", 400);
-
-            comment.Status = CommentStatus.Rejected;
-            comment.RejectionReason = reason.Trim();
-            comment.ReviewedAt = DateTime.UtcNow;
-            comment.ReviewedById = reviewerId;
+            try
+            {
+                comment.Reject(reason, reviewerId);
+            }
+            catch (DomainException ex)
+            {
+                return Result<CommentResponse>.Failure(ex.Message, ex.StatusCode);
+            }
 
             await commentRepository.UpdateAsync(comment, cancellationToken);
 
@@ -116,8 +118,15 @@ namespace FantasyRealm.Application.Services
                 logger.LogWarning(ex, "Failed to send rejection email for comment {CommentId}", commentId);
             }
 
-            try { await activityLogService.LogAsync(ActivityAction.CommentRejected, "Comment", commentId, comment.Author.Pseudo, reason.Trim(), cancellationToken); }
-            catch (Exception ex) { logger.LogWarning(ex, "Failed to log activity for comment rejection {CommentId}", commentId); }
+            try
+            {
+                await activityLogService.LogAsync(
+                    ActivityAction.CommentRejected, "Comment", commentId, comment.Author.Pseudo, reason.Trim(), cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to log activity for comment rejection {CommentId}", commentId);
+            }
 
             return Result<CommentResponse>.Success(CommentMapper.ToResponse(comment));
         }

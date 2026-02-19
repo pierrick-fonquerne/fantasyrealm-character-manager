@@ -265,6 +265,11 @@ namespace FantasyRealm.Tests.Unit.Services
         [Fact]
         public async Task RejectAsync_WithEmptyReason_ReturnsFailure400()
         {
+            var comment = PendingComment();
+            _commentRepoMock
+                .Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(comment);
+
             var result = await _sut.RejectAsync(1, "", ReviewerId, CancellationToken.None);
 
             result.IsFailure.Should().BeTrue();
@@ -274,6 +279,11 @@ namespace FantasyRealm.Tests.Unit.Services
         [Fact]
         public async Task RejectAsync_WithReasonTooShort_ReturnsFailure400()
         {
+            var comment = PendingComment();
+            _commentRepoMock
+                .Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(comment);
+
             var result = await _sut.RejectAsync(1, "Court", ReviewerId, CancellationToken.None);
 
             result.IsFailure.Should().BeTrue();
@@ -283,6 +293,11 @@ namespace FantasyRealm.Tests.Unit.Services
         [Fact]
         public async Task RejectAsync_WithReasonTooLong_ReturnsFailure400()
         {
+            var comment = PendingComment();
+            _commentRepoMock
+                .Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(comment);
+
             var longReason = new string('x', 501);
             var result = await _sut.RejectAsync(1, longReason, ReviewerId, CancellationToken.None);
 
