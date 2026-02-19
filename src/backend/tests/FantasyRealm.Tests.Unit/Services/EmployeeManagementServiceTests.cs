@@ -17,6 +17,7 @@ namespace FantasyRealm.Tests.Unit.Services
     {
         private readonly Mock<IUserRepository> _userRepoMock = new();
         private readonly Mock<IPasswordHasher> _passwordHasherMock = new();
+        private readonly Mock<IPasswordGenerator> _passwordGeneratorMock = new();
         private readonly Mock<IEmailService> _emailServiceMock = new();
         private readonly Mock<IActivityLogService> _activityLogServiceMock = new();
         private readonly Mock<ILogger<EmployeeManagementService>> _loggerMock = new();
@@ -29,6 +30,7 @@ namespace FantasyRealm.Tests.Unit.Services
             _sut = new EmployeeManagementService(
                 _userRepoMock.Object,
                 _passwordHasherMock.Object,
+                _passwordGeneratorMock.Object,
                 _emailServiceMock.Object,
                 _activityLogServiceMock.Object,
                 _loggerMock.Object);
@@ -313,6 +315,86 @@ namespace FantasyRealm.Tests.Unit.Services
                 .ReturnsAsync(user);
 
             var result = await _sut.ReactivateAsync(20, AdminId, CancellationToken.None);
+
+            result.IsFailure.Should().BeTrue();
+            result.ErrorCode.Should().Be(403);
+        }
+
+        // -- ResetPasswordAsync ---------------------------------------------------
+
+        [Fact]
+        public async Task ResetPasswordAsync_WhenFound_SetsHashAndMustChangePassword()
+        {
+            var employee = ActiveEmployee();
+            _userRepoMock
+                .Setup(r => r.GetByIdWithRoleAsync(10, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(employee);
+            _passwordGeneratorMock
+                .Setup(g => g.GenerateSecurePassword(It.IsAny<int>()))
+                .Returns("TempP@ss2025!xyz");
+            _passwordHasherMock
+                .Setup(h => h.Hash("TempP@ss2025!xyz"))
+                .Returns("hashed_temp");
+            _userRepoMock
+                .Setup(r => r.UpdateAsync(employee, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(employee);
+
+            var result = await _sut.ResetPasswordAsync(10, AdminId, CancellationToken.None);
+
+            result.IsSuccess.Should().BeTrue();
+            employee.PasswordHash.Should().Be("hashed_temp");
+            employee.MustChangePassword.Should().BeTrue();
+            _userRepoMock.Verify(r => r.UpdateAsync(employee, It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task ResetPasswordAsync_WhenFound_SendsTemporaryPasswordEmail()
+        {
+            var employee = ActiveEmployee();
+            _userRepoMock
+                .Setup(r => r.GetByIdWithRoleAsync(10, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(employee);
+            _passwordGeneratorMock
+                .Setup(g => g.GenerateSecurePassword(It.IsAny<int>()))
+                .Returns("TempP@ss2025!xyz");
+            _passwordHasherMock
+                .Setup(h => h.Hash(It.IsAny<string>()))
+                .Returns("hashed_temp");
+            _userRepoMock
+                .Setup(r => r.UpdateAsync(employee, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(employee);
+
+            await _sut.ResetPasswordAsync(10, AdminId, CancellationToken.None);
+
+            _emailServiceMock.Verify(
+                e => e.SendTemporaryPasswordEmailAsync(
+                    "legolas@example.com", "Legolas", "TempP@ss2025!xyz",
+                    It.IsAny<CancellationToken>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task ResetPasswordAsync_WhenNotFound_ReturnsFailure404()
+        {
+            _userRepoMock
+                .Setup(r => r.GetByIdWithRoleAsync(999, It.IsAny<CancellationToken>()))
+                .ReturnsAsync((User?)null);
+
+            var result = await _sut.ResetPasswordAsync(999, AdminId, CancellationToken.None);
+
+            result.IsFailure.Should().BeTrue();
+            result.ErrorCode.Should().Be(404);
+        }
+
+        [Fact]
+        public async Task ResetPasswordAsync_WhenNotEmployeeRole_ReturnsFailure403()
+        {
+            var user = RegularUser();
+            _userRepoMock
+                .Setup(r => r.GetByIdWithRoleAsync(20, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(user);
+
+            var result = await _sut.ResetPasswordAsync(20, AdminId, CancellationToken.None);
 
             result.IsFailure.Should().BeTrue();
             result.ErrorCode.Should().Be(403);

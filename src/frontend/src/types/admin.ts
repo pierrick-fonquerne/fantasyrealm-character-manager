@@ -43,4 +43,5 @@ export type ActivityAction =
   | 'EmployeeSuspended'
   | 'EmployeeReactivated'
   | 'EmployeeDeleted'
+  | 'EmployeePasswordReset'
   | 'PasswordChanged';

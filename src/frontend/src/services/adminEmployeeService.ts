@@ -51,5 +51,12 @@ export const reactivateEmployee = (
     EmployeeManagement
   >(`/admin/employees/${id}`, { isSuspended: false }, token);
 
+export const resetEmployeePassword = (id: number, token: string): Promise<void> =>
+  apiClient.postAuthenticatedNoContent(
+    `/admin/employees/${id}/reset-password`,
+    {},
+    token
+  );
+
 export const deleteEmployee = (id: number, token: string): Promise<void> =>
   apiClient.deleteAuthenticated(`/admin/employees/${id}`, token);

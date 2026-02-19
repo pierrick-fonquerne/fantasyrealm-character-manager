@@ -14,6 +14,7 @@ namespace FantasyRealm.Application.Services
     public sealed class EmployeeManagementService(
         IUserRepository userRepository,
         IPasswordHasher passwordHasher,
+        IPasswordGenerator passwordGenerator,
         IEmailService emailService,
         IActivityLogService activityLogService,
         ILogger<EmployeeManagementService> logger) : IEmployeeManagementService
@@ -180,6 +181,44 @@ namespace FantasyRealm.Application.Services
             }
 
             return Result<EmployeeManagementResponse>.Success(UserMapper.ToEmployeeResponse(updated));
+        }
+
+        /// <inheritdoc />
+        public async Task<Result<Unit>> ResetPasswordAsync(
+            int employeeId,
+            int adminId,
+            CancellationToken cancellationToken)
+        {
+            var employee = await userRepository.GetByIdWithRoleAsync(employeeId, cancellationToken);
+
+            if (employee is null)
+                return Result<Unit>.Failure("Employé introuvable.", 404);
+
+            if (employee.Role.Label != EmployeeRoleLabel)
+                return Result<Unit>.Failure("Seuls les mots de passe des comptes employés peuvent être réinitialisés depuis cet espace.", 403);
+
+            var temporaryPassword = passwordGenerator.GenerateSecurePassword();
+            employee.PasswordHash = passwordHasher.Hash(temporaryPassword);
+            employee.MustChangePassword = true;
+
+            await userRepository.UpdateAsync(employee, cancellationToken);
+
+            logger.LogInformation("Employee {EmployeeId} password reset by admin {AdminId}", employeeId, adminId);
+
+            try { await activityLogService.LogAsync(ActivityAction.EmployeePasswordReset, "User", employeeId, employee.Pseudo, null, cancellationToken); }
+            catch (Exception ex) { logger.LogWarning(ex, "Failed to log activity for employee password reset {EmployeeId}", employeeId); }
+
+            try
+            {
+                await emailService.SendTemporaryPasswordEmailAsync(
+                    employee.Email, employee.Pseudo, temporaryPassword, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to send temporary password email for employee {EmployeeId}", employeeId);
+            }
+
+            return Result<Unit>.Success(Unit.Value);
         }
 
         /// <inheritdoc />

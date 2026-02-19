@@ -68,6 +68,18 @@ namespace FantasyRealm.Application.Interfaces
             CancellationToken cancellationToken);
 
         /// <summary>
+        /// Resets an employee's password with a generated temporary password.
+        /// Sets the MustChangePassword flag and sends the new credentials by email.
+        /// </summary>
+        /// <param name="employeeId">The employee identifier.</param>
+        /// <param name="adminId">The administrator performing the action.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        Task<Result<Unit>> ResetPasswordAsync(
+            int employeeId,
+            int adminId,
+            CancellationToken cancellationToken);
+
+        /// <summary>
         /// Permanently deletes an employee account.
         /// Sends a notification email before deletion.
         /// </summary>
