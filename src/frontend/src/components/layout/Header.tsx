@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '../ui';
 import { useAuth } from '../../context/AuthContext';
@@ -46,6 +46,46 @@ const Header = () => {
     };
   }, [isDropdownOpen]);
 
+  const dropdownTriggerRef = useRef<HTMLButtonElement>(null);
+
+  const handleDropdownKeyDown = useCallback((e: KeyboardEvent) => {
+    if (!isDropdownOpen || !dropdownRef.current) return;
+
+    if (e.key === 'Escape') {
+      setIsDropdownOpen(false);
+      dropdownTriggerRef.current?.focus();
+      return;
+    }
+
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Tab') {
+      const items = dropdownRef.current.querySelectorAll<HTMLElement>('[role="menuitem"]');
+      if (items.length === 0) return;
+
+      const currentIndex = Array.from(items).indexOf(document.activeElement as HTMLElement);
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        const next = currentIndex < items.length - 1 ? currentIndex + 1 : 0;
+        items[next].focus();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const prev = currentIndex > 0 ? currentIndex - 1 : items.length - 1;
+        items[prev].focus();
+      }
+    }
+  }, [isDropdownOpen]);
+
+  useEffect(() => {
+    if (isDropdownOpen) {
+      document.addEventListener('keydown', handleDropdownKeyDown);
+      requestAnimationFrame(() => {
+        const firstItem = dropdownRef.current?.querySelector<HTMLElement>('[role="menuitem"]');
+        firstItem?.focus();
+      });
+    }
+    return () => document.removeEventListener('keydown', handleDropdownKeyDown);
+  }, [isDropdownOpen, handleDropdownKeyDown]);
+
   return (
     <header className="sticky top-0 z-40 w-full bg-dark-900/95 backdrop-blur-sm border-b border-dark-700">
       <div className="max-w-7xl mx-auto px-4 lg:px-8">
@@ -60,11 +100,12 @@ const Header = () => {
           </Link>
 
           {/* Navigation Desktop */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden md:flex items-center gap-1" aria-label="Navigation principale">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 to={link.href}
+                aria-current={isActive(link.href) ? 'page' : undefined}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                   isActive(link.href)
                     ? 'text-gold-500 bg-dark-800'
@@ -81,10 +122,12 @@ const Header = () => {
             {isAuthenticated ? (
               <div className="relative" ref={dropdownRef}>
                 <button
+                  ref={dropdownTriggerRef}
                   type="button"
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   aria-expanded={isDropdownOpen}
-                  aria-haspopup="true"
+                  aria-haspopup="menu"
+                  aria-controls={isDropdownOpen ? 'user-menu' : undefined}
                   aria-label="Menu utilisateur"
                   className="w-9 h-9 rounded-full bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center text-dark-950 font-semibold text-sm hover:shadow-lg hover:shadow-gold-500/25 transition-all duration-200 cursor-pointer"
                 >
@@ -92,27 +135,29 @@ const Header = () => {
                 </button>
 
                 {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-dark-800 border border-dark-700 rounded-lg shadow-xl py-1 z-50">
+                  <div id="user-menu" role="menu" aria-label="Menu utilisateur" className="absolute right-0 mt-2 w-48 bg-dark-800 border border-dark-700 rounded-lg shadow-xl py-1 z-50">
                     <div className="px-4 py-2 border-b border-dark-700">
                       <p className="text-sm font-medium text-cream-200">{user?.pseudo}</p>
                       <p className="text-xs text-cream-400 truncate">{user?.email}</p>
                     </div>
                     <Link
                       to="/dashboard"
+                      role="menuitem"
                       className="flex items-center gap-2 px-4 py-2 text-sm text-cream-300 hover:bg-dark-700 hover:text-cream-100 transition-colors"
                       onClick={() => setIsDropdownOpen(false)}
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
                       Mon profil
                     </Link>
                     <Link
                       to="/parametres"
+                      role="menuitem"
                       className="flex items-center gap-2 px-4 py-2 text-sm text-cream-300 hover:bg-dark-700 hover:text-cream-100 transition-colors"
                       onClick={() => setIsDropdownOpen(false)}
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
@@ -123,10 +168,11 @@ const Header = () => {
                         <div className="border-t border-dark-700 my-1" />
                         <Link
                           to="/moderation"
+                          role="menuitem"
                           className="flex items-center gap-2 px-4 py-2 text-sm text-cream-300 hover:bg-dark-700 hover:text-cream-100 transition-colors"
                           onClick={() => setIsDropdownOpen(false)}
                         >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                           Modération
@@ -136,22 +182,24 @@ const Header = () => {
                     {user?.role === 'Admin' && (
                       <Link
                         to="/administration"
+                        role="menuitem"
                         className="flex items-center gap-2 px-4 py-2 text-sm text-cream-300 hover:bg-dark-700 hover:text-cream-100 transition-colors"
                         onClick={() => setIsDropdownOpen(false)}
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
                         </svg>
                         Administration
                       </Link>
                     )}
-                    <div className="border-t border-dark-700 my-1" />
+                    <div className="border-t border-dark-700 my-1" role="separator" />
                     <button
                       type="button"
+                      role="menuitem"
                       onClick={handleLogout}
-                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:bg-dark-700 hover:text-red-300 transition-colors"
+                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:bg-dark-700 hover:text-red-300 transition-colors cursor-pointer"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                       </svg>
                       Déconnexion
@@ -180,6 +228,7 @@ const Header = () => {
             type="button"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-expanded={isMenuOpen}
+            aria-controls="mobile-menu"
             aria-label={isMenuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
             className="md:hidden p-2 rounded-lg text-cream-300 hover:text-cream-100 hover:bg-dark-800 transition-colors"
           >
@@ -211,12 +260,13 @@ const Header = () => {
 
       {/* Menu Mobile */}
       {isMenuOpen && (
-        <div className="md:hidden border-t border-dark-700 bg-dark-900 animate-slide-down">
-          <nav className="flex flex-col p-4 gap-2">
+        <div id="mobile-menu" className="md:hidden border-t border-dark-700 bg-dark-900 animate-slide-down">
+          <nav className="flex flex-col p-4 gap-2" aria-label="Navigation mobile">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 to={link.href}
+                aria-current={isActive(link.href) ? 'page' : undefined}
                 className={`px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
                   isActive(link.href)
                     ? 'text-gold-500 bg-dark-800'

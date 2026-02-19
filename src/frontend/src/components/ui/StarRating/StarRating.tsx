@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useId } from 'react';
 
 type StarRatingSize = 'sm' | 'md';
 
@@ -35,6 +35,7 @@ function StarIcon({ filled, className }: { filled: boolean; className: string })
 
 function StarRating({ value, onChange, readonly = false, size = 'md' }: StarRatingProps) {
   const [hoverValue, setHoverValue] = useState(0);
+  const groupName = useId();
 
   const displayValue = hoverValue || value;
   const starSize = sizeStyles[size];
@@ -69,11 +70,12 @@ function StarRating({ value, onChange, readonly = false, size = 'md' }: StarRati
         >
           <input
             type="radio"
-            name="star-rating"
+            name={groupName}
             value={star}
             checked={value === star}
             onChange={() => onChange?.(star)}
             className="sr-only"
+            aria-label={`${star} étoile${star > 1 ? 's' : ''}`}
           />
           <StarIcon
             filled={star <= displayValue}

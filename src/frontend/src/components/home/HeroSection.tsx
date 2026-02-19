@@ -1,6 +1,10 @@
+import { Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { Button } from '../ui';
 
 const HeroSection = () => {
+  const { isAuthenticated } = useAuth();
+
   return (
     <section className="relative py-16 lg:py-24 overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-dark-900 via-dark-950 to-dark-900" />
@@ -21,12 +25,16 @@ const HeroSection = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <Button size="lg">
-                Créer un personnage
-              </Button>
-              <Button variant="outline" size="lg">
-                Explorer la galerie
-              </Button>
+              <Link to={isAuthenticated ? '/characters/create' : '/register'}>
+                <Button size="lg">
+                  Créer un personnage
+                </Button>
+              </Link>
+              <Link to="/galerie">
+                <Button variant="outline" size="lg">
+                  Explorer la galerie
+                </Button>
+              </Link>
             </div>
           </div>
 

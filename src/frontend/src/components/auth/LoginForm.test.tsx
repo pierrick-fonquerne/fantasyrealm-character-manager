@@ -55,7 +55,7 @@ describe('LoginForm', () => {
       renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       expect(screen.getByLabelText(/adresse email/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/^mot de passe$/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/^mot de passe/i)).toBeInTheDocument();
     });
 
     it('should render submit button', () => {
@@ -112,7 +112,7 @@ describe('LoginForm', () => {
       await userEvent.click(screen.getByRole('button', { name: /se connecter/i }));
       expect(screen.getByText(/le mot de passe est requis/i)).toBeInTheDocument();
 
-      await userEvent.type(screen.getByLabelText(/^mot de passe$/i), 'a');
+      await userEvent.type(screen.getByLabelText(/^mot de passe/i), 'a');
 
       expect(screen.queryByText(/le mot de passe est requis/i)).not.toBeInTheDocument();
     });
@@ -144,7 +144,7 @@ describe('LoginForm', () => {
       renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), validFormData.email);
-      await userEvent.type(screen.getByLabelText(/^mot de passe$/i), validFormData.password);
+      await userEvent.type(screen.getByLabelText(/^mot de passe/i), validFormData.password);
       await userEvent.click(screen.getByRole('button', { name: /se connecter/i }));
 
       await waitFor(() => {
@@ -161,7 +161,7 @@ describe('LoginForm', () => {
       renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), validFormData.email);
-      await userEvent.type(screen.getByLabelText(/^mot de passe$/i), validFormData.password);
+      await userEvent.type(screen.getByLabelText(/^mot de passe/i), validFormData.password);
       await userEvent.click(screen.getByRole('button', { name: /se connecter/i }));
 
       await waitFor(() => {
@@ -175,7 +175,7 @@ describe('LoginForm', () => {
       renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), validFormData.email);
-      await userEvent.type(screen.getByLabelText(/^mot de passe$/i), validFormData.password);
+      await userEvent.type(screen.getByLabelText(/^mot de passe/i), validFormData.password);
       await userEvent.click(screen.getByRole('button', { name: /se connecter/i }));
 
       await waitFor(() => {
@@ -189,7 +189,7 @@ describe('LoginForm', () => {
       renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), validFormData.email);
-      await userEvent.type(screen.getByLabelText(/^mot de passe$/i), validFormData.password);
+      await userEvent.type(screen.getByLabelText(/^mot de passe/i), validFormData.password);
 
       fireEvent.click(screen.getByRole('button', { name: /se connecter/i }));
 
@@ -209,7 +209,7 @@ describe('LoginForm', () => {
       renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), validFormData.email);
-      await userEvent.type(screen.getByLabelText(/^mot de passe$/i), validFormData.password);
+      await userEvent.type(screen.getByLabelText(/^mot de passe/i), validFormData.password);
       await userEvent.click(screen.getByRole('button', { name: /se connecter/i }));
 
       await waitFor(() => {
@@ -226,7 +226,7 @@ describe('LoginForm', () => {
       renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), validFormData.email);
-      await userEvent.type(screen.getByLabelText(/^mot de passe$/i), validFormData.password);
+      await userEvent.type(screen.getByLabelText(/^mot de passe/i), validFormData.password);
       await userEvent.click(screen.getByRole('button', { name: /se connecter/i }));
 
       await waitFor(() => {
@@ -242,7 +242,7 @@ describe('LoginForm', () => {
       renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), validFormData.email);
-      await userEvent.type(screen.getByLabelText(/^mot de passe$/i), validFormData.password);
+      await userEvent.type(screen.getByLabelText(/^mot de passe/i), validFormData.password);
       await userEvent.click(screen.getByRole('button', { name: /se connecter/i }));
 
       await waitFor(() => {
@@ -259,7 +259,7 @@ describe('LoginForm', () => {
       renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), validFormData.email);
-      await userEvent.type(screen.getByLabelText(/^mot de passe$/i), validFormData.password);
+      await userEvent.type(screen.getByLabelText(/^mot de passe/i), validFormData.password);
       await userEvent.click(screen.getByRole('button', { name: /se connecter/i }));
 
       await waitFor(() => {
@@ -280,7 +280,7 @@ describe('LoginForm', () => {
       renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), validFormData.email);
-      await userEvent.type(screen.getByLabelText(/^mot de passe$/i), validFormData.password);
+      await userEvent.type(screen.getByLabelText(/^mot de passe/i), validFormData.password);
       await userEvent.click(screen.getByRole('button', { name: /se connecter/i }));
 
       await waitFor(() => {
@@ -304,7 +304,7 @@ describe('LoginForm', () => {
       renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), validFormData.email);
-      await userEvent.type(screen.getByLabelText(/^mot de passe$/i), validFormData.password);
+      await userEvent.type(screen.getByLabelText(/^mot de passe/i), validFormData.password);
       await userEvent.click(screen.getByRole('button', { name: /se connecter/i }));
 
       await waitFor(() => {
@@ -321,7 +321,7 @@ describe('LoginForm', () => {
       renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), validFormData.email);
-      await userEvent.type(screen.getByLabelText(/^mot de passe$/i), validFormData.password);
+      await userEvent.type(screen.getByLabelText(/^mot de passe/i), validFormData.password);
       await userEvent.click(screen.getByRole('button', { name: /se connecter/i }));
 
       await waitFor(() => {
@@ -340,7 +340,7 @@ describe('LoginForm', () => {
       renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), validFormData.email);
-      await userEvent.type(screen.getByLabelText(/^mot de passe$/i), validFormData.password);
+      await userEvent.type(screen.getByLabelText(/^mot de passe/i), validFormData.password);
       await userEvent.click(screen.getByRole('button', { name: /se connecter/i }));
 
       await waitFor(() => {
@@ -377,7 +377,7 @@ describe('LoginForm', () => {
       const { container } = renderWithRouter(<LoginForm onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), 'test@example.com');
-      await userEvent.type(screen.getByLabelText(/^mot de passe$/i), 'SomePassword1!');
+      await userEvent.type(screen.getByLabelText(/^mot de passe/i), 'SomePassword1!');
       await userEvent.click(screen.getByRole('button', { name: /se connecter/i }));
 
       await waitFor(() => {

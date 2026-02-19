@@ -171,7 +171,7 @@ const AppearanceStep = ({
     </h2>
 
     <Tabs defaultTab="visage">
-      <TabsList className="mb-6">
+      <TabsList className="mb-6" aria-label="Catégories d'apparence">
         <Tab value="visage">Visage</Tab>
         <Tab value="cheveux">Cheveux</Tab>
         <Tab value="details">Détails</Tab>

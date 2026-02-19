@@ -106,7 +106,7 @@ describe('LoginPage', () => {
       renderWithRouter(<LoginPage />);
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), validFormData.email);
-      await userEvent.type(screen.getByLabelText(/^mot de passe$/i), validFormData.password);
+      await userEvent.type(screen.getByLabelText(/^mot de passe/i), validFormData.password);
       await userEvent.click(screen.getByRole('button', { name: /se connecter/i }));
 
       await waitFor(() => {
@@ -123,7 +123,7 @@ describe('LoginPage', () => {
       renderWithRouter(<LoginPage />);
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), validFormData.email);
-      await userEvent.type(screen.getByLabelText(/^mot de passe$/i), validFormData.password);
+      await userEvent.type(screen.getByLabelText(/^mot de passe/i), validFormData.password);
       await userEvent.click(screen.getByRole('button', { name: /se connecter/i }));
 
       await waitFor(() => {
@@ -142,7 +142,7 @@ describe('LoginPage', () => {
       renderWithRouter(<LoginPage />);
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), validFormData.email);
-      await userEvent.type(screen.getByLabelText(/^mot de passe$/i), validFormData.password);
+      await userEvent.type(screen.getByLabelText(/^mot de passe/i), validFormData.password);
       await userEvent.click(screen.getByRole('button', { name: /se connecter/i }));
 
       await waitFor(() => {

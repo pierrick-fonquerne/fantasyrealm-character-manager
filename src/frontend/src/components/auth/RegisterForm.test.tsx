@@ -34,7 +34,7 @@ describe('RegisterForm', () => {
 
       expect(screen.getByLabelText(/adresse email/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/pseudo/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/^mot de passe$/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/^mot de passe/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/confirmer le mot de passe/i)).toBeInTheDocument();
     });
 
@@ -99,7 +99,7 @@ describe('RegisterForm', () => {
     it('should show error when password does not meet security criteria', async () => {
       render(<RegisterForm onSuccess={mockOnSuccess} />);
 
-      await userEvent.type(screen.getByLabelText(/^mot de passe$/i), 'weak');
+      await userEvent.type(screen.getByLabelText(/^mot de passe/i), 'weak');
       await userEvent.click(screen.getByRole('button', { name: /créer mon compte/i }));
 
       expect(screen.getByText(/le mot de passe ne respecte pas les critères de sécurité/i)).toBeInTheDocument();
@@ -108,7 +108,7 @@ describe('RegisterForm', () => {
     it('should show error when passwords do not match', async () => {
       render(<RegisterForm onSuccess={mockOnSuccess} />);
 
-      await userEvent.type(screen.getByLabelText(/^mot de passe$/i), 'MySecure@Pass1');
+      await userEvent.type(screen.getByLabelText(/^mot de passe/i), 'MySecure@Pass1');
       await userEvent.type(screen.getByLabelText(/confirmer le mot de passe/i), 'DifferentPass@1');
       await userEvent.click(screen.getByRole('button', { name: /créer mon compte/i }));
 
@@ -149,7 +149,7 @@ describe('RegisterForm', () => {
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), validFormData.email);
       await userEvent.type(screen.getByLabelText(/pseudo/i), validFormData.pseudo);
-      await userEvent.type(screen.getByLabelText(/^mot de passe$/i), validFormData.password);
+      await userEvent.type(screen.getByLabelText(/^mot de passe/i), validFormData.password);
       await userEvent.type(screen.getByLabelText(/confirmer le mot de passe/i), validFormData.confirmPassword);
       await userEvent.click(screen.getByRole('button', { name: /créer mon compte/i }));
 
@@ -176,7 +176,7 @@ describe('RegisterForm', () => {
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), validFormData.email);
       await userEvent.type(screen.getByLabelText(/pseudo/i), validFormData.pseudo);
-      await userEvent.type(screen.getByLabelText(/^mot de passe$/i), validFormData.password);
+      await userEvent.type(screen.getByLabelText(/^mot de passe/i), validFormData.password);
       await userEvent.type(screen.getByLabelText(/confirmer le mot de passe/i), validFormData.confirmPassword);
       await userEvent.click(screen.getByRole('button', { name: /créer mon compte/i }));
 
@@ -192,7 +192,7 @@ describe('RegisterForm', () => {
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), validFormData.email);
       await userEvent.type(screen.getByLabelText(/pseudo/i), validFormData.pseudo);
-      await userEvent.type(screen.getByLabelText(/^mot de passe$/i), validFormData.password);
+      await userEvent.type(screen.getByLabelText(/^mot de passe/i), validFormData.password);
       await userEvent.type(screen.getByLabelText(/confirmer le mot de passe/i), validFormData.confirmPassword);
 
       fireEvent.click(screen.getByRole('button', { name: /créer mon compte/i }));
@@ -214,7 +214,7 @@ describe('RegisterForm', () => {
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), validFormData.email);
       await userEvent.type(screen.getByLabelText(/pseudo/i), validFormData.pseudo);
-      await userEvent.type(screen.getByLabelText(/^mot de passe$/i), validFormData.password);
+      await userEvent.type(screen.getByLabelText(/^mot de passe/i), validFormData.password);
       await userEvent.type(screen.getByLabelText(/confirmer le mot de passe/i), validFormData.confirmPassword);
       await userEvent.click(screen.getByRole('button', { name: /créer mon compte/i }));
 
@@ -232,7 +232,7 @@ describe('RegisterForm', () => {
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), validFormData.email);
       await userEvent.type(screen.getByLabelText(/pseudo/i), validFormData.pseudo);
-      await userEvent.type(screen.getByLabelText(/^mot de passe$/i), validFormData.password);
+      await userEvent.type(screen.getByLabelText(/^mot de passe/i), validFormData.password);
       await userEvent.type(screen.getByLabelText(/confirmer le mot de passe/i), validFormData.confirmPassword);
       await userEvent.click(screen.getByRole('button', { name: /créer mon compte/i }));
 
@@ -251,7 +251,7 @@ describe('RegisterForm', () => {
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), validFormData.email);
       await userEvent.type(screen.getByLabelText(/pseudo/i), validFormData.pseudo);
-      await userEvent.type(screen.getByLabelText(/^mot de passe$/i), validFormData.password);
+      await userEvent.type(screen.getByLabelText(/^mot de passe/i), validFormData.password);
       await userEvent.type(screen.getByLabelText(/confirmer le mot de passe/i), validFormData.confirmPassword);
       await userEvent.click(screen.getByRole('button', { name: /créer mon compte/i }));
 
@@ -274,7 +274,7 @@ describe('RegisterForm', () => {
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), validFormData.email);
       await userEvent.type(screen.getByLabelText(/pseudo/i), validFormData.pseudo);
-      await userEvent.type(screen.getByLabelText(/^mot de passe$/i), validFormData.password);
+      await userEvent.type(screen.getByLabelText(/^mot de passe/i), validFormData.password);
       await userEvent.type(screen.getByLabelText(/confirmer le mot de passe/i), validFormData.confirmPassword);
       await userEvent.click(screen.getByRole('button', { name: /créer mon compte/i }));
 
@@ -293,7 +293,7 @@ describe('RegisterForm', () => {
     it('should display password strength indicator when typing password', async () => {
       render(<RegisterForm onSuccess={mockOnSuccess} />);
 
-      await userEvent.type(screen.getByLabelText(/^mot de passe$/i), 'test');
+      await userEvent.type(screen.getByLabelText(/^mot de passe/i), 'test');
 
       expect(screen.getByRole('progressbar')).toBeInTheDocument();
     });
@@ -332,7 +332,7 @@ describe('RegisterForm', () => {
 
       await userEvent.type(screen.getByLabelText(/adresse email/i), 'test@example.com');
       await userEvent.type(screen.getByLabelText(/pseudo/i), 'TestUser');
-      await userEvent.type(screen.getByLabelText(/^mot de passe$/i), 'MySecure@Pass1');
+      await userEvent.type(screen.getByLabelText(/^mot de passe/i), 'MySecure@Pass1');
       await userEvent.type(screen.getByLabelText(/confirmer le mot de passe/i), 'MySecure@Pass1');
       await userEvent.click(screen.getByRole('button', { name: /créer mon compte/i }));
 

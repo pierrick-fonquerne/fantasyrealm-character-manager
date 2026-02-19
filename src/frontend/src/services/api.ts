@@ -22,7 +22,7 @@ class ApiClient {
   ): Promise<Response> {
     const headers: Record<string, string> = {};
 
-    if (method !== 'DELETE') {
+    if (method !== 'GET' && (method !== 'DELETE' || body !== undefined)) {
       headers['Content-Type'] = 'application/json';
     }
 
@@ -109,6 +109,14 @@ class ApiClient {
     token: string
   ): Promise<void> {
     await this.request(endpoint, 'DELETE', token);
+  }
+
+  async deleteAuthenticatedWithBody<TRequest>(
+    endpoint: string,
+    data: TRequest,
+    token: string
+  ): Promise<void> {
+    await this.request(endpoint, 'DELETE', token, data);
   }
 
   async patchAuthenticated<TResponse>(

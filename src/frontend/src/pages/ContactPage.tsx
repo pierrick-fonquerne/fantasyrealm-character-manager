@@ -19,7 +19,7 @@ const ContactPage = () => {
             <h1 className="text-3xl font-bold text-cream-100 text-center mb-2">
               Contactez-nous
             </h1>
-            <p className="text-dark-200 text-center mb-10">
+            <p className="text-cream-400 text-center mb-10">
               Une question, une suggestion ou un problème ? Envoyez-nous un message.
             </p>
             <ContactForm />

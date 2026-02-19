@@ -124,7 +124,7 @@ export function CommentForm({ characterId, isOwner, hasAlreadyCommented, onSucce
       <h3 className="text-lg font-medium text-cream-100 mb-4">Donner votre avis</h3>
 
       <div className="mb-4">
-        <label className="block text-sm font-medium text-cream-300 mb-2">Note</label>
+        <p className="block text-sm font-medium text-cream-300 mb-2" aria-hidden="true">Note</p>
         <StarRating
           value={rating}
           onChange={(val) => {

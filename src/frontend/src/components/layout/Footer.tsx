@@ -7,6 +7,7 @@ const Footer = () => {
     left: [
       { label: 'Mentions légales', to: '/mentions-legales' },
       { label: 'CGU', to: '/cgu' },
+      { label: 'Confidentialité', to: '/politique-de-confidentialite' },
     ],
     right: [
       { label: 'Contact', to: '/contact' },
@@ -45,7 +46,7 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="bg-dark-900 border-t border-dark-700">
+    <footer className="bg-dark-900 border-t border-dark-700" aria-label="Pied de page">
       <div className="max-w-7xl mx-auto px-4 lg:px-8 py-12">
         <div className="grid md:grid-cols-3 gap-8 mb-8">
           <div>
@@ -55,12 +56,12 @@ const Footer = () => {
             >
               FantasyRealm
             </Link>
-            <p className="mt-3 text-sm text-dark-300">
+            <p className="mt-3 text-sm text-cream-400">
               Créez et personnalisez vos héros légendaires dans l'univers de FantasyRealm Online.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-8 md:col-span-2">
+          <nav aria-label="Liens du site" className="grid grid-cols-2 gap-8 md:col-span-2">
             <ul className="space-y-3">
               {footerLinks.left.map((link) => (
                 <li key={link.to}>
@@ -85,7 +86,7 @@ const Footer = () => {
                 </li>
               ))}
             </ul>
-          </div>
+          </nav>
         </div>
 
         <div className="border-t border-dark-700 pt-8">
@@ -98,14 +99,14 @@ const Footer = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={social.label}
-                  className="w-10 h-10 rounded-full bg-dark-800 border border-dark-600 flex items-center justify-center text-dark-300 hover:text-cream-100 hover:border-dark-500 transition-colors"
+                  className="w-10 h-10 rounded-full bg-dark-800 border border-dark-600 flex items-center justify-center text-cream-400 hover:text-cream-100 hover:border-dark-500 transition-colors"
                 >
                   {social.icon}
                 </a>
               ))}
             </div>
 
-            <p className="text-sm text-dark-400">
+            <p className="text-sm text-dark-100">
               © {currentYear} PixelVerse Studios. Tous droits réservés.
             </p>
           </div>
