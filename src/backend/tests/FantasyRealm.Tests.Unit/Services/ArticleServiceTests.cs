@@ -27,19 +27,19 @@ namespace FantasyRealm.Tests.Unit.Services
                 .Setup(r => r.GetAllArticleTypesAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new List<ArticleType>
                 {
-                    new() { Id = 1, Name = "Clothing" },
-                    new() { Id = 2, Name = "Armor" },
-                    new() { Id = 3, Name = "Weapon" },
-                    new() { Id = 4, Name = "Accessory" }
+                    new() { Id = 1, Name = "Vêtement" },
+                    new() { Id = 2, Name = "Armure" },
+                    new() { Id = 3, Name = "Arme" },
+                    new() { Id = 4, Name = "Accessoire" }
                 });
 
             _refDataRepoMock
                 .Setup(r => r.GetAllSlotsAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new List<EquipmentSlot>
                 {
-                    new() { Id = 1, Name = "Head", DisplayOrder = 1 },
-                    new() { Id = 2, Name = "Chest", DisplayOrder = 2 },
-                    new() { Id = 5, Name = "MainHand", DisplayOrder = 5 }
+                    new() { Id = 1, Name = "Tête", DisplayOrder = 1 },
+                    new() { Id = 2, Name = "Torse", DisplayOrder = 2 },
+                    new() { Id = 5, Name = "Main droite", DisplayOrder = 5 }
                 });
         }
 
@@ -52,8 +52,8 @@ namespace FantasyRealm.Tests.Unit.Services
             IsActive = isActive,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
-            Type = new ArticleType { Id = 3, Name = "Weapon" },
-            Slot = new EquipmentSlot { Id = 5, Name = "MainHand", DisplayOrder = 5 }
+            Type = new ArticleType { Id = 3, Name = "Arme" },
+            Slot = new EquipmentSlot { Id = 5, Name = "Main droite", DisplayOrder = 5 }
         };
 
         // ── CreateAsync ──────────────────────────────────────────────────
@@ -77,8 +77,8 @@ namespace FantasyRealm.Tests.Unit.Services
 
             result.IsSuccess.Should().BeTrue();
             result.Value!.Name.Should().Be("Steel Sword");
-            result.Value.TypeName.Should().Be("Weapon");
-            result.Value.SlotName.Should().Be("MainHand");
+            result.Value.TypeName.Should().Be("Arme");
+            result.Value.SlotName.Should().Be("Main droite");
         }
 
         [Fact]

@@ -120,7 +120,7 @@ namespace FantasyRealm.Tests.Integration.Persistence
             var role = await context.Roles.FirstAsync(r => r.Label == "User");
             var characterClass = await context.CharacterClasses.FirstAsync();
             var weaponSlot = await context.EquipmentSlots.FirstAsync(s => s.Name == "Main droite");
-            var weaponType = await context.ArticleTypes.FirstAsync(t => t.Name == "Weapon");
+            var weaponType = await context.ArticleTypes.FirstAsync(t => t.Name == "Arme");
 
             var user = new User
             {
