@@ -121,6 +121,33 @@ namespace FantasyRealm.Api.Controllers
         }
 
         /// <summary>
+        /// Resets an employee's password with a generated temporary password.
+        /// Sets the MustChangePassword flag and sends the new credentials by email.
+        /// </summary>
+        /// <param name="id">The employee identifier.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>No content on success.</returns>
+        /// <response code="204">Password reset successfully.</response>
+        /// <response code="403">Target user is not an employee.</response>
+        /// <response code="404">Employee not found.</response>
+        [HttpPost("{id:int}/reset-password")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> ResetPassword(int id, CancellationToken cancellationToken)
+        {
+            if (!TryGetUserId(out var adminId))
+                return Unauthorized(new { message = "Utilisateur non identifié." });
+
+            var result = await employeeManagementService.ResetPasswordAsync(id, adminId, cancellationToken);
+
+            if (result.IsFailure)
+                return StatusCode(result.ErrorCode ?? 400, new { message = result.Error });
+
+            return NoContent();
+        }
+
+        /// <summary>
         /// Permanently deletes an employee account.
         /// Sends a notification email before deletion.
         /// </summary>
