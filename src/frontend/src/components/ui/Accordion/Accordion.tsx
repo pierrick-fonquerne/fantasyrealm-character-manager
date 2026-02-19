@@ -112,6 +112,7 @@ const AccordionTrigger = forwardRef<HTMLButtonElement, AccordionTriggerProps>(
         type="button"
         onClick={() => toggleItem(value)}
         aria-expanded={isOpen}
+        aria-controls={`accordion-content-${value}`}
         className={`w-full flex items-center justify-between p-5 bg-dark-800 hover:bg-dark-700 transition-colors text-left ${className}`}
         {...props}
       >
@@ -121,6 +122,7 @@ const AccordionTrigger = forwardRef<HTMLButtonElement, AccordionTriggerProps>(
         </span>
         <svg
           className={`w-5 h-5 text-dark-200 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+          aria-hidden="true"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -134,11 +136,14 @@ const AccordionTrigger = forwardRef<HTMLButtonElement, AccordionTriggerProps>(
 
 const AccordionContent = forwardRef<HTMLDivElement, AccordionContentProps>(
   ({ children, className = '', ...props }, ref) => {
-    const { isOpen } = useAccordionItem();
+    const { value, isOpen } = useAccordionItem();
 
     return (
       <div
         ref={ref}
+        id={`accordion-content-${value}`}
+        role="region"
+        aria-hidden={!isOpen}
         className={`grid transition-all duration-200 ${isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}
         {...props}
       >
