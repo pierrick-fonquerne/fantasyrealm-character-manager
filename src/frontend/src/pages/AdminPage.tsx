@@ -11,10 +11,17 @@ import {
   reactivateEmployee,
   deleteEmployee,
 } from '../services/adminEmployeeService';
-import type { AdminStats, EmployeeManagement } from '../types/admin';
+import { getLogs } from '../services/adminActivityLogService';
+import type { AdminStats, EmployeeManagement, ActivityLog, ActivityAction } from '../types/admin';
 import type { PagedResponse } from '../types/common';
 import { Header, Footer } from '../components/layout';
-import { AdminDashboardStats, CreateEmployeeModal, EmployeeCard } from '../components/admin';
+import {
+  ActivityLogFilters,
+  ActivityLogTable,
+  AdminDashboardStats,
+  CreateEmployeeModal,
+  EmployeeCard,
+} from '../components/admin';
 import { SuspendReasonModal, ConfirmDeleteModal } from '../components/moderation';
 import { Alert, Pagination } from '../components/ui';
 import { Tabs, TabsList, Tab, TabsPanel } from '../components/ui/Tabs/Tabs';
@@ -220,6 +227,48 @@ export default function AdminPage() {
     setEmpPage(1);
   }, [debouncedEmpSearch, empFilter]);
 
+  // ── Activity logs state ──────────────────────────────────────────
+  const [logData, setLogData] = useState<PagedResponse<ActivityLog> | null>(null);
+  const [logLoading, setLogLoading] = useState(true);
+  const [logError, setLogError] = useState<string | null>(null);
+  const [logPage, setLogPage] = useState(1);
+  const [logAction, setLogAction] = useState<ActivityAction | null>(null);
+  const [logFrom, setLogFrom] = useState('');
+  const [logTo, setLogTo] = useState('');
+  const logRequestIdRef = useRef(0);
+
+  const logItems = logData?.items ?? [];
+  const logTotalPages = logData?.totalPages ?? 0;
+
+  const fetchLogs = useCallback(async () => {
+    if (!token) return;
+    const currentRequestId = ++logRequestIdRef.current;
+    setLogError(null);
+    setLogLoading(true);
+    try {
+      const result = await getLogs(
+        logPage, 20, logAction, logFrom || null, logTo || null, token
+      );
+      if (currentRequestId !== logRequestIdRef.current) return;
+      setLogData(result);
+    } catch {
+      if (currentRequestId !== logRequestIdRef.current) return;
+      setLogError("Impossible de charger les logs d'activité.");
+    } finally {
+      if (currentRequestId === logRequestIdRef.current) {
+        setLogLoading(false);
+      }
+    }
+  }, [logPage, logAction, logFrom, logTo, token]);
+
+  useEffect(() => {
+    fetchLogs();
+  }, [fetchLogs]);
+
+  useEffect(() => {
+    setLogPage(1);
+  }, [logAction, logFrom, logTo]);
+
   return (
     <div className="min-h-screen bg-dark-950 flex flex-col">
       <a
@@ -408,13 +457,66 @@ export default function AdminPage() {
 
             {/* ── Logs Panel ──────────────────────────────────────── */}
             <TabsPanel value="logs">
-              <div className="text-center py-20">
-                <svg className="w-16 h-16 mx-auto text-cream-700 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-                <p className="text-cream-500 text-lg mb-2">Logs d'activité</p>
-                <p className="text-cream-600 text-sm">Cette fonctionnalité sera bientôt disponible.</p>
-              </div>
+              <ActivityLogFilters
+                action={logAction}
+                from={logFrom}
+                to={logTo}
+                isLoading={logLoading}
+                onActionChange={setLogAction}
+                onFromChange={setLogFrom}
+                onToChange={setLogTo}
+                onRefresh={fetchLogs}
+              />
+
+              {logError && (
+                <Alert variant="error" className="mb-6">
+                  <div className="flex items-center justify-between">
+                    <span>{logError}</span>
+                    <button
+                      type="button"
+                      onClick={fetchLogs}
+                      className="ml-4 text-sm font-medium underline hover:no-underline cursor-pointer"
+                    >
+                      Réessayer
+                    </button>
+                  </div>
+                </Alert>
+              )}
+
+              {logLoading && (
+                <div className="flex justify-center py-20" role="status" aria-label="Chargement">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gold-500" />
+                </div>
+              )}
+
+              {!logLoading && !logError && logItems.length === 0 && (
+                <div className="text-center py-20">
+                  <svg className="w-16 h-16 mx-auto text-cream-700 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                  <p className="text-cream-500 text-lg">
+                    {logAction || logFrom || logTo
+                      ? "Aucun log ne correspond aux filtres sélectionnés."
+                      : "Aucun log d'activité enregistré."}
+                  </p>
+                </div>
+              )}
+
+              {!logLoading && !logError && logItems.length > 0 && (
+                <div className="bg-dark-800 border border-dark-700 rounded-xl overflow-hidden">
+                  <ActivityLogTable logs={logItems} />
+                </div>
+              )}
+
+              {logTotalPages > 1 && (
+                <div className="mt-8 flex justify-center">
+                  <Pagination
+                    currentPage={logPage}
+                    totalPages={logTotalPages}
+                    onChange={setLogPage}
+                  />
+                </div>
+              )}
             </TabsPanel>
           </Tabs>
         </div>

@@ -3,6 +3,7 @@ using FantasyRealm.Application.DTOs;
 using FantasyRealm.Application.Interfaces;
 using FantasyRealm.Application.Mapping;
 using FantasyRealm.Domain.Entities;
+using FantasyRealm.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace FantasyRealm.Application.Services
@@ -14,6 +15,7 @@ namespace FantasyRealm.Application.Services
         IUserRepository userRepository,
         IPasswordHasher passwordHasher,
         IEmailService emailService,
+        IActivityLogService activityLogService,
         ILogger<EmployeeManagementService> logger) : IEmployeeManagementService
     {
         private const string EmployeeRoleLabel = "Employee";
@@ -88,6 +90,9 @@ namespace FantasyRealm.Application.Services
 
             logger.LogInformation("Employee {EmployeeId} created by admin {AdminId}", created.Id, adminId);
 
+            try { await activityLogService.LogAsync(ActivityAction.EmployeeCreated, "User", created.Id, created.Pseudo, null, cancellationToken); }
+            catch (Exception ex) { logger.LogWarning(ex, "Failed to log activity for employee creation {EmployeeId}", created.Id); }
+
             return Result<EmployeeManagementResponse>.Success(UserMapper.ToEmployeeResponse(created));
         }
 
@@ -123,6 +128,9 @@ namespace FantasyRealm.Application.Services
 
             logger.LogInformation("Employee {EmployeeId} suspended by admin {AdminId}", employeeId, adminId);
 
+            try { await activityLogService.LogAsync(ActivityAction.EmployeeSuspended, "User", employeeId, employee.Pseudo, reason.Trim(), cancellationToken); }
+            catch (Exception ex) { logger.LogWarning(ex, "Failed to log activity for employee suspension {EmployeeId}", employeeId); }
+
             try
             {
                 await emailService.SendAccountSuspendedEmailAsync(
@@ -157,6 +165,9 @@ namespace FantasyRealm.Application.Services
             var updated = await userRepository.UpdateAsync(employee, cancellationToken);
 
             logger.LogInformation("Employee {EmployeeId} reactivated by admin {AdminId}", employeeId, adminId);
+
+            try { await activityLogService.LogAsync(ActivityAction.EmployeeReactivated, "User", employeeId, employee.Pseudo, null, cancellationToken); }
+            catch (Exception ex) { logger.LogWarning(ex, "Failed to log activity for employee reactivation {EmployeeId}", employeeId); }
 
             try
             {
@@ -198,6 +209,9 @@ namespace FantasyRealm.Application.Services
             await userRepository.DeleteAsync(employee, cancellationToken);
 
             logger.LogInformation("Employee {EmployeeId} deleted by admin {AdminId}", employeeId, adminId);
+
+            try { await activityLogService.LogAsync(ActivityAction.EmployeeDeleted, "User", employeeId, employee.Pseudo, null, cancellationToken); }
+            catch (Exception ex) { logger.LogWarning(ex, "Failed to log activity for employee deletion {EmployeeId}", employeeId); }
 
             return Result<Unit>.Success(Unit.Value);
         }

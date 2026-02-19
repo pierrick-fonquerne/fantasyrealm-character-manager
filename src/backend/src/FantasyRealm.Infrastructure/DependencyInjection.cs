@@ -4,6 +4,7 @@ using FantasyRealm.Infrastructure.Email;
 using FantasyRealm.Infrastructure.Persistence;
 using FantasyRealm.Infrastructure.Repositories;
 using FantasyRealm.Infrastructure.Security;
+using FantasyRealm.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -42,6 +43,12 @@ namespace FantasyRealm.Infrastructure
                     var client = sp.GetRequiredService<IMongoClient>();
                     return new MongoDbContext(client, mongoDbDatabaseName);
                 });
+                services.AddScoped<IActivityLogRepository, ActivityLogRepository>();
+                services.AddScoped<IActivityLogService, ActivityLogService>();
+            }
+            else
+            {
+                services.AddSingleton<IActivityLogService, NoOpActivityLogService>();
             }
 
             services.Configure<BrevoSettings>(configuration.GetSection(BrevoSettings.SectionName));
@@ -57,6 +64,7 @@ namespace FantasyRealm.Infrastructure
             services.AddScoped<IReferenceDataRepository, ReferenceDataRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
 
+            services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IEmployeeManagementService, EmployeeManagementService>();

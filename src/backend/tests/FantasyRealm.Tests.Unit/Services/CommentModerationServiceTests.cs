@@ -17,6 +17,7 @@ namespace FantasyRealm.Tests.Unit.Services
     {
         private readonly Mock<ICommentRepository> _commentRepoMock = new();
         private readonly Mock<IEmailService> _emailServiceMock = new();
+        private readonly Mock<IActivityLogService> _activityLogServiceMock = new();
         private readonly Mock<ILogger<CommentModerationService>> _loggerMock = new();
         private readonly CommentModerationService _sut;
 
@@ -27,6 +28,7 @@ namespace FantasyRealm.Tests.Unit.Services
             _sut = new CommentModerationService(
                 _commentRepoMock.Object,
                 _emailServiceMock.Object,
+                _activityLogServiceMock.Object,
                 _loggerMock.Object);
         }
 

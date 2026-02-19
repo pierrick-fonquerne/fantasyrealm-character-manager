@@ -26,8 +26,10 @@ services:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-fantasyrealm}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
       MONGO_INITDB_DATABASE: ${MONGO_DB:-fantasyrealm_logs}
+      MONGO_DB: ${MONGO_DB:-fantasyrealm_logs}
     volumes:
       - mongo_data:/data/db
+      - ../database/mongodb/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 5s
@@ -62,6 +64,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__PostgreSQL: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-fantasyrealm};Username=${POSTGRES_USER:-fantasyrealm};Password=${POSTGRES_PASSWORD}"
       ConnectionStrings__MongoDB: "mongodb://${MONGO_USER:-fantasyrealm}:${MONGO_PASSWORD}@mongodb:27017/${MONGO_DB:-fantasyrealm_logs}?authSource=admin"
+      MongoDB__DatabaseName: ${MONGO_DB:-fantasyrealm_logs}
       Brevo__ApiKey: ${BREVO_API_KEY}
       Brevo__ContactAddress: ${BREVO_CONTACT_ADDRESS:-contact@fantasy-realm.com}
       Brevo__BaseUrl: ${FRONTEND_URL:-http://localhost:5173}

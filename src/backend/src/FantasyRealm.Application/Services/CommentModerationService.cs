@@ -13,6 +13,7 @@ namespace FantasyRealm.Application.Services
     public sealed class CommentModerationService(
         ICommentRepository commentRepository,
         IEmailService emailService,
+        IActivityLogService activityLogService,
         ILogger<CommentModerationService> logger) : ICommentModerationService
     {
         /// <inheritdoc />
@@ -68,6 +69,9 @@ namespace FantasyRealm.Application.Services
                 logger.LogWarning(ex, "Failed to send approval email for comment {CommentId}", commentId);
             }
 
+            try { await activityLogService.LogAsync(ActivityAction.CommentApproved, "Comment", commentId, comment.Author.Pseudo, null, cancellationToken); }
+            catch (Exception ex) { logger.LogWarning(ex, "Failed to log activity for comment approval {CommentId}", commentId); }
+
             return Result<CommentResponse>.Success(CommentMapper.ToResponse(comment));
         }
 
@@ -111,6 +115,9 @@ namespace FantasyRealm.Application.Services
             {
                 logger.LogWarning(ex, "Failed to send rejection email for comment {CommentId}", commentId);
             }
+
+            try { await activityLogService.LogAsync(ActivityAction.CommentRejected, "Comment", commentId, comment.Author.Pseudo, reason.Trim(), cancellationToken); }
+            catch (Exception ex) { logger.LogWarning(ex, "Failed to log activity for comment rejection {CommentId}", commentId); }
 
             return Result<CommentResponse>.Success(CommentMapper.ToResponse(comment));
         }

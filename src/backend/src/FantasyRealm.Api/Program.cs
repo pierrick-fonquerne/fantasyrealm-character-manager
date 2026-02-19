@@ -58,6 +58,8 @@ namespace FantasyRealm.Api
                 });
             });
 
+            builder.Services.AddHttpContextAccessor();
+
             // Infrastructure services (Database, Email, Auth)
             builder.Services.AddInfrastructure(builder.Configuration);
 

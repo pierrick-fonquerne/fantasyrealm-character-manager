@@ -13,6 +13,7 @@ namespace FantasyRealm.Application.Services
     public sealed class ModerationService(
         ICharacterRepository characterRepository,
         IEmailService emailService,
+        IActivityLogService activityLogService,
         ILogger<ModerationService> logger) : IModerationService
     {
         /// <inheritdoc />
@@ -66,6 +67,9 @@ namespace FantasyRealm.Application.Services
                 logger.LogWarning(ex, "Failed to send approval email for character {CharacterId}", characterId);
             }
 
+            try { await activityLogService.LogAsync(ActivityAction.CharacterApproved, "Character", characterId, character.Name, null, cancellationToken); }
+            catch (Exception ex) { logger.LogWarning(ex, "Failed to log activity for character approval {CharacterId}", characterId); }
+
             return Result<CharacterResponse>.Success(CharacterMapper.ToResponse(character, character.Class.Name, isOwner: false));
         }
 
@@ -100,6 +104,9 @@ namespace FantasyRealm.Application.Services
             {
                 logger.LogWarning(ex, "Failed to send rejection email for character {CharacterId}", characterId);
             }
+
+            try { await activityLogService.LogAsync(ActivityAction.CharacterRejected, "Character", characterId, character.Name, reason, cancellationToken); }
+            catch (Exception ex) { logger.LogWarning(ex, "Failed to log activity for character rejection {CharacterId}", characterId); }
 
             return Result<CharacterResponse>.Success(CharacterMapper.ToResponse(character, character.Class.Name, isOwner: false));
         }
