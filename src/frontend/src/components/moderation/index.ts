@@ -5,3 +5,4 @@ export { RejectReasonModal } from './RejectReasonModal';
 export { SuspendReasonModal } from './SuspendReasonModal';
 export { ConfirmDeleteModal } from './ConfirmDeleteModal';
 export { ModerationStats } from './ModerationStats';
+export { ArticleManagementTab } from './ArticleManagementTab';
