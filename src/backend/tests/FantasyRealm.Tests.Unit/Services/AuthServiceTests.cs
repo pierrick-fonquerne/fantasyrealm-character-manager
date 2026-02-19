@@ -15,6 +15,7 @@ namespace FantasyRealm.Tests.Unit.Services
         private readonly Mock<IPasswordGenerator> _passwordGeneratorMock;
         private readonly Mock<IEmailService> _emailServiceMock;
         private readonly Mock<IJwtService> _jwtServiceMock;
+        private readonly Mock<IActivityLogService> _activityLogServiceMock;
         private readonly Mock<ILogger<AuthService>> _loggerMock;
         private readonly AuthService _authService;
 
@@ -25,6 +26,7 @@ namespace FantasyRealm.Tests.Unit.Services
             _passwordGeneratorMock = new Mock<IPasswordGenerator>();
             _emailServiceMock = new Mock<IEmailService>();
             _jwtServiceMock = new Mock<IJwtService>();
+            _activityLogServiceMock = new Mock<IActivityLogService>();
             _loggerMock = new Mock<ILogger<AuthService>>();
 
             _authService = new AuthService(
@@ -33,6 +35,7 @@ namespace FantasyRealm.Tests.Unit.Services
                 _passwordGeneratorMock.Object,
                 _emailServiceMock.Object,
                 _jwtServiceMock.Object,
+                _activityLogServiceMock.Object,
                 _loggerMock.Object);
         }
 

@@ -12,3 +12,4 @@ export { default as GalleryPage } from './GalleryPage';
 export { default as LegalPage } from './LegalPage';
 export { default as ModerationPage } from './ModerationPage';
 export { default as AdminPage } from './AdminPage';
+export { default as SettingsPage } from './SettingsPage';

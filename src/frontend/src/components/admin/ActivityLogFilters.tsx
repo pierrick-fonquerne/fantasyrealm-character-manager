@@ -13,6 +13,7 @@ const ACTION_OPTIONS: { value: ActivityAction; label: string }[] = [
   { value: 'CharacterRejected', label: 'Personnage rejeté' },
   { value: 'CommentApproved', label: 'Commentaire approuvé' },
   { value: 'CommentRejected', label: 'Commentaire rejeté' },
+  { value: 'PasswordChanged', label: 'Mot de passe modifié' },
 ];
 
 interface ActivityLogFiltersProps {

@@ -16,6 +16,7 @@ const ACTION_LABELS: Record<string, string> = {
   ArticleCreated: 'Article créé',
   ArticleUpdated: 'Article modifié',
   ArticleDeleted: 'Article supprimé',
+  PasswordChanged: 'Mot de passe modifié',
 };
 
 const ACTION_COLORS: Record<string, string> = {
@@ -33,6 +34,7 @@ const ACTION_COLORS: Record<string, string> = {
   ArticleCreated: 'bg-blue-500/20 text-blue-400',
   ArticleUpdated: 'bg-blue-500/20 text-blue-400',
   ArticleDeleted: 'bg-red-500/20 text-red-400',
+  PasswordChanged: 'bg-purple-500/20 text-purple-400',
 };
 
 function formatDate(dateString: string): string {

@@ -18,6 +18,7 @@ namespace FantasyRealm.Domain.Enums
         EmployeeCreated,
         EmployeeSuspended,
         EmployeeReactivated,
-        EmployeeDeleted
+        EmployeeDeleted,
+        PasswordChanged
     }
 }
