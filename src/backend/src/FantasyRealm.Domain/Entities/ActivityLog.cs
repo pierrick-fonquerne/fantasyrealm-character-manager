@@ -31,6 +31,9 @@ namespace FantasyRealm.Domain.Entities
         [BsonElement("target_id")]
         public int TargetId { get; set; }
 
+        [BsonElement("target_name")]
+        public string? TargetName { get; set; }
+
         [BsonElement("details")]
         public BsonDocument? Details { get; set; }
 

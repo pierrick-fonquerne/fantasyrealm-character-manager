@@ -2,6 +2,7 @@ using FantasyRealm.Application.Common;
 using FantasyRealm.Application.DTOs;
 using FantasyRealm.Application.Interfaces;
 using FantasyRealm.Application.Mapping;
+using FantasyRealm.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace FantasyRealm.Application.Services
@@ -12,6 +13,7 @@ namespace FantasyRealm.Application.Services
     public sealed class UserModerationService(
         IUserRepository userRepository,
         IEmailService emailService,
+        IActivityLogService activityLogService,
         ILogger<UserModerationService> logger) : IUserModerationService
     {
         private const string UserRoleLabel = "User";
@@ -80,6 +82,9 @@ namespace FantasyRealm.Application.Services
 
             logger.LogInformation("User {UserId} suspended by reviewer {ReviewerId}", userId, reviewerId);
 
+            try { await activityLogService.LogAsync(ActivityAction.UserSuspended, "User", userId, user.Pseudo, reason.Trim(), cancellationToken); }
+            catch (Exception ex) { logger.LogWarning(ex, "Failed to log activity for user suspension {UserId}", userId); }
+
             try
             {
                 await emailService.SendAccountSuspendedEmailAsync(
@@ -115,6 +120,9 @@ namespace FantasyRealm.Application.Services
             var updated = await userRepository.UpdateAsync(user, cancellationToken);
 
             logger.LogInformation("User {UserId} reactivated by reviewer {ReviewerId}", userId, reviewerId);
+
+            try { await activityLogService.LogAsync(ActivityAction.UserReactivated, "User", userId, user.Pseudo, null, cancellationToken); }
+            catch (Exception ex) { logger.LogWarning(ex, "Failed to log activity for user reactivation {UserId}", userId); }
 
             try
             {
@@ -157,6 +165,9 @@ namespace FantasyRealm.Application.Services
             await userRepository.DeleteAsync(user, cancellationToken);
 
             logger.LogInformation("User {UserId} deleted by reviewer {ReviewerId}", userId, reviewerId);
+
+            try { await activityLogService.LogAsync(ActivityAction.UserDeleted, "User", userId, user.Pseudo, null, cancellationToken); }
+            catch (Exception ex) { logger.LogWarning(ex, "Failed to log activity for user deletion {UserId}", userId); }
 
             return Result<Unit>.Success(Unit.Value);
         }
