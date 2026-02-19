@@ -327,7 +327,7 @@ export default function AdminPage() {
           </div>
 
           <Tabs defaultTab="overview">
-            <TabsList className="mb-6">
+            <TabsList className="mb-6" aria-label="Sections d'administration">
               <Tab value="overview">Vue d'ensemble</Tab>
               <Tab
                 value="employees"

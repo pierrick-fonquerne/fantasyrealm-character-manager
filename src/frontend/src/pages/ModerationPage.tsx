@@ -398,7 +398,7 @@ export default function ModerationPage() {
           />
 
           <Tabs defaultTab="characters">
-            <TabsList className="mb-6">
+            <TabsList className="mb-6" aria-label="Sections de modération">
               <Tab
                 value="characters"
                 badge={
