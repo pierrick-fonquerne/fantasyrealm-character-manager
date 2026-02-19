@@ -51,6 +51,13 @@ const defaultIcons: Record<AlertVariant, ReactNode> = {
   ),
 };
 
+const variantRoles: Record<AlertVariant, string> = {
+  error: 'alert',
+  warning: 'alert',
+  success: 'status',
+  info: 'status',
+};
+
 const Alert = forwardRef<HTMLDivElement, AlertProps>(
   ({ variant, title, icon, onClose, className = '', children, ...props }, ref) => {
     const styles = variantStyles[variant];
@@ -58,11 +65,11 @@ const Alert = forwardRef<HTMLDivElement, AlertProps>(
     return (
       <div
         ref={ref}
-        role="alert"
+        role={variantRoles[variant]}
         className={`flex gap-3 p-4 border rounded-lg ${styles.container} ${className}`}
         {...props}
       >
-        <span className={`flex-shrink-0 ${styles.icon}`}>
+        <span className={`flex-shrink-0 ${styles.icon}`} aria-hidden="true">
           {icon || defaultIcons[variant]}
         </span>
         <div className="flex-1 min-w-0">
@@ -78,7 +85,7 @@ const Alert = forwardRef<HTMLDivElement, AlertProps>(
             className="flex-shrink-0 p-1.5 cursor-pointer opacity-60 hover:opacity-100 transition-opacity"
             aria-label="Fermer"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
