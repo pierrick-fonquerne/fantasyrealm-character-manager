@@ -3,6 +3,7 @@ using FantasyRealm.Application.DTOs;
 using FantasyRealm.Application.Interfaces;
 using FantasyRealm.Application.Validators;
 using FantasyRealm.Domain.Entities;
+using FantasyRealm.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace FantasyRealm.Application.Services
@@ -16,6 +17,7 @@ namespace FantasyRealm.Application.Services
         IPasswordGenerator passwordGenerator,
         IEmailService emailService,
         IJwtService jwtService,
+        IActivityLogService activityLogService,
         ILogger<AuthService> logger) : IAuthService
     {
         private const string DefaultRole = "User";
@@ -223,6 +225,16 @@ namespace FantasyRealm.Application.Services
             var expiresAt = jwtService.GetExpirationDate();
 
             logger.LogInformation("Password changed successfully for user {UserId} ({Email})", user.Id, user.Email);
+
+            try
+            {
+                await activityLogService.LogAsync(
+                    ActivityAction.PasswordChanged, "User", user.Id, user.Pseudo, null, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to log password change activity for user {UserId}", user.Id);
+            }
 
             var userInfo = new UserInfo(user.Id, user.Email, user.Pseudo, user.Role.Label);
 
