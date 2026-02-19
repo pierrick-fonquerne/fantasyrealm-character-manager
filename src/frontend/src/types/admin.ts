@@ -42,4 +42,5 @@ export type ActivityAction =
   | 'EmployeeCreated'
   | 'EmployeeSuspended'
   | 'EmployeeReactivated'
-  | 'EmployeeDeleted';
+  | 'EmployeeDeleted'
+  | 'PasswordChanged';
