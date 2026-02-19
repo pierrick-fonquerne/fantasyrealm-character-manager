@@ -66,6 +66,7 @@ namespace FantasyRealm.Infrastructure
             services.AddScoped<IUserRepository, UserRepository>();
 
             services.AddScoped<ICurrentUserService, CurrentUserService>();
+            services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<IArticleService, ArticleService>();
             services.AddScoped<IAuthService, AuthService>();

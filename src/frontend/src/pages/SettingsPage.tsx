@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Header, Footer } from '../components/layout';
+import { DeleteAccountModal } from '../components/auth';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/authService';
 import type { ApiError } from '../services/api';
@@ -51,13 +52,15 @@ const CRITERIA_LABELS: { key: keyof PasswordCriteria; label: string }[] = [
 ];
 
 const SettingsPage = () => {
-  const { token, login } = useAuth();
+  const { token, login, user } = useAuth();
+  const canDeleteAccount = user?.role === 'User';
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const { criteria, score } = evaluatePassword(newPassword);
   const strength = getStrengthLabel(score);
@@ -272,11 +275,47 @@ const SettingsPage = () => {
                 </button>
               </form>
             </div>
+
+            <div className="mt-8 bg-dark-900 border border-red-500/30 rounded-xl p-6 sm:p-8">
+              <h2 className="text-xl font-semibold text-red-400 mb-4">
+                Zone de danger
+              </h2>
+              <p className="text-cream-300 text-sm mb-4">
+                La suppression de votre compte est définitive et irréversible.
+                Toutes vos données seront supprimées : personnages, commentaires
+                et informations personnelles.
+              </p>
+              {!canDeleteAccount && (
+                <p className="text-amber-400 text-sm mb-4">
+                  Les comptes modérateur et administrateur ne peuvent pas être
+                  supprimés.
+                </p>
+              )}
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(true)}
+                disabled={!canDeleteAccount}
+                aria-describedby={!canDeleteAccount ? 'delete-account-restriction' : undefined}
+                className="px-4 py-2.5 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-dark-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                Supprimer mon compte
+              </button>
+              {!canDeleteAccount && (
+                <p id="delete-account-restriction" className="sr-only">
+                  La suppression de compte est désactivée pour les comptes modérateur et administrateur.
+                </p>
+              )}
+            </div>
           </div>
         </section>
       </main>
 
       <Footer />
+
+      <DeleteAccountModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+      />
     </div>
   );
 };
