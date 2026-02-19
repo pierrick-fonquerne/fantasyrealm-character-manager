@@ -96,6 +96,14 @@ class ApiClient {
     return response.json();
   }
 
+  async postAuthenticatedNoContent<TRequest>(
+    endpoint: string,
+    data: TRequest,
+    token: string
+  ): Promise<void> {
+    await this.request(endpoint, 'POST', token, data);
+  }
+
   async deleteAuthenticated(
     endpoint: string,
     token: string

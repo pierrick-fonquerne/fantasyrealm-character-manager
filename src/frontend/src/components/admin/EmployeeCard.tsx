@@ -7,6 +7,7 @@ interface EmployeeCardProps {
   employee: EmployeeManagement;
   onSuspend: (id: number) => void;
   onReactivate: (id: number) => void;
+  onResetPassword: (id: number) => void;
   onDelete: (id: number) => void;
   isProcessing: boolean;
 }
@@ -15,6 +16,7 @@ export const EmployeeCard = memo(function EmployeeCard({
   employee,
   onSuspend,
   onReactivate,
+  onResetPassword,
   onDelete,
   isProcessing,
 }: EmployeeCardProps) {
@@ -55,6 +57,9 @@ export const EmployeeCard = memo(function EmployeeCard({
             aria-label={`Réactiver le compte de ${employee.pseudo}`}
             className="flex-1"
           >
+            <svg className="w-3.5 h-3.5 mr-1 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
             Réactiver
           </Button>
         ) : (
@@ -66,9 +71,25 @@ export const EmployeeCard = memo(function EmployeeCard({
             aria-label={`Suspendre le compte de ${employee.pseudo}`}
             className="flex-1"
           >
+            <svg className="w-3.5 h-3.5 mr-1 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+            </svg>
             Suspendre
           </Button>
         )}
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => onResetPassword(employee.id)}
+          isLoading={isProcessing}
+          aria-label={`Réinitialiser le mot de passe de ${employee.pseudo}`}
+          className="flex-1"
+        >
+          <svg className="w-3.5 h-3.5 mr-1 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+          </svg>
+          Mot de passe
+        </Button>
         <Button
           variant="danger"
           size="sm"
@@ -77,6 +98,9 @@ export const EmployeeCard = memo(function EmployeeCard({
           aria-label={`Supprimer le compte de ${employee.pseudo}`}
           className="flex-1"
         >
+          <svg className="w-3.5 h-3.5 mr-1 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
           Supprimer
         </Button>
       </div>
