@@ -363,4 +363,4 @@ Les pull requests ciblent toujours `develop`. Le merge vers `main` se fait aprè
 
 ## Licence
 
-MIT License — voir [LICENSE](LICENSE)
+CC0 1.0 License — voir [LICENSE](LICENSE)
