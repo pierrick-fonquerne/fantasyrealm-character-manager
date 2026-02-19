@@ -112,9 +112,52 @@ export function DuplicateModal({
     isAvailable !== false &&
     !localError;
 
+  // Restore focus on close
+  const triggerRef = useRef<Element | null>(null);
+  useEffect(() => {
+    if (isOpen) {
+      triggerRef.current = document.activeElement;
+    } else if (triggerRef.current instanceof HTMLElement) {
+      triggerRef.current.focus();
+    }
+  }, [isOpen]);
+
+  // Focus trap
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleFocusTrap = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab' || !modalRef.current) return;
+
+      const focusable = modalRef.current.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleFocusTrap);
+    return () => document.removeEventListener('keydown', handleFocusTrap);
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const displayError = localError || availabilityError;
+  const feedbackId = 'duplicate-name-feedback';
 
   return (
     <div
@@ -180,6 +223,8 @@ export function DuplicateModal({
                 value={newName}
                 onChange={handleNameChange}
                 disabled={isDuplicating}
+                aria-describedby={feedbackId}
+                aria-invalid={!!displayError}
                 className={`w-full px-4 py-3 pr-10 bg-dark-700 border rounded-lg text-cream-100 placeholder-cream-500 focus:outline-none focus:ring-2 focus:ring-gold-500/50 transition-colors ${
                   displayError
                     ? 'border-error-500'
@@ -243,14 +288,19 @@ export function DuplicateModal({
                 </div>
               )}
             </div>
-            {displayError && (
-              <p className="mt-2 text-sm text-error-400">{displayError}</p>
-            )}
-            {isAvailable === true && !displayError && (
-              <p className="mt-2 text-sm text-success-400">
-                Ce nom est disponible
-              </p>
-            )}
+            <div id={feedbackId} aria-live="polite">
+              {displayError && (
+                <p className="mt-2 text-sm text-error-400">{displayError}</p>
+              )}
+              {isAvailable === true && !displayError && (
+                <p className="mt-2 text-sm text-success-400">
+                  Ce nom est disponible
+                </p>
+              )}
+              {isChecking && (
+                <p className="mt-2 text-sm text-cream-500 sr-only">Vérification en cours...</p>
+              )}
+            </div>
           </div>
 
           <div className="flex gap-3 justify-end">

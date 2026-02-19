@@ -26,6 +26,7 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
       id,
       className = '',
       rows = 4,
+      required,
       ...props
     },
     ref
@@ -40,6 +41,11 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
       ? 'border-error-500 focus:ring-error-500'
       : 'border-dark-500 hover:border-dark-400';
 
+    const describedBy = [
+      hint && `${textareaId}-hint`,
+      error && `${textareaId}-error`,
+    ].filter(Boolean).join(' ') || undefined;
+
     return (
       <div className={`${fullWidth ? 'w-full' : ''}`}>
         {label && (
@@ -48,17 +54,22 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
             className="block text-sm font-medium text-cream-200 mb-1.5"
           >
             {label}
+            {required && (
+              <>
+                <span aria-hidden="true" className="text-error-500 ml-0.5">*</span>
+                <span className="sr-only"> (obligatoire)</span>
+              </>
+            )}
           </label>
         )}
         <textarea
           ref={ref}
           id={textareaId}
           rows={rows}
+          required={required}
           className={`${baseStyles} ${borderStyles} ${resizeStyles[resize]} ${fullWidth ? 'w-full' : ''} ${className}`}
           aria-invalid={error ? 'true' : 'false'}
-          aria-describedby={
-            error ? `${textareaId}-error` : hint ? `${textareaId}-hint` : undefined
-          }
+          aria-describedby={describedBy}
           {...props}
         />
         {error && (

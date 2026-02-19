@@ -113,7 +113,7 @@ export default function GalleryPage() {
                 placeholder="Rechercher par pseudo..."
                 value={author}
                 onChange={(e) => handleAuthorChange(e.target.value)}
-                className="w-full bg-dark-800 border border-dark-600 rounded-lg px-3 py-2 text-sm text-cream-200 placeholder-cream-600 focus:outline-none focus:border-gold-500"
+                className="w-full bg-dark-800 border border-dark-600 rounded-lg px-3 py-2 text-sm text-cream-200 placeholder-dark-100 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-gold-500"
               />
             </div>
 
@@ -125,7 +125,7 @@ export default function GalleryPage() {
                 id="gender-filter"
                 value={gender}
                 onChange={(e) => handleGenderChange(e.target.value)}
-                className="bg-dark-800 border border-dark-600 rounded-lg px-3 py-2 text-sm text-cream-200 focus:outline-none focus:border-gold-500"
+                className="bg-dark-800 border border-dark-600 rounded-lg px-3 py-2 text-sm text-cream-200 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-gold-500"
               >
                 {GENDER_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -143,7 +143,7 @@ export default function GalleryPage() {
                 id="sort-select"
                 value={sort}
                 onChange={(e) => handleSortChange(e.target.value)}
-                className="bg-dark-800 border border-dark-600 rounded-lg px-3 py-2 text-sm text-cream-200 focus:outline-none focus:border-gold-500"
+                className="bg-dark-800 border border-dark-600 rounded-lg px-3 py-2 text-sm text-cream-200 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-gold-500"
               >
                 {SORT_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -155,7 +155,7 @@ export default function GalleryPage() {
           </section>
 
           {!isLoading && !error && totalCount > 0 && (
-            <p className="text-sm text-cream-500 mb-4">
+            <p className="text-sm text-cream-400 mb-4">
               {totalCount} personnage{totalCount > 1 ? 's' : ''} trouvé{totalCount > 1 ? 's' : ''}
             </p>
           )}
@@ -174,7 +174,7 @@ export default function GalleryPage() {
 
           {!isLoading && !error && characters.length === 0 && (
             <div className="text-center py-20">
-              <p className="text-cream-500 text-lg">Aucun personnage trouvé.</p>
+              <p className="text-cream-400 text-lg">Aucun personnage trouvé.</p>
             </div>
           )}
 

@@ -54,7 +54,7 @@ const BreadcrumbItem = forwardRef<HTMLLIElement, BreadcrumbItemProps>(
     const baseStyles = 'flex items-center gap-1.5 transition-colors';
     const activeStyles = active
       ? 'text-cream-200 font-medium'
-      : 'text-dark-200 hover:text-cream-300';
+      : 'text-cream-400 hover:text-cream-300';
 
     const content = (
       <>

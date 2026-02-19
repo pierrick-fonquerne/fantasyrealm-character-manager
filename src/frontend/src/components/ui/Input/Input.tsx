@@ -26,6 +26,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       fullWidth = true,
       id,
       className = '',
+      required,
       ...props
     },
     ref
@@ -40,6 +41,11 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       ? 'border-error-500 focus:ring-error-500'
       : 'border-dark-500 hover:border-dark-400';
 
+    const describedBy = [
+      hint && `${inputId}-hint`,
+      error && `${inputId}-error`,
+    ].filter(Boolean).join(' ') || undefined;
+
     return (
       <div className={`${fullWidth ? 'w-full' : ''}`}>
         {label && (
@@ -48,16 +54,21 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             className="block text-sm font-medium text-cream-200 mb-1.5"
           >
             {label}
+            {required && (
+              <>
+                <span aria-hidden="true" className="text-error-500 ml-0.5">*</span>
+                <span className="sr-only"> (obligatoire)</span>
+              </>
+            )}
           </label>
         )}
         <input
           ref={ref}
           id={inputId}
+          required={required}
           className={`${baseStyles} ${borderStyles} ${sizeStyles[inputSize]} ${fullWidth ? 'w-full' : ''} ${className}`}
           aria-invalid={error ? 'true' : 'false'}
-          aria-describedby={
-            error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined
-          }
+          aria-describedby={describedBy}
           {...props}
         />
         {error && (
