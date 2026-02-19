@@ -9,6 +9,7 @@ import {
   createEmployee,
   suspendEmployee,
   reactivateEmployee,
+  resetEmployeePassword,
   deleteEmployee,
 } from '../services/adminEmployeeService';
 import { getLogs } from '../services/adminActivityLogService';
@@ -21,6 +22,7 @@ import {
   AdminDashboardStats,
   CreateEmployeeModal,
   EmployeeCard,
+  ResetPasswordModal,
 } from '../components/admin';
 import { SuspendReasonModal, ConfirmDeleteModal } from '../components/moderation';
 import { Alert, Pagination } from '../components/ui';
@@ -174,6 +176,39 @@ export default function AdminPage() {
       setEmpError('Erreur lors de la réactivation du compte.');
     } finally {
       setEmpProcessingId(null);
+    }
+  };
+
+  // ── Reset password modal ──────────────────────────────────────
+  const [resetPwdModal, setResetPwdModal] = useState<{
+    isOpen: boolean;
+    id: number | null;
+    targetName: string;
+  }>({ isOpen: false, id: null, targetName: '' });
+  const [isResettingPwd, setIsResettingPwd] = useState(false);
+  const [resetPwdResult, setResetPwdResult] = useState<'idle' | 'success' | 'error'>('idle');
+
+  const handleResetPasswordOpen = (id: number) => {
+    const emp = employees.find((e) => e.id === id);
+    setResetPwdResult('idle');
+    setResetPwdModal({ isOpen: true, id, targetName: emp?.pseudo ?? '' });
+  };
+
+  const handleResetPasswordClose = () => {
+    setResetPwdModal({ isOpen: false, id: null, targetName: '' });
+    setResetPwdResult('idle');
+  };
+
+  const handleResetPasswordConfirm = async () => {
+    if (!token || resetPwdModal.id === null) return;
+    setIsResettingPwd(true);
+    try {
+      await resetEmployeePassword(resetPwdModal.id, token);
+      setResetPwdResult('success');
+    } catch {
+      setResetPwdResult('error');
+    } finally {
+      setIsResettingPwd(false);
     }
   };
 
@@ -427,7 +462,7 @@ export default function AdminPage() {
 
               {!empLoading && !empError && employees.length > 0 && (
                 <ul
-                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 list-none p-0 m-0"
+                  className="grid grid-cols-1 lg:grid-cols-2 gap-4 list-none p-0 m-0"
                   aria-label="Liste des employés"
                 >
                   {employees.map((emp) => (
@@ -436,6 +471,7 @@ export default function AdminPage() {
                         employee={emp}
                         onSuspend={handleSuspendOpen}
                         onReactivate={handleReactivate}
+                        onResetPassword={handleResetPasswordOpen}
                         onDelete={handleDeleteOpen}
                         isProcessing={empProcessingId === emp.id}
                       />
@@ -547,6 +583,16 @@ export default function AdminPage() {
         onConfirm={handleDeleteConfirm}
         onClose={handleDeleteClose}
         isSubmitting={isDeleting}
+      />
+
+      <ResetPasswordModal
+        key={`reset-pwd-${resetPwdModal.id}`}
+        isOpen={resetPwdModal.isOpen}
+        targetName={resetPwdModal.targetName}
+        onConfirm={handleResetPasswordConfirm}
+        onClose={handleResetPasswordClose}
+        isSubmitting={isResettingPwd}
+        result={resetPwdResult}
       />
     </div>
   );

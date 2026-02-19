@@ -6,6 +6,7 @@ const ACTION_OPTIONS: { value: ActivityAction; label: string }[] = [
   { value: 'EmployeeSuspended', label: 'Employé suspendu' },
   { value: 'EmployeeReactivated', label: 'Employé réactivé' },
   { value: 'EmployeeDeleted', label: 'Employé supprimé' },
+  { value: 'EmployeePasswordReset', label: 'Mot de passe employé réinitialisé' },
   { value: 'UserSuspended', label: 'Utilisateur suspendu' },
   { value: 'UserReactivated', label: 'Utilisateur réactivé' },
   { value: 'UserDeleted', label: 'Utilisateur supprimé' },
