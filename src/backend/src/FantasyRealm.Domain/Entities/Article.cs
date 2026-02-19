@@ -1,5 +1,3 @@
-using FantasyRealm.Domain.Enums;
-
 namespace FantasyRealm.Domain.Entities
 {
     /// <summary>
@@ -11,11 +9,17 @@ namespace FantasyRealm.Domain.Entities
 
         public string Name { get; set; } = string.Empty;
 
-        public ArticleType Type { get; set; }
+        public int TypeId { get; set; }
+
+        public int SlotId { get; set; }
 
         public byte[]? Image { get; set; }
 
         public bool IsActive { get; set; } = true;
+
+        public ArticleType Type { get; set; } = null!;
+
+        public EquipmentSlot Slot { get; set; } = null!;
 
         public ICollection<CharacterArticle> CharacterArticles { get; set; } = [];
     }

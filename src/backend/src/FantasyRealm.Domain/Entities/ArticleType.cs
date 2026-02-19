@@ -1,15 +1,13 @@
 namespace FantasyRealm.Domain.Entities
 {
     /// <summary>
-    /// Represents an equipment slot where articles can be equipped (e.g. Head, Chest, MainHand).
+    /// Represents a reference type for customization articles (e.g. Clothing, Armor, Weapon, Accessory).
     /// </summary>
-    public class EquipmentSlot
+    public class ArticleType
     {
         public int Id { get; set; }
 
         public string Name { get; set; } = string.Empty;
-
-        public int DisplayOrder { get; set; }
 
         public ICollection<Article> Articles { get; set; } = [];
     }
