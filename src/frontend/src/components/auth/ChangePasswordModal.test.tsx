@@ -57,7 +57,7 @@ describe('ChangePasswordModal', () => {
       render(<ChangePasswordModal isOpen={true} token={mockToken} onSuccess={mockOnSuccess} />);
 
       expect(screen.getByLabelText(/mot de passe actuel/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/^nouveau mot de passe$/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/^nouveau mot de passe/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/confirmer le nouveau mot de passe/i)).toBeInTheDocument();
     });
 
@@ -106,7 +106,7 @@ describe('ChangePasswordModal', () => {
       render(<ChangePasswordModal isOpen={true} token={mockToken} onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/mot de passe actuel/i), validFormData.currentPassword);
-      await userEvent.type(screen.getByLabelText(/^nouveau mot de passe$/i), validFormData.newPassword);
+      await userEvent.type(screen.getByLabelText(/^nouveau mot de passe/i), validFormData.newPassword);
       await userEvent.click(screen.getByRole('button', { name: /changer mon mot de passe/i }));
 
       await waitFor(() => {
@@ -118,7 +118,7 @@ describe('ChangePasswordModal', () => {
       render(<ChangePasswordModal isOpen={true} token={mockToken} onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/mot de passe actuel/i), validFormData.currentPassword);
-      await userEvent.type(screen.getByLabelText(/^nouveau mot de passe$/i), validFormData.newPassword);
+      await userEvent.type(screen.getByLabelText(/^nouveau mot de passe/i), validFormData.newPassword);
       await userEvent.type(screen.getByLabelText(/confirmer le nouveau mot de passe/i), 'DifferentPass@789');
       await userEvent.click(screen.getByRole('button', { name: /changer mon mot de passe/i }));
 
@@ -131,7 +131,7 @@ describe('ChangePasswordModal', () => {
       render(<ChangePasswordModal isOpen={true} token={mockToken} onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/mot de passe actuel/i), validFormData.currentPassword);
-      await userEvent.type(screen.getByLabelText(/^nouveau mot de passe$/i), 'weak');
+      await userEvent.type(screen.getByLabelText(/^nouveau mot de passe/i), 'weak');
       await userEvent.type(screen.getByLabelText(/confirmer le nouveau mot de passe/i), 'weak');
       await userEvent.click(screen.getByRole('button', { name: /changer mon mot de passe/i }));
 
@@ -144,7 +144,7 @@ describe('ChangePasswordModal', () => {
       render(<ChangePasswordModal isOpen={true} token={mockToken} onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/mot de passe actuel/i), validFormData.newPassword);
-      await userEvent.type(screen.getByLabelText(/^nouveau mot de passe$/i), validFormData.newPassword);
+      await userEvent.type(screen.getByLabelText(/^nouveau mot de passe/i), validFormData.newPassword);
       await userEvent.type(screen.getByLabelText(/confirmer le nouveau mot de passe/i), validFormData.newPassword);
       await userEvent.click(screen.getByRole('button', { name: /changer mon mot de passe/i }));
 
@@ -177,7 +177,7 @@ describe('ChangePasswordModal', () => {
       render(<ChangePasswordModal isOpen={true} token={mockToken} onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/mot de passe actuel/i), validFormData.currentPassword);
-      await userEvent.type(screen.getByLabelText(/^nouveau mot de passe$/i), validFormData.newPassword);
+      await userEvent.type(screen.getByLabelText(/^nouveau mot de passe/i), validFormData.newPassword);
       await userEvent.type(screen.getByLabelText(/confirmer le nouveau mot de passe/i), validFormData.confirmNewPassword);
       await userEvent.click(screen.getByRole('button', { name: /changer mon mot de passe/i }));
 
@@ -192,7 +192,7 @@ describe('ChangePasswordModal', () => {
       render(<ChangePasswordModal isOpen={true} token={mockToken} onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/mot de passe actuel/i), validFormData.currentPassword);
-      await userEvent.type(screen.getByLabelText(/^nouveau mot de passe$/i), validFormData.newPassword);
+      await userEvent.type(screen.getByLabelText(/^nouveau mot de passe/i), validFormData.newPassword);
       await userEvent.type(screen.getByLabelText(/confirmer le nouveau mot de passe/i), validFormData.confirmNewPassword);
       await userEvent.click(screen.getByRole('button', { name: /changer mon mot de passe/i }));
 
@@ -210,7 +210,7 @@ describe('ChangePasswordModal', () => {
       render(<ChangePasswordModal isOpen={true} token={mockToken} onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/mot de passe actuel/i), validFormData.currentPassword);
-      await userEvent.type(screen.getByLabelText(/^nouveau mot de passe$/i), validFormData.newPassword);
+      await userEvent.type(screen.getByLabelText(/^nouveau mot de passe/i), validFormData.newPassword);
       await userEvent.type(screen.getByLabelText(/confirmer le nouveau mot de passe/i), validFormData.confirmNewPassword);
 
       const button = screen.getByRole('button', { name: /changer mon mot de passe/i });
@@ -232,7 +232,7 @@ describe('ChangePasswordModal', () => {
       render(<ChangePasswordModal isOpen={true} token={mockToken} onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/mot de passe actuel/i), validFormData.currentPassword);
-      await userEvent.type(screen.getByLabelText(/^nouveau mot de passe$/i), validFormData.newPassword);
+      await userEvent.type(screen.getByLabelText(/^nouveau mot de passe/i), validFormData.newPassword);
       await userEvent.type(screen.getByLabelText(/confirmer le nouveau mot de passe/i), validFormData.confirmNewPassword);
       await userEvent.click(screen.getByRole('button', { name: /changer mon mot de passe/i }));
 
@@ -249,7 +249,7 @@ describe('ChangePasswordModal', () => {
       render(<ChangePasswordModal isOpen={true} token={mockToken} onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/mot de passe actuel/i), validFormData.currentPassword);
-      await userEvent.type(screen.getByLabelText(/^nouveau mot de passe$/i), validFormData.newPassword);
+      await userEvent.type(screen.getByLabelText(/^nouveau mot de passe/i), validFormData.newPassword);
       await userEvent.type(screen.getByLabelText(/confirmer le nouveau mot de passe/i), validFormData.confirmNewPassword);
       await userEvent.click(screen.getByRole('button', { name: /changer mon mot de passe/i }));
 
@@ -267,7 +267,7 @@ describe('ChangePasswordModal', () => {
       render(<ChangePasswordModal isOpen={true} token={mockToken} onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/mot de passe actuel/i), validFormData.currentPassword);
-      await userEvent.type(screen.getByLabelText(/^nouveau mot de passe$/i), validFormData.newPassword);
+      await userEvent.type(screen.getByLabelText(/^nouveau mot de passe/i), validFormData.newPassword);
       await userEvent.type(screen.getByLabelText(/confirmer le nouveau mot de passe/i), validFormData.confirmNewPassword);
       await userEvent.click(screen.getByRole('button', { name: /changer mon mot de passe/i }));
 
@@ -291,7 +291,7 @@ describe('ChangePasswordModal', () => {
       render(<ChangePasswordModal isOpen={true} token={mockToken} onSuccess={mockOnSuccess} />);
 
       await userEvent.type(screen.getByLabelText(/mot de passe actuel/i), validFormData.currentPassword);
-      await userEvent.type(screen.getByLabelText(/^nouveau mot de passe$/i), validFormData.newPassword);
+      await userEvent.type(screen.getByLabelText(/^nouveau mot de passe/i), validFormData.newPassword);
       await userEvent.type(screen.getByLabelText(/confirmer le nouveau mot de passe/i), validFormData.confirmNewPassword);
       await userEvent.click(screen.getByRole('button', { name: /changer mon mot de passe/i }));
 
@@ -307,7 +307,7 @@ describe('ChangePasswordModal', () => {
     it('should display password strength indicator when typing new password', async () => {
       render(<ChangePasswordModal isOpen={true} token={mockToken} onSuccess={mockOnSuccess} />);
 
-      await userEvent.type(screen.getByLabelText(/^nouveau mot de passe$/i), 'Test');
+      await userEvent.type(screen.getByLabelText(/^nouveau mot de passe/i), 'Test');
 
       await waitFor(() => {
         expect(screen.getByText(/12 caractères min/i)).toBeInTheDocument();
@@ -317,7 +317,7 @@ describe('ChangePasswordModal', () => {
     it('should update strength indicator as password changes', async () => {
       render(<ChangePasswordModal isOpen={true} token={mockToken} onSuccess={mockOnSuccess} />);
 
-      await userEvent.type(screen.getByLabelText(/^nouveau mot de passe$/i), 'MySecure@Pass123');
+      await userEvent.type(screen.getByLabelText(/^nouveau mot de passe/i), 'MySecure@Pass123');
 
       await waitFor(() => {
         expect(screen.getByRole('progressbar')).toBeInTheDocument();
@@ -361,7 +361,7 @@ describe('ChangePasswordModal', () => {
       );
 
       await userEvent.type(screen.getByLabelText(/mot de passe actuel/i), validFormData.currentPassword);
-      await userEvent.type(screen.getByLabelText(/^nouveau mot de passe$/i), validFormData.newPassword);
+      await userEvent.type(screen.getByLabelText(/^nouveau mot de passe/i), validFormData.newPassword);
       await userEvent.type(screen.getByLabelText(/confirmer le nouveau mot de passe/i), validFormData.confirmNewPassword);
       await userEvent.click(screen.getByRole('button', { name: /changer mon mot de passe/i }));
 
