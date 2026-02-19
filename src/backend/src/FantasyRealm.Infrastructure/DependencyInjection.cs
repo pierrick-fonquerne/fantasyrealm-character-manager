@@ -43,6 +43,12 @@ namespace FantasyRealm.Infrastructure
                     var client = sp.GetRequiredService<IMongoClient>();
                     return new MongoDbContext(client, mongoDbDatabaseName);
                 });
+                services.AddScoped<IActivityLogRepository, ActivityLogRepository>();
+                services.AddScoped<IActivityLogService, ActivityLogService>();
+            }
+            else
+            {
+                services.AddSingleton<IActivityLogService, NoOpActivityLogService>();
             }
 
             services.Configure<BrevoSettings>(configuration.GetSection(BrevoSettings.SectionName));
@@ -53,14 +59,12 @@ namespace FantasyRealm.Infrastructure
             services.AddSingleton<IPasswordHasher, Argon2PasswordHasher>();
             services.AddSingleton<IPasswordGenerator, SecurePasswordGenerator>();
 
-            services.AddScoped<IActivityLogRepository, ActivityLogRepository>();
             services.AddScoped<ICharacterRepository, CharacterRepository>();
             services.AddScoped<ICommentRepository, CommentRepository>();
             services.AddScoped<IReferenceDataRepository, ReferenceDataRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
 
             services.AddScoped<ICurrentUserService, CurrentUserService>();
-            services.AddScoped<IActivityLogService, ActivityLogService>();
             services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IEmployeeManagementService, EmployeeManagementService>();
