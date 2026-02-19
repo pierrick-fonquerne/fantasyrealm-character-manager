@@ -188,6 +188,7 @@ const SettingsPage = () => {
                     className="w-full px-4 py-2.5 bg-dark-800 border border-dark-600 rounded-lg text-cream-100 placeholder-dark-400 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-colors"
                     placeholder="Votre nouveau mot de passe"
                     required
+                    aria-describedby={newPassword.length > 0 ? 'password-criteria password-strength' : undefined}
                   />
 
                   {newPassword.length > 0 && (
@@ -199,21 +200,21 @@ const SettingsPage = () => {
                             style={{ width: `${(score / 6) * 100}%` }}
                           />
                         </div>
-                        <span className={`text-xs font-medium ${strength.color}`}>
+                        <span id="password-strength" aria-live="polite" className={`text-xs font-medium ${strength.color}`}>
                           {strength.label}
                         </span>
                       </div>
 
-                      <ul className="space-y-1" aria-label="Critères du mot de passe">
+                      <ul id="password-criteria" className="space-y-1" aria-label="Critères du mot de passe" aria-live="polite">
                         {CRITERIA_LABELS.map(({ key, label }) => (
                           <li
                             key={key}
                             className={`flex items-center gap-2 text-xs ${
-                              criteria[key] ? 'text-green-400' : 'text-dark-400'
+                              criteria[key] ? 'text-green-400' : 'text-dark-100'
                             }`}
                           >
                             {criteria[key] ? (
-                              <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                              <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                                 <path
                                   fillRule="evenodd"
                                   d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -221,11 +222,14 @@ const SettingsPage = () => {
                                 />
                               </svg>
                             ) : (
-                              <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                              <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                                 <circle cx="10" cy="10" r="4" />
                               </svg>
                             )}
                             {label}
+                            <span className="sr-only">
+                              {criteria[key] ? '(validé)' : '(non validé)'}
+                            </span>
                           </li>
                         ))}
                       </ul>
@@ -249,9 +253,11 @@ const SettingsPage = () => {
                     className="w-full px-4 py-2.5 bg-dark-800 border border-dark-600 rounded-lg text-cream-100 placeholder-dark-400 focus:outline-none focus:ring-2 focus:ring-gold-500 focus:border-transparent transition-colors"
                     placeholder="Confirmez votre nouveau mot de passe"
                     required
+                    aria-invalid={confirmPassword.length > 0 && !passwordsMatch ? 'true' : undefined}
+                    aria-describedby={confirmPassword.length > 0 && !passwordsMatch ? 'confirm-password-error' : undefined}
                   />
                   {confirmPassword.length > 0 && !passwordsMatch && (
-                    <p className="mt-1.5 text-xs text-red-400">
+                    <p id="confirm-password-error" className="mt-1.5 text-xs text-red-400" role="alert">
                       Les mots de passe ne correspondent pas.
                     </p>
                   )}
