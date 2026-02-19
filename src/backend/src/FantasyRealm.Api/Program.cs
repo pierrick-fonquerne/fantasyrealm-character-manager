@@ -1,6 +1,16 @@
+using System.Security.Claims;
+using System.Text;
+using FantasyRealm.Infrastructure;
+using FantasyRealm.Infrastructure.Security;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+
 namespace FantasyRealm.Api
 {
-    public static class Program
+    /// <summary>
+    /// Application entry point.
+    /// </summary>
+    public partial class Program
     {
         private static void Main(string[] args)
         {
@@ -12,20 +22,77 @@ namespace FantasyRealm.Api
             builder.Services.AddSwaggerGen();
 
             // CORS configuration
+            var corsOrigins = builder.Configuration["CorsOrigins"]?.Split(',')
+                ?? ["http://localhost:5173"];
+
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowFrontend", policy =>
                 {
-                    policy.WithOrigins("http://localhost:5173")
-                          .AllowAnyMethod()
-                          .AllowAnyHeader()
-                          .AllowCredentials();
+                    policy.SetIsOriginAllowed(origin =>
+                    {
+                        // Check each configured origin pattern
+                        foreach (var allowedOrigin in corsOrigins)
+                        {
+                            var pattern = allowedOrigin.Trim();
+
+                            // Support wildcard patterns like https://*.vercel.app
+                            if (pattern.Contains('*'))
+                            {
+                                var regex = new System.Text.RegularExpressions.Regex(
+                                    "^" + System.Text.RegularExpressions.Regex.Escape(pattern).Replace("\\*", ".*") + "$");
+                                if (regex.IsMatch(origin))
+                                    return true;
+                            }
+                            // Exact match
+                            else if (pattern.Equals(origin, StringComparison.OrdinalIgnoreCase))
+                            {
+                                return true;
+                            }
+                        }
+                        return false;
+                    })
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .AllowCredentials();
                 });
             });
 
-            // TODO: Add JWT Authentication (FRO-1)
-            // TODO: Add Application services (FRO-15+)
-            // TODO: Add Infrastructure services (FRO-17)
+            builder.Services.AddHttpContextAccessor();
+
+            // Infrastructure services (Database, Email, Auth)
+            builder.Services.AddInfrastructure(builder.Configuration);
+
+            // JWT Authentication configuration
+            var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()!;
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.MapInboundClaims = false;
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = jwtSettings.Issuer,
+                    ValidAudience = jwtSettings.Audience,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret)),
+                    RoleClaimType = ClaimTypes.Role
+                };
+            });
+
+            builder.Services.AddAuthorizationBuilder()
+                .AddPolicy("RequireUser", policy =>
+                    policy.RequireRole("User", "Employee", "Admin"))
+                .AddPolicy("RequireEmployee", policy =>
+                    policy.RequireRole("Employee", "Admin"))
+                .AddPolicy("RequireAdmin", policy =>
+                    policy.RequireRole("Admin"));
 
             var app = builder.Build();
 
@@ -39,10 +106,12 @@ namespace FantasyRealm.Api
                 });
             }
 
-            app.UseHttpsRedirection();
             app.UseCors("AllowFrontend");
+            app.UseHttpsRedirection();
+            app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllers();
+            app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
 
             app.Run();
         }

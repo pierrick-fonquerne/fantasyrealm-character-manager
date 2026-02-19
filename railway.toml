@@ -1,10 +1,14 @@
-# Railway configuration
-# Backend deployment will be configured in a future US
-# For now, skip automatic builds to prevent CI failures
+# Railway configuration — Backend (.NET 8)
+# Uses the multi-stage Dockerfile in src/backend/
 
 [build]
-builder = "nixpacks"
-buildCommand = "echo 'Backend deployment not configured yet - skipping build'"
+builder = "dockerfile"
+dockerfilePath = "src/backend/Dockerfile"
+dockerfileContext = "src/backend"
+watchPatterns = ["src/backend/**"]
 
 [deploy]
-startCommand = "echo 'Backend not deployed' && sleep infinity"
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3

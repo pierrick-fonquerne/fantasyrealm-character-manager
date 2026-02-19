@@ -6,9 +6,37 @@ on:
   pull_request:
     branches: [main, develop]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect file changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'src/backend/**'
+              - '.github/workflows/ci.yml'
+            frontend:
+              - 'src/frontend/**'
+              - '.github/workflows/ci.yml'
+
   backend:
     name: Backend (.NET)
+    needs: changes
+    if: ${{ needs.changes.outputs.backend == 'true' }}
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -18,40 +46,31 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Check if backend exists
-        id: check
-        run: |
-          if find . -name "*.sln" -o -name "*.csproj" 2>/dev/null | grep -q .; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-          fi
-        working-directory: src/backend
-
       - name: Setup .NET
-        if: steps.check.outputs.exists == 'true'
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
 
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('src/backend/**/*.csproj') }}
+          restore-keys: ${{ runner.os }}-nuget-
+
       - name: Restore dependencies
-        if: steps.check.outputs.exists == 'true'
         run: dotnet restore
 
       - name: Build
-        if: steps.check.outputs.exists == 'true'
         run: dotnet build --no-restore --configuration Release
 
       - name: Test
-        if: steps.check.outputs.exists == 'true'
         run: dotnet test --no-build --configuration Release --verbosity normal --filter "Category!=Email"
-
-      - name: Skip (no backend yet)
-        if: steps.check.outputs.exists == 'false'
-        run: echo "Backend not yet implemented - skipping"
 
   frontend:
     name: Frontend (React)
+    needs: changes
+    if: ${{ needs.changes.outputs.frontend == 'true' }}
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -61,18 +80,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Check if frontend exists
-        id: check
-        run: |
-          if [ -f "package.json" ]; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-          fi
-        working-directory: src/frontend
-
       - name: Setup Node.js
-        if: steps.check.outputs.exists == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -80,25 +88,30 @@ jobs:
           cache-dependency-path: src/frontend/package-lock.json
 
       - name: Install dependencies
-        if: steps.check.outputs.exists == 'true'
         run: npm ci
 
       - name: Lint
-        if: steps.check.outputs.exists == 'true'
         run: npm run lint
 
       - name: Type check
-        if: steps.check.outputs.exists == 'true'
         run: npm run type-check
 
       - name: Build
-        if: steps.check.outputs.exists == 'true'
         run: npm run build
 
       - name: Test
-        if: steps.check.outputs.exists == 'true'
         run: npm run test -- --passWithNoTests
 
-      - name: Skip (no frontend yet)
-        if: steps.check.outputs.exists == 'false'
-        run: echo "Frontend not yet implemented - skipping"
+  ci-success:
+    name: CI Success
+    needs: [changes, backend, frontend]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check results
+        run: |
+          if [[ "${{ needs.backend.result }}" == "failure" || "${{ needs.frontend.result }}" == "failure" ]]; then
+            echo "One or more jobs failed"
+            exit 1
+          fi
+          echo "CI passed successfully"

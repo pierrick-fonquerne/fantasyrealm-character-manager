@@ -1,35 +1,28 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Routes, Route } from 'react-router-dom';
+import { HomePage, RegisterPage, LoginPage, ForgotPasswordPage, DashboardPage, ContactPage, UnauthorizedPage, CreateCharacterPage, EditCharacterPage, CharacterDetailPage, GalleryPage, LegalPage, ModerationPage, AdminPage, SettingsPage } from './pages';
+import { ProtectedRoute } from './components/auth';
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <Routes>
+      <Route path="/" element={<HomePage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/dashboard" element={<ProtectedRoute requiredRole="User"><DashboardPage /></ProtectedRoute>} />
+      <Route path="/characters/create" element={<ProtectedRoute requiredRole="User"><CreateCharacterPage /></ProtectedRoute>} />
+      <Route path="/characters/:id/edit" element={<ProtectedRoute requiredRole="User"><EditCharacterPage /></ProtectedRoute>} />
+      <Route path="/characters/:id" element={<CharacterDetailPage />} />
+      <Route path="/galerie" element={<GalleryPage />} />
+      <Route path="/moderation" element={<ProtectedRoute requiredRole="Employee"><ModerationPage /></ProtectedRoute>} />
+      <Route path="/administration" element={<ProtectedRoute requiredRole="Admin"><AdminPage /></ProtectedRoute>} />
+      <Route path="/parametres" element={<ProtectedRoute requiredRole="User"><SettingsPage /></ProtectedRoute>} />
+      <Route path="/contact" element={<ContactPage />} />
+      <Route path="/mentions-legales" element={<LegalPage slug="mentions-legales" />} />
+      <Route path="/cgu" element={<LegalPage slug="cgu" />} />
+      <Route path="/unauthorized" element={<UnauthorizedPage />} />
+    </Routes>
+  );
 }
 
-export default App
+export default App;

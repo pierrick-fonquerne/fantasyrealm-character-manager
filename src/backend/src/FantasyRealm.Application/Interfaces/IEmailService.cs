@@ -25,6 +25,16 @@ namespace FantasyRealm.Application.Interfaces
         Task SendPasswordResetEmailAsync(string toEmail, string pseudo, string resetToken, CancellationToken cancellationToken = default);
 
         /// <summary>
+        /// Sends an email containing a temporary password.
+        /// </summary>
+        /// <param name="toEmail">The recipient's email address.</param>
+        /// <param name="pseudo">The user's display name.</param>
+        /// <param name="temporaryPassword">The generated temporary password.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        Task SendTemporaryPasswordEmailAsync(string toEmail, string pseudo, string temporaryPassword, CancellationToken cancellationToken = default);
+
+        /// <summary>
         /// Sends a notification when a character has been approved by an employee.
         /// </summary>
         /// <param name="toEmail">The recipient's email address.</param>
@@ -75,5 +85,33 @@ namespace FantasyRealm.Application.Interfaces
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
         Task SendAccountSuspendedEmailAsync(string toEmail, string pseudo, string reason, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Sends a notification when a suspended account has been reactivated.
+        /// </summary>
+        /// <param name="toEmail">The recipient's email address.</param>
+        /// <param name="pseudo">The user's display name.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        Task SendAccountReactivatedEmailAsync(string toEmail, string pseudo, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Sends a notification when a user account has been permanently deleted.
+        /// </summary>
+        /// <param name="toEmail">The recipient's email address.</param>
+        /// <param name="pseudo">The user's display name.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        Task SendAccountDeletedEmailAsync(string toEmail, string pseudo, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Sends a contact form notification email to the site administrator.
+        /// </summary>
+        /// <param name="fromEmail">The sender's email address.</param>
+        /// <param name="pseudo">The sender's display name.</param>
+        /// <param name="message">The contact message content.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        Task SendContactNotificationEmailAsync(string fromEmail, string pseudo, string message, CancellationToken cancellationToken = default);
     }
 }

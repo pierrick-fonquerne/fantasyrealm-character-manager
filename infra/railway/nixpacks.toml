@@ -1,0 +1,15 @@
+[phases.setup]
+nixPkgs = ["dotnet-sdk_8"]
+
+[phases.build]
+cmds = [
+    "cd src/backend",
+    "dotnet restore",
+    "dotnet publish FantasyRealm.Api/FantasyRealm.Api.csproj -c Release -o out"
+]
+
+[start]
+cmd = "cd src/backend && dotnet out/FantasyRealm.Api.dll"
+
+[variables]
+DOTNET_SYSTEM_GLOBALIZATION_INVARIANT = "1"

@@ -1,0 +1,134 @@
+using FantasyRealm.Application.Common;
+using FantasyRealm.Application.DTOs;
+using FantasyRealm.Application.Interfaces;
+using FantasyRealm.Application.Mapping;
+using FantasyRealm.Domain.Enums;
+using FantasyRealm.Domain.Exceptions;
+using Microsoft.Extensions.Logging;
+
+namespace FantasyRealm.Application.Services
+{
+    /// <summary>
+    /// Handles comment moderation operations performed by employees.
+    /// </summary>
+    public sealed class CommentModerationService(
+        ICommentRepository commentRepository,
+        IEmailService emailService,
+        IActivityLogService activityLogService,
+        ILogger<CommentModerationService> logger) : ICommentModerationService
+    {
+        /// <inheritdoc />
+        public async Task<Result<PagedResponse<PendingCommentResponse>>> GetPendingCommentsAsync(
+            int page,
+            int pageSize,
+            CancellationToken cancellationToken)
+        {
+            if (page < 1)
+                return Result<PagedResponse<PendingCommentResponse>>.Failure("Le numéro de page doit être supérieur à 0.");
+
+            if (page > 1000)
+                return Result<PagedResponse<PendingCommentResponse>>.Failure("Le numéro de page ne peut pas dépasser 1000.");
+
+            pageSize = Math.Clamp(pageSize, 1, 50);
+
+            var (items, totalCount) = await commentRepository.GetPendingAsync(page, pageSize, cancellationToken);
+
+            var responses = items.Select(CommentMapper.ToPendingResponse).ToList();
+            var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+
+            return Result<PagedResponse<PendingCommentResponse>>.Success(
+                new PagedResponse<PendingCommentResponse>(responses, page, pageSize, totalCount, totalPages));
+        }
+
+        /// <inheritdoc />
+        public async Task<Result<CommentResponse>> ApproveAsync(
+            int commentId,
+            int reviewerId,
+            CancellationToken cancellationToken)
+        {
+            var comment = await commentRepository.GetByIdAsync(commentId, cancellationToken);
+
+            if (comment is null)
+                return Result<CommentResponse>.Failure("Commentaire introuvable.", 404);
+
+            try
+            {
+                comment.Approve(reviewerId);
+            }
+            catch (DomainException ex)
+            {
+                return Result<CommentResponse>.Failure(ex.Message, ex.StatusCode);
+            }
+
+            await commentRepository.UpdateAsync(comment, cancellationToken);
+
+            try
+            {
+                await emailService.SendCommentApprovedEmailAsync(
+                    comment.Author.Email, comment.Author.Pseudo, comment.Character.Name, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to send approval email for comment {CommentId}", commentId);
+            }
+
+            try
+            {
+                await activityLogService.LogAsync(
+                    ActivityAction.CommentApproved, "Comment", commentId, comment.Author.Pseudo, null, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to log activity for comment approval {CommentId}", commentId);
+            }
+
+            return Result<CommentResponse>.Success(CommentMapper.ToResponse(comment));
+        }
+
+        /// <inheritdoc />
+        public async Task<Result<CommentResponse>> RejectAsync(
+            int commentId,
+            string reason,
+            int reviewerId,
+            CancellationToken cancellationToken)
+        {
+            var comment = await commentRepository.GetByIdAsync(commentId, cancellationToken);
+
+            if (comment is null)
+                return Result<CommentResponse>.Failure("Commentaire introuvable.", 404);
+
+            try
+            {
+                comment.Reject(reason, reviewerId);
+            }
+            catch (DomainException ex)
+            {
+                return Result<CommentResponse>.Failure(ex.Message, ex.StatusCode);
+            }
+
+            await commentRepository.UpdateAsync(comment, cancellationToken);
+
+            try
+            {
+                await emailService.SendCommentRejectedEmailAsync(
+                    comment.Author.Email, comment.Author.Pseudo, comment.Character.Name, reason, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to send rejection email for comment {CommentId}", commentId);
+            }
+
+            try
+            {
+                await activityLogService.LogAsync(
+                    ActivityAction.CommentRejected, "Comment", commentId, comment.Author.Pseudo, reason.Trim(), cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to log activity for comment rejection {CommentId}", commentId);
+            }
+
+            return Result<CommentResponse>.Success(CommentMapper.ToResponse(comment));
+        }
+    }
+}

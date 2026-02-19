@@ -1,6 +1,10 @@
 using FantasyRealm.Application.Interfaces;
+using FantasyRealm.Application.Services;
 using FantasyRealm.Infrastructure.Email;
 using FantasyRealm.Infrastructure.Persistence;
+using FantasyRealm.Infrastructure.Repositories;
+using FantasyRealm.Infrastructure.Security;
+using FantasyRealm.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -39,11 +43,40 @@ namespace FantasyRealm.Infrastructure
                     var client = sp.GetRequiredService<IMongoClient>();
                     return new MongoDbContext(client, mongoDbDatabaseName);
                 });
+                services.AddScoped<IActivityLogRepository, ActivityLogRepository>();
+                services.AddScoped<IActivityLogService, ActivityLogService>();
+            }
+            else
+            {
+                services.AddSingleton<IActivityLogService, NoOpActivityLogService>();
             }
 
-            services.Configure<EmailSettings>(configuration.GetSection(EmailSettings.SectionName));
-            services.AddSingleton<ISmtpClientFactory, SmtpClientFactory>();
-            services.AddScoped<IEmailService, SmtpEmailService>();
+            services.Configure<BrevoSettings>(configuration.GetSection(BrevoSettings.SectionName));
+            services.AddHttpClient<IEmailService, BrevoEmailService>();
+
+            services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
+            services.AddSingleton<IJwtService, JwtService>();
+            services.AddSingleton<IPasswordHasher, Argon2PasswordHasher>();
+            services.AddSingleton<IPasswordGenerator, SecurePasswordGenerator>();
+
+            services.AddScoped<IArticleRepository, ArticleRepository>();
+            services.AddScoped<ICharacterRepository, CharacterRepository>();
+            services.AddScoped<ICommentRepository, CommentRepository>();
+            services.AddScoped<IReferenceDataRepository, ReferenceDataRepository>();
+            services.AddScoped<IUserRepository, UserRepository>();
+
+            services.AddScoped<ICurrentUserService, CurrentUserService>();
+            services.AddScoped<IAdminService, AdminService>();
+            services.AddScoped<IArticleService, ArticleService>();
+            services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IEmployeeManagementService, EmployeeManagementService>();
+            services.AddScoped<ICharacterService, CharacterService>();
+            services.AddScoped<ICommentService, CommentService>();
+            services.AddScoped<ICommentModerationService, CommentModerationService>();
+            services.AddScoped<IContactService, ContactService>();
+            services.AddScoped<IModerationService, ModerationService>();
+            services.AddScoped<IUserModerationService, UserModerationService>();
+            services.AddScoped<IReferenceDataService, ReferenceDataService>();
 
             return services;
         }

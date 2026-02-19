@@ -1,0 +1,15 @@
+export { default as HomePage } from './HomePage';
+export { default as RegisterPage } from './RegisterPage';
+export { default as LoginPage } from './LoginPage';
+export { default as ForgotPasswordPage } from './ForgotPasswordPage';
+export { default as DashboardPage } from './DashboardPage';
+export { default as ContactPage } from './ContactPage';
+export { default as UnauthorizedPage } from './UnauthorizedPage';
+export { default as CreateCharacterPage } from './CreateCharacterPage';
+export { default as EditCharacterPage } from './EditCharacterPage';
+export { default as CharacterDetailPage } from './CharacterDetailPage';
+export { default as GalleryPage } from './GalleryPage';
+export { default as LegalPage } from './LegalPage';
+export { default as ModerationPage } from './ModerationPage';
+export { default as AdminPage } from './AdminPage';
+export { default as SettingsPage } from './SettingsPage';
