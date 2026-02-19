@@ -143,7 +143,7 @@ ON CONFLICT (email) DO NOTHING;
 INSERT INTO articles (name, type_id, slot_id, is_active)
 VALUES
     -- -------------------------------------------------------------------------
-    -- Clothing (type_id=1) — 25 items
+    -- Vêtement (type_id=1) — 25 items
     -- -------------------------------------------------------------------------
     ('Tunique de lin',              1,  4, TRUE),   -- Torse
     ('Robe de mage émérite',        1,  4, TRUE),   -- Torse
@@ -172,7 +172,7 @@ VALUES
     ('Jambières de soie',           1,  8, TRUE),   -- Jambes
 
     -- -------------------------------------------------------------------------
-    -- Armor (type_id=2) — 25 items
+    -- Armure (type_id=2) — 25 items
     -- -------------------------------------------------------------------------
     ('Casque en fer forgé',         2,  1, TRUE),   -- Tête
     ('Heaume de mithril',           2,  1, TRUE),   -- Tête
@@ -201,7 +201,7 @@ VALUES
     ('Targe en bois de chêne sacré',2, 14, TRUE),   -- Main gauche
 
     -- -------------------------------------------------------------------------
-    -- Weapon (type_id=3) — 25 items
+    -- Arme (type_id=3) — 25 items
     -- -------------------------------------------------------------------------
     ('Épée longue du croisé',       3, 13, TRUE),   -- Main droite
     ('Épée courte de furtivité',    3, 13, TRUE),   -- Main droite
@@ -230,7 +230,7 @@ VALUES
     ('Fouet de soie ardente',       3, 13, TRUE),   -- Main droite
 
     -- -------------------------------------------------------------------------
-    -- Accessory (type_id=4) — 25 items
+    -- Accessoire (type_id=4) — 25 items
     -- -------------------------------------------------------------------------
     ('Anneau de puissance runique', 4, 11, TRUE),   -- Anneau 1
     ('Anneau en or des anciens',    4, 11, TRUE),   -- Anneau 1

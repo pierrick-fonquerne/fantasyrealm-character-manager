@@ -27,5 +27,14 @@ namespace FantasyRealm.Infrastructure.Repositories
                 .OrderBy(s => s.DisplayOrder)
                 .ToListAsync(cancellationToken);
         }
+
+        /// <inheritdoc />
+        public async Task<IReadOnlyList<ArticleType>> GetAllArticleTypesAsync(CancellationToken cancellationToken)
+        {
+            return await context.ArticleTypes
+                .AsNoTracking()
+                .OrderBy(t => t.Name)
+                .ToListAsync(cancellationToken);
+        }
     }
 }

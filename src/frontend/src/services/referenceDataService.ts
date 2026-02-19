@@ -18,3 +18,11 @@ export const fetchCharacterClasses = (): Promise<CharacterClass[]> =>
 
 export const fetchEquipmentSlots = (): Promise<EquipmentSlot[]> =>
   apiClient.get<EquipmentSlot[]>('/equipment-slots');
+
+export interface ArticleType {
+  id: number;
+  name: string;
+}
+
+export const fetchArticleTypes = (): Promise<ArticleType[]> =>
+  apiClient.get<ArticleType[]>('/article-types');
