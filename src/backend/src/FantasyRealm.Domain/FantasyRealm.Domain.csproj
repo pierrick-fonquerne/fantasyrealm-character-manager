@@ -10,4 +10,9 @@
     <PackageReference Include="MongoDB.Bson" Version="3.1.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="FantasyRealm.Tests.Unit" />
+    <InternalsVisibleTo Include="FantasyRealm.Tests.Integration" />
+  </ItemGroup>
+
 </Project>

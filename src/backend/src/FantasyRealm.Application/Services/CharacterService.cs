@@ -4,6 +4,7 @@ using FantasyRealm.Application.Interfaces;
 using FantasyRealm.Application.Mapping;
 using FantasyRealm.Domain.Entities;
 using FantasyRealm.Domain.Enums;
+using FantasyRealm.Domain.Exceptions;
 
 namespace FantasyRealm.Application.Services
 {
@@ -29,24 +30,19 @@ namespace FantasyRealm.Application.Services
             if (nameExists)
                 return Result<CharacterResponse>.Failure("Vous avez déjà un personnage avec ce nom.", 409);
 
-            var character = new Character
-            {
-                Name = request.Name,
-                ClassId = request.ClassId,
-                Gender = gender,
-                Status = CharacterStatus.Draft,
-                SkinColor = request.SkinColor,
-                EyeColor = request.EyeColor,
-                HairColor = request.HairColor,
-                HairStyle = request.HairStyle,
-                EyeShape = request.EyeShape,
-                NoseShape = request.NoseShape,
-                MouthShape = request.MouthShape,
-                FaceShape = request.FaceShape,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                UserId = userId
-            };
+            var character = Character.Create(
+                request.Name,
+                request.ClassId,
+                gender,
+                request.SkinColor,
+                request.EyeColor,
+                request.HairColor,
+                request.HairStyle,
+                request.EyeShape,
+                request.NoseShape,
+                request.MouthShape,
+                request.FaceShape,
+                userId);
 
             var created = await characterRepository.CreateAsync(character, cancellationToken);
             return Result<CharacterResponse>.Success(CharacterMapper.ToResponse(created, characterClass.Name, true));
@@ -85,9 +81,6 @@ namespace FantasyRealm.Application.Services
             if (character.UserId != userId)
                 return Result<CharacterResponse>.Failure("Accès non autorisé.", 403);
 
-            if (character.Status is not (CharacterStatus.Draft or CharacterStatus.Rejected or CharacterStatus.Approved))
-                return Result<CharacterResponse>.Failure("Seuls les personnages en brouillon, rejetés ou approuvés peuvent être modifiés.", 400);
-
             if (!Enum.TryParse<Gender>(request.Gender, true, out var gender))
                 return Result<CharacterResponse>.Failure("Genre invalide. Valeurs acceptées : Male, Female.");
 
@@ -100,25 +93,24 @@ namespace FantasyRealm.Application.Services
             if (nameExists)
                 return Result<CharacterResponse>.Failure("Vous avez déjà un personnage avec ce nom.", 409);
 
-            var nameChanged = !string.Equals(character.Name, request.Name, StringComparison.Ordinal);
-
-            character.Name = request.Name;
-            character.ClassId = request.ClassId;
-            character.Gender = gender;
-            character.SkinColor = request.SkinColor;
-            character.EyeColor = request.EyeColor;
-            character.HairColor = request.HairColor;
-            character.HairStyle = request.HairStyle;
-            character.EyeShape = request.EyeShape;
-            character.NoseShape = request.NoseShape;
-            character.MouthShape = request.MouthShape;
-            character.FaceShape = request.FaceShape;
-            character.UpdatedAt = DateTime.UtcNow;
-
-            if (character.Status == CharacterStatus.Approved && nameChanged)
+            try
             {
-                character.Status = CharacterStatus.Pending;
-                character.IsShared = false;
+                character.UpdateAppearance(
+                    request.Name,
+                    request.ClassId,
+                    gender,
+                    request.SkinColor,
+                    request.EyeColor,
+                    request.HairColor,
+                    request.HairStyle,
+                    request.EyeShape,
+                    request.NoseShape,
+                    request.MouthShape,
+                    request.FaceShape);
+            }
+            catch (DomainException ex)
+            {
+                return Result<CharacterResponse>.Failure(ex.Message, ex.StatusCode);
             }
 
             await characterRepository.UpdateAsync(character, cancellationToken);
@@ -149,11 +141,14 @@ namespace FantasyRealm.Application.Services
             if (character.UserId != userId)
                 return Result<CharacterResponse>.Failure("Accès non autorisé.", 403);
 
-            if (character.Status is not (CharacterStatus.Draft or CharacterStatus.Rejected))
-                return Result<CharacterResponse>.Failure("Seuls les personnages en brouillon ou rejetés peuvent être soumis.", 400);
-
-            character.Status = CharacterStatus.Pending;
-            character.UpdatedAt = DateTime.UtcNow;
+            try
+            {
+                character.SubmitForReview();
+            }
+            catch (DomainException ex)
+            {
+                return Result<CharacterResponse>.Failure(ex.Message, ex.StatusCode);
+            }
 
             await characterRepository.UpdateAsync(character, cancellationToken);
             return Result<CharacterResponse>.Success(CharacterMapper.ToResponse(character, character.Class.Name, true));
@@ -189,25 +184,7 @@ namespace FantasyRealm.Application.Services
             if (nameExists)
                 return Result<CharacterResponse>.Failure("Vous avez déjà un personnage avec ce nom.", 409);
 
-            var duplicate = new Character
-            {
-                Name = newName,
-                ClassId = character.ClassId,
-                Gender = character.Gender,
-                Status = CharacterStatus.Draft,
-                SkinColor = character.SkinColor,
-                EyeColor = character.EyeColor,
-                HairColor = character.HairColor,
-                HairStyle = character.HairStyle,
-                EyeShape = character.EyeShape,
-                NoseShape = character.NoseShape,
-                MouthShape = character.MouthShape,
-                FaceShape = character.FaceShape,
-                IsShared = false,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                UserId = userId
-            };
+            var duplicate = Character.Duplicate(character, newName, userId);
 
             var created = await characterRepository.CreateAsync(duplicate, cancellationToken);
             return Result<CharacterResponse>.Success(CharacterMapper.ToResponse(created, character.Class.Name, true));
@@ -223,11 +200,14 @@ namespace FantasyRealm.Application.Services
             if (character.UserId != userId)
                 return Result<CharacterResponse>.Failure("Accès non autorisé.", 403);
 
-            if (character.Status != CharacterStatus.Approved)
-                return Result<CharacterResponse>.Failure("Seuls les personnages approuvés peuvent être partagés.", 400);
-
-            character.IsShared = !character.IsShared;
-            character.UpdatedAt = DateTime.UtcNow;
+            try
+            {
+                character.ToggleShare();
+            }
+            catch (DomainException ex)
+            {
+                return Result<CharacterResponse>.Failure(ex.Message, ex.StatusCode);
+            }
 
             await characterRepository.UpdateAsync(character, cancellationToken);
             return Result<CharacterResponse>.Success(CharacterMapper.ToResponse(character, character.Class.Name, true));

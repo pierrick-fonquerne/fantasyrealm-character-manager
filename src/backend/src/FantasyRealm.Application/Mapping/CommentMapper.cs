@@ -1,6 +1,5 @@
 using FantasyRealm.Application.DTOs;
 using FantasyRealm.Domain.Entities;
-using FantasyRealm.Domain.Enums;
 
 namespace FantasyRealm.Application.Mapping
 {
@@ -56,15 +55,7 @@ namespace FantasyRealm.Application.Mapping
         /// <returns>A new <see cref="Comment"/> entity ready to be persisted.</returns>
         public static Comment ToEntity(CreateCommentRequest request, int characterId, int authorId)
         {
-            return new Comment
-            {
-                Rating = request.Rating,
-                Text = request.Text,
-                Status = CommentStatus.Pending,
-                CommentedAt = DateTime.UtcNow,
-                CharacterId = characterId,
-                AuthorId = authorId
-            };
+            return Comment.Create(request.Rating, request.Text, characterId, authorId);
         }
     }
 }

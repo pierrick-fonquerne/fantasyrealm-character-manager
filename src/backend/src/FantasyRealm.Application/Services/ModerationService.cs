@@ -3,6 +3,7 @@ using FantasyRealm.Application.DTOs;
 using FantasyRealm.Application.Interfaces;
 using FantasyRealm.Application.Mapping;
 using FantasyRealm.Domain.Enums;
+using FantasyRealm.Domain.Exceptions;
 using Microsoft.Extensions.Logging;
 
 namespace FantasyRealm.Application.Services
@@ -49,11 +50,14 @@ namespace FantasyRealm.Application.Services
             if (character is null)
                 return Result<CharacterResponse>.Failure("Personnage introuvable.", 404);
 
-            if (character.Status is not CharacterStatus.Pending)
-                return Result<CharacterResponse>.Failure("Seuls les personnages en attente peuvent être approuvés.", 400);
-
-            character.Status = CharacterStatus.Approved;
-            character.UpdatedAt = DateTime.UtcNow;
+            try
+            {
+                character.Approve();
+            }
+            catch (DomainException ex)
+            {
+                return Result<CharacterResponse>.Failure(ex.Message, ex.StatusCode);
+            }
 
             await characterRepository.UpdateAsync(character, cancellationToken);
 
@@ -67,8 +71,15 @@ namespace FantasyRealm.Application.Services
                 logger.LogWarning(ex, "Failed to send approval email for character {CharacterId}", characterId);
             }
 
-            try { await activityLogService.LogAsync(ActivityAction.CharacterApproved, "Character", characterId, character.Name, null, cancellationToken); }
-            catch (Exception ex) { logger.LogWarning(ex, "Failed to log activity for character approval {CharacterId}", characterId); }
+            try
+            {
+                await activityLogService.LogAsync(
+                    ActivityAction.CharacterApproved, "Character", characterId, character.Name, null, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to log activity for character approval {CharacterId}", characterId);
+            }
 
             return Result<CharacterResponse>.Success(CharacterMapper.ToResponse(character, character.Class.Name, isOwner: false));
         }
@@ -87,11 +98,14 @@ namespace FantasyRealm.Application.Services
             if (character is null)
                 return Result<CharacterResponse>.Failure("Personnage introuvable.", 404);
 
-            if (character.Status is not CharacterStatus.Pending)
-                return Result<CharacterResponse>.Failure("Seuls les personnages en attente peuvent être rejetés.", 400);
-
-            character.Status = CharacterStatus.Rejected;
-            character.UpdatedAt = DateTime.UtcNow;
+            try
+            {
+                character.Reject();
+            }
+            catch (DomainException ex)
+            {
+                return Result<CharacterResponse>.Failure(ex.Message, ex.StatusCode);
+            }
 
             await characterRepository.UpdateAsync(character, cancellationToken);
 
@@ -105,8 +119,15 @@ namespace FantasyRealm.Application.Services
                 logger.LogWarning(ex, "Failed to send rejection email for character {CharacterId}", characterId);
             }
 
-            try { await activityLogService.LogAsync(ActivityAction.CharacterRejected, "Character", characterId, character.Name, reason, cancellationToken); }
-            catch (Exception ex) { logger.LogWarning(ex, "Failed to log activity for character rejection {CharacterId}", characterId); }
+            try
+            {
+                await activityLogService.LogAsync(
+                    ActivityAction.CharacterRejected, "Character", characterId, character.Name, reason, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to log activity for character rejection {CharacterId}", characterId);
+            }
 
             return Result<CharacterResponse>.Success(CharacterMapper.ToResponse(character, character.Class.Name, isOwner: false));
         }

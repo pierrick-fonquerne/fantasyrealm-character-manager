@@ -71,7 +71,6 @@ namespace FantasyRealm.Infrastructure.Repositories
         /// <inheritdoc />
         public async Task<User> UpdateAsync(User user, CancellationToken cancellationToken = default)
         {
-            user.UpdatedAt = DateTime.UtcNow;
             context.Users.Update(user);
             await context.SaveChangesAsync(cancellationToken);
             return user;
