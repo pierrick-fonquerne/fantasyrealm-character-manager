@@ -139,7 +139,10 @@ namespace FantasyRealm.Infrastructure.Persistence
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Name).HasMaxLength(100).IsRequired();
                 entity.Property(e => e.IsActive).HasDefaultValue(true);
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+                entity.HasIndex(e => e.Name).IsUnique();
                 entity.HasIndex(e => e.TypeId);
                 entity.HasIndex(e => e.IsActive);
                 entity.HasIndex(e => e.SlotId);

@@ -59,6 +59,7 @@ namespace FantasyRealm.Infrastructure
             services.AddSingleton<IPasswordHasher, Argon2PasswordHasher>();
             services.AddSingleton<IPasswordGenerator, SecurePasswordGenerator>();
 
+            services.AddScoped<IArticleRepository, ArticleRepository>();
             services.AddScoped<ICharacterRepository, CharacterRepository>();
             services.AddScoped<ICommentRepository, CommentRepository>();
             services.AddScoped<IReferenceDataRepository, ReferenceDataRepository>();
@@ -66,6 +67,7 @@ namespace FantasyRealm.Infrastructure
 
             services.AddScoped<ICurrentUserService, CurrentUserService>();
             services.AddScoped<IAdminService, AdminService>();
+            services.AddScoped<IArticleService, ArticleService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IEmployeeManagementService, EmployeeManagementService>();
             services.AddScoped<ICharacterService, CharacterService>();

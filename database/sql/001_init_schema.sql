@@ -131,7 +131,7 @@ CREATE TABLE article_types (
     name VARCHAR(50) NOT NULL UNIQUE
 );
 
-INSERT INTO article_types (name) VALUES ('Clothing'), ('Armor'), ('Weapon'), ('Accessory');
+INSERT INTO article_types (name) VALUES ('Vêtement'), ('Armure'), ('Arme'), ('Accessoire');
 
 -- ============================================================================
 -- TABLE: articles
@@ -139,16 +139,23 @@ INSERT INTO article_types (name) VALUES ('Clothing'), ('Armor'), ('Weapon'), ('A
 -- ============================================================================
 CREATE TABLE articles (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
+    name VARCHAR(100) NOT NULL UNIQUE,
     type_id INTEGER NOT NULL REFERENCES article_types(id) ON DELETE RESTRICT,
     slot_id INTEGER NOT NULL REFERENCES equipment_slots(id) ON DELETE RESTRICT,
     image BYTEA,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX idx_articles_type_id ON articles(type_id);
 CREATE INDEX idx_articles_slot_id ON articles(slot_id);
 CREATE INDEX idx_articles_active ON articles(is_active) WHERE is_active = TRUE;
+
+CREATE TRIGGER trigger_articles_updated_at
+    BEFORE UPDATE ON articles
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================================================
 -- TABLE: character_articles

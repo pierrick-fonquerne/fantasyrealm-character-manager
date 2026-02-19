@@ -32,5 +32,17 @@ namespace FantasyRealm.Application.Services
 
             return Result<IReadOnlyList<EquipmentSlotResponse>>.Success(response);
         }
+
+        /// <inheritdoc />
+        public async Task<Result<IReadOnlyList<ArticleTypeResponse>>> GetArticleTypesAsync(CancellationToken cancellationToken)
+        {
+            var types = await repository.GetAllArticleTypesAsync(cancellationToken);
+
+            var response = types
+                .Select(t => new ArticleTypeResponse(t.Id, t.Name))
+                .ToList() as IReadOnlyList<ArticleTypeResponse>;
+
+            return Result<IReadOnlyList<ArticleTypeResponse>>.Success(response);
+        }
     }
 }

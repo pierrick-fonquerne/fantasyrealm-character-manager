@@ -17,5 +17,10 @@ namespace FantasyRealm.Application.Interfaces
         /// Returns all equipment slots ordered by display order.
         /// </summary>
         Task<Result<IReadOnlyList<EquipmentSlotResponse>>> GetEquipmentSlotsAsync(CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Returns all article types.
+        /// </summary>
+        Task<Result<IReadOnlyList<ArticleTypeResponse>>> GetArticleTypesAsync(CancellationToken cancellationToken);
     }
 }

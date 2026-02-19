@@ -50,5 +50,25 @@ namespace FantasyRealm.Api.Controllers
 
             return Ok(result.Value);
         }
+
+        /// <summary>
+        /// Returns all article types.
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>A list of article types.</returns>
+        /// <response code="200">Article types retrieved successfully.</response>
+        [HttpGet("article-types")]
+        [ProducesResponseType(typeof(IReadOnlyList<ArticleTypeResponse>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetArticleTypes(CancellationToken cancellationToken)
+        {
+            var result = await referenceDataService.GetArticleTypesAsync(cancellationToken);
+
+            if (result.IsFailure)
+            {
+                return StatusCode(result.ErrorCode ?? 500, new { message = result.Error });
+            }
+
+            return Ok(result.Value);
+        }
     }
 }
