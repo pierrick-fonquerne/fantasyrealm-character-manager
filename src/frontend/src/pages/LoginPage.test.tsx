@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { BrowserRouter } from 'react-router-dom';
+import { MemoryRouter, BrowserRouter } from 'react-router-dom';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import LoginPage from './LoginPage';
 import { authService } from '../services/authService';
@@ -34,6 +34,10 @@ const mockAuthLogin = vi.mocked(authService.login);
 
 const renderWithRouter = (component: React.ReactNode) => {
   return render(<BrowserRouter>{component}</BrowserRouter>);
+};
+
+const renderWithQuery = (component: React.ReactNode, search: string) => {
+  return render(<MemoryRouter initialEntries={[`/login${search}`]}>{component}</MemoryRouter>);
 };
 
 describe('LoginPage', () => {
@@ -156,6 +160,55 @@ describe('LoginPage', () => {
   describe('accessibility (RGAA/WCAG)', () => {
     it('should have no accessibility violations on initial render', async () => {
       const { container } = renderWithRouter(<LoginPage />);
+
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+  });
+
+  describe('session expired banner', () => {
+    it('should NOT display the banner when no expired query param is present', () => {
+      renderWithQuery(<LoginPage />, '');
+
+      expect(screen.queryByText(/votre session a expiré/i)).not.toBeInTheDocument();
+    });
+
+    it('should NOT display the banner when expired query param is missing', () => {
+      renderWithQuery(<LoginPage />, '?other=true');
+
+      expect(screen.queryByText(/votre session a expiré/i)).not.toBeInTheDocument();
+    });
+
+    it('should display the banner when ?expired=true is present', () => {
+      renderWithQuery(<LoginPage />, '?expired=true');
+
+      expect(screen.getByText(/votre session a expiré/i)).toBeInTheDocument();
+      expect(screen.getByText(/veuillez vous reconnecter/i)).toBeInTheDocument();
+    });
+
+    it('should NOT display the banner when expired query param is not exactly "true"', () => {
+      renderWithQuery(<LoginPage />, '?expired=false');
+
+      expect(screen.queryByText(/votre session a expiré/i)).not.toBeInTheDocument();
+    });
+
+    it('should expose the banner as an accessible alert', () => {
+      renderWithQuery(<LoginPage />, '?expired=true');
+
+      const alert = screen.getByRole('alert');
+      expect(alert).toHaveTextContent(/votre session a expiré/i);
+      expect(alert).toHaveAttribute('aria-live', 'polite');
+    });
+
+    it('should still render the login form when banner is shown', () => {
+      renderWithQuery(<LoginPage />, '?expired=true');
+
+      expect(screen.getByLabelText(/adresse email/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /se connecter/i })).toBeInTheDocument();
+    });
+
+    it('should have no accessibility violations when banner is shown', async () => {
+      const { container } = renderWithQuery(<LoginPage />, '?expired=true');
 
       const results = await axe(container);
       expect(results).toHaveNoViolations();

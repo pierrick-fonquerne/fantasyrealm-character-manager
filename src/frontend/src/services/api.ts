@@ -6,12 +6,31 @@ interface ApiError {
 }
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+type UnauthorizedHandler = () => void;
 
 class ApiClient {
   private baseUrl: string;
+  private onUnauthorized: UnauthorizedHandler | null = null;
+  private isHandlingUnauthorized = false;
+
+  private static readonly PUBLIC_AUTH_ENDPOINTS: ReadonlyArray<string> = [
+    '/auth/login',
+    '/auth/register',
+  ];
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
+  }
+
+  setUnauthorizedHandler(handler: UnauthorizedHandler): void {
+    this.onUnauthorized = handler;
+    this.isHandlingUnauthorized = false;
+  }
+
+  private shouldTriggerUnauthorizedHandler(endpoint: string): boolean {
+    return !ApiClient.PUBLIC_AUTH_ENDPOINTS.some((publicEndpoint) =>
+      endpoint.startsWith(publicEndpoint)
+    );
   }
 
   private async request(
@@ -46,6 +65,15 @@ class ApiClient {
     }
 
     if (!response.ok) {
+      if (
+        response.status === 401 &&
+        this.shouldTriggerUnauthorizedHandler(endpoint) &&
+        !this.isHandlingUnauthorized
+      ) {
+        this.isHandlingUnauthorized = true;
+        this.onUnauthorized?.();
+      }
+
       const errorData = await response.json().catch(() => ({}));
       const error: ApiError = {
         message: errorData.message || 'Une erreur est survenue',
