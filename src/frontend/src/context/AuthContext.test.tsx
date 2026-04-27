@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { AuthProvider, useAuth } from './AuthContext';
+import { apiClient } from '../services/api';
 import type { LoginResponse } from '../services/authService';
 
 const TOKEN_KEY = 'fantasyrealm_token';
@@ -217,6 +218,70 @@ describe('AuthContext', () => {
       }).toThrow('useAuth must be used within an AuthProvider');
 
       consoleError.mockRestore();
+    });
+  });
+
+  describe('JWT expiration handler registration', () => {
+    it('should register an unauthorized handler on apiClient at mount', () => {
+      const setHandlerSpy = vi.spyOn(apiClient, 'setUnauthorizedHandler');
+
+      render(
+        <AuthProvider>
+          <TestComponent />
+        </AuthProvider>
+      );
+
+      expect(setHandlerSpy).toHaveBeenCalledTimes(1);
+      expect(setHandlerSpy).toHaveBeenCalledWith(expect.any(Function));
+
+      setHandlerSpy.mockRestore();
+    });
+
+    it('should clear localStorage and redirect when handler is invoked', () => {
+      const storedUser = { id: 1, email: 'a@a.com', pseudo: 'X', role: 'User' };
+      localStorage.setItem(TOKEN_KEY, 'some-token');
+      localStorage.setItem(USER_KEY, JSON.stringify(storedUser));
+
+      let capturedHandler: (() => void) | null = null;
+      const setHandlerSpy = vi
+        .spyOn(apiClient, 'setUnauthorizedHandler')
+        .mockImplementation((handler) => {
+          capturedHandler = handler;
+        });
+
+      const originalLocation = window.location;
+      const hrefSetter = vi.fn();
+      Object.defineProperty(window, 'location', {
+        configurable: true,
+        value: {
+          ...originalLocation,
+          set href(value: string) {
+            hrefSetter(value);
+          },
+          get href() {
+            return originalLocation.href;
+          },
+        },
+      });
+
+      render(
+        <AuthProvider>
+          <TestComponent />
+        </AuthProvider>
+      );
+
+      expect(capturedHandler).not.toBeNull();
+      capturedHandler!();
+
+      expect(localStorage.getItem(TOKEN_KEY)).toBeNull();
+      expect(localStorage.getItem(USER_KEY)).toBeNull();
+      expect(hrefSetter).toHaveBeenCalledWith('/login?expired=true');
+
+      Object.defineProperty(window, 'location', {
+        configurable: true,
+        value: originalLocation,
+      });
+      setHandlerSpy.mockRestore();
     });
   });
 });

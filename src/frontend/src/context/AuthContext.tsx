@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { apiClient } from '../services/api';
 import type { UserInfo, LoginResponse } from '../services/authService';
 
 const TOKEN_KEY = 'fantasyrealm_token';
@@ -39,6 +40,14 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
   const initialState = getInitialState();
   const [user, setUser] = useState<UserInfo | null>(initialState.user);
   const [token, setToken] = useState<string | null>(initialState.token);
+
+  useEffect(() => {
+    apiClient.setUnauthorizedHandler(() => {
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(USER_KEY);
+      window.location.href = '/login?expired=true';
+    });
+  }, []);
 
   const login = (response: LoginResponse) => {
     localStorage.setItem(TOKEN_KEY, response.token);
