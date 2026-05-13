@@ -501,7 +501,7 @@ namespace FantasyRealm.Tests.Unit.Services
             var character = CharacterWithClass();
             character.Status = CharacterStatus.Approved;
             _characterRepoMock
-                .Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+                .Setup(r => r.GetByIdWithEquipmentAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(character);
             _characterRepoMock
                 .Setup(r => r.ExistsByNameAndUserAsync("NewHero", 10, null, It.IsAny<CancellationToken>()))
@@ -538,7 +538,7 @@ namespace FantasyRealm.Tests.Unit.Services
             var character = CharacterWithClass();
             character.Status = CharacterStatus.Approved;
             _characterRepoMock
-                .Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+                .Setup(r => r.GetByIdWithEquipmentAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(character);
             _characterRepoMock
                 .Setup(r => r.ExistsByNameAndUserAsync("TakenName", 10, null, It.IsAny<CancellationToken>()))
@@ -556,7 +556,7 @@ namespace FantasyRealm.Tests.Unit.Services
             var character = CharacterWithClass();
             character.Status = CharacterStatus.Draft;
             _characterRepoMock
-                .Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+                .Setup(r => r.GetByIdWithEquipmentAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(character);
 
             var result = await _sut.DuplicateAsync(1, 10, "NewHero", CancellationToken.None);
@@ -572,7 +572,7 @@ namespace FantasyRealm.Tests.Unit.Services
             var character = CharacterWithClass(userId: 99);
             character.Status = CharacterStatus.Approved;
             _characterRepoMock
-                .Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+                .Setup(r => r.GetByIdWithEquipmentAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(character);
 
             var result = await _sut.DuplicateAsync(1, 10, "NewHero", CancellationToken.None);
@@ -585,7 +585,7 @@ namespace FantasyRealm.Tests.Unit.Services
         public async Task DuplicateAsync_WhenNotFound_Returns404()
         {
             _characterRepoMock
-                .Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+                .Setup(r => r.GetByIdWithEquipmentAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Character?)null);
 
             var result = await _sut.DuplicateAsync(1, 10, "NewHero", CancellationToken.None);
@@ -609,7 +609,7 @@ namespace FantasyRealm.Tests.Unit.Services
             character.FaceShape = "carré";
 
             _characterRepoMock
-                .Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+                .Setup(r => r.GetByIdWithEquipmentAsync(1, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(character);
             _characterRepoMock
                 .Setup(r => r.ExistsByNameAndUserAsync("CopiedHero", 10, null, It.IsAny<CancellationToken>()))
