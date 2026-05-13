@@ -13,7 +13,9 @@ namespace FantasyRealm.Api.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Authorize(Policy = "RequireUser")]
-    public sealed class CharactersController(ICharacterService characterService) : ControllerBase
+    public sealed class CharactersController(
+        ICharacterService characterService,
+        ICharacterEquipmentService equipmentService) : ControllerBase
     {
         /// <summary>
         /// Creates a new character for the authenticated user.
@@ -291,6 +293,87 @@ namespace FantasyRealm.Api.Controllers
                 return StatusCode(result.ErrorCode ?? 400, new { message = result.Error });
 
             return Ok(result.Value);
+        }
+
+        /// <summary>
+        /// Returns the current equipment of a character.
+        /// </summary>
+        /// <param name="id">The character identifier.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <response code="200">Equipment retrieved successfully.</response>
+        /// <response code="403">The authenticated user is not the owner.</response>
+        /// <response code="404">Character not found.</response>
+        [HttpGet("{id:int}/equipment")]
+        [ProducesResponseType(typeof(IReadOnlyList<EquippedArticleResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetEquipment(int id, CancellationToken cancellationToken)
+        {
+            if (!TryGetUserId(out var userId))
+                return Unauthorized(new { message = "Token invalide." });
+
+            var result = await equipmentService.GetEquipmentAsync(id, userId, cancellationToken);
+
+            if (result.IsFailure)
+                return StatusCode(result.ErrorCode ?? 400, new { message = result.Error });
+
+            return Ok(result.Value);
+        }
+
+        /// <summary>
+        /// Equips an article on a character, replacing any existing article in the same slot.
+        /// </summary>
+        /// <param name="id">The character identifier.</param>
+        /// <param name="articleId">The article identifier to equip.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <response code="204">Article equipped successfully.</response>
+        /// <response code="400">Article is inactive or domain rule violated.</response>
+        /// <response code="403">The authenticated user is not the owner.</response>
+        /// <response code="404">Character or article not found.</response>
+        [HttpPost("{id:int}/equipment/{articleId:int}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> EquipArticle(int id, int articleId, CancellationToken cancellationToken)
+        {
+            if (!TryGetUserId(out var userId))
+                return Unauthorized(new { message = "Token invalide." });
+
+            var result = await equipmentService.EquipArticleAsync(id, articleId, userId, cancellationToken);
+
+            if (result.IsFailure)
+                return StatusCode(result.ErrorCode ?? 400, new { message = result.Error });
+
+            return NoContent();
+        }
+
+        /// <summary>
+        /// Unequips an article from a character.
+        /// </summary>
+        /// <param name="id">The character identifier.</param>
+        /// <param name="articleId">The article identifier to unequip.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <response code="204">Article unequipped successfully.</response>
+        /// <response code="400">Article is not equipped on this character.</response>
+        /// <response code="403">The authenticated user is not the owner.</response>
+        /// <response code="404">Character not found.</response>
+        [HttpDelete("{id:int}/equipment/{articleId:int}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UnequipArticle(int id, int articleId, CancellationToken cancellationToken)
+        {
+            if (!TryGetUserId(out var userId))
+                return Unauthorized(new { message = "Token invalide." });
+
+            var result = await equipmentService.UnequipArticleAsync(id, articleId, userId, cancellationToken);
+
+            if (result.IsFailure)
+                return StatusCode(result.ErrorCode ?? 400, new { message = result.Error });
+
+            return NoContent();
         }
 
         private bool TryGetUserId(out int userId)

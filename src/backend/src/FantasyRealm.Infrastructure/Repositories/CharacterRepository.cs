@@ -44,7 +44,9 @@ namespace FantasyRealm.Infrastructure.Repositories
         /// <inheritdoc />
         public async Task UpdateAsync(Character character, CancellationToken cancellationToken)
         {
-            context.Characters.Update(character);
+            if (context.Entry(character).State == Microsoft.EntityFrameworkCore.EntityState.Detached)
+                context.Characters.Update(character);
+
             await context.SaveChangesAsync(cancellationToken);
         }
 
@@ -157,6 +159,20 @@ namespace FantasyRealm.Infrastructure.Repositories
                 .ToListAsync(cancellationToken);
 
             return (items, totalCount);
+        }
+
+        /// <inheritdoc />
+        public async Task<Character?> GetByIdWithEquipmentAsync(int id, CancellationToken cancellationToken)
+        {
+            return await context.Characters
+                .Include(c => c.Class)
+                .Include(c => c.CharacterArticles)
+                    .ThenInclude(ca => ca.Article)
+                        .ThenInclude(a => a.Slot)
+                .Include(c => c.CharacterArticles)
+                    .ThenInclude(ca => ca.Article)
+                        .ThenInclude(a => a.Type)
+                .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
         }
 
         /// <inheritdoc />

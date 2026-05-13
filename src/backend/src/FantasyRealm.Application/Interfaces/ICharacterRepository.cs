@@ -68,6 +68,12 @@ namespace FantasyRealm.Application.Interfaces
             CancellationToken cancellationToken);
 
         /// <summary>
+        /// Returns a character by its identifier, including its full equipment with slot and type details.
+        /// Used by equipment operations and duplication to access the <see cref="Domain.Entities.CharacterArticle"/> collection.
+        /// </summary>
+        Task<Character?> GetByIdWithEquipmentAsync(int id, CancellationToken cancellationToken);
+
+        /// <summary>
         /// Returns the total number of characters in the system.
         /// </summary>
         Task<int> CountAllAsync(CancellationToken cancellationToken);

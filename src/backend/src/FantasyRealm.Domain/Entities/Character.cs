@@ -120,6 +120,42 @@ namespace FantasyRealm.Domain.Entities
         }
 
         /// <summary>
+        /// Equips an article on the character, replacing any existing article occupying the same slot.
+        /// </summary>
+        /// <param name="article">The article to equip.</param>
+        /// <exception cref="DomainException">Thrown when the article is inactive.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when article navigations are not loaded.</exception>
+        public void Equip(Article article)
+        {
+            if (!article.IsActive)
+                throw new DomainException("Seuls les articles actifs peuvent être équipés.");
+
+            if (CharacterArticles.Any(ca => ca.Article is null))
+                throw new InvalidOperationException("CharacterArticles must be loaded with Article navigation before calling Equip().");
+
+            var existing = CharacterArticles.FirstOrDefault(ca => ca.Article.SlotId == article.SlotId);
+            if (existing is not null)
+                CharacterArticles.Remove(existing);
+
+            CharacterArticles.Add(new CharacterArticle { CharacterId = Id, ArticleId = article.Id });
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        /// <summary>
+        /// Unequips an article from the character by its identifier.
+        /// </summary>
+        /// <param name="articleId">The identifier of the article to remove.</param>
+        /// <exception cref="DomainException">Thrown when the article is not currently equipped.</exception>
+        public void Unequip(int articleId)
+        {
+            var existing = CharacterArticles.FirstOrDefault(ca => ca.ArticleId == articleId)
+                ?? throw new DomainException("Cet article n'est pas équipé sur ce personnage.");
+
+            CharacterArticles.Remove(existing);
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        /// <summary>
         /// Submits the character for moderation review.
         /// </summary>
         /// <exception cref="DomainException">Thrown when the character is not in a submittable state.</exception>

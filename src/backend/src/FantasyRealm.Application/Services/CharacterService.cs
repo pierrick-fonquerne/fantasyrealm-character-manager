@@ -170,7 +170,7 @@ namespace FantasyRealm.Application.Services
             if (string.IsNullOrWhiteSpace(newName))
                 return Result<CharacterResponse>.Failure("Le nom est requis.", 400);
 
-            var character = await characterRepository.GetByIdAsync(characterId, cancellationToken);
+            var character = await characterRepository.GetByIdWithEquipmentAsync(characterId, cancellationToken);
             if (character is null)
                 return Result<CharacterResponse>.Failure("Personnage introuvable.", 404);
 
@@ -185,6 +185,9 @@ namespace FantasyRealm.Application.Services
                 return Result<CharacterResponse>.Failure("Vous avez déjà un personnage avec ce nom.", 409);
 
             var duplicate = Character.Duplicate(character, newName, userId);
+
+            foreach (var ca in character.CharacterArticles)
+                duplicate.CharacterArticles.Add(new Domain.Entities.CharacterArticle { ArticleId = ca.ArticleId });
 
             var created = await characterRepository.CreateAsync(duplicate, cancellationToken);
             return Result<CharacterResponse>.Success(CharacterMapper.ToResponse(created, character.Class.Name, true));

@@ -72,6 +72,7 @@ namespace FantasyRealm.Infrastructure
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IEmployeeManagementService, EmployeeManagementService>();
             services.AddScoped<ICharacterService, CharacterService>();
+            services.AddScoped<ICharacterEquipmentService, CharacterEquipmentService>();
             services.AddScoped<ICommentService, CommentService>();
             services.AddScoped<ICommentModerationService, CommentModerationService>();
             services.AddScoped<IContactService, ContactService>();
