@@ -39,3 +39,12 @@ export interface CharacterSummary {
 export interface NameAvailabilityResponse {
   available: boolean;
 }
+
+export interface EquippedArticleResponse {
+  articleId: number;
+  name: string;
+  slotId: number;
+  slotName: string;
+  typeId: number;
+  typeName: string;
+}
