@@ -4,6 +4,7 @@ import type {
   UpdateCharacterData,
   CharacterResponse,
   CharacterSummary,
+  EquippedArticleResponse,
   NameAvailabilityResponse,
   GalleryCharacter,
   GalleryFilters,
@@ -94,6 +95,33 @@ export const toggleShareCharacter = (
     `/characters/${id}/share`,
     token
   );
+
+export const getEquipment = (
+  id: number,
+  token: string
+): Promise<EquippedArticleResponse[]> =>
+  apiClient.getAuthenticated<EquippedArticleResponse[]>(
+    `/characters/${id}/equipment`,
+    token
+  );
+
+export const equipArticle = (
+  id: number,
+  articleId: number,
+  token: string
+): Promise<void> =>
+  apiClient.postAuthenticatedNoContent<Record<string, never>>(
+    `/characters/${id}/equipment/${articleId}`,
+    {} as Record<string, never>,
+    token
+  );
+
+export const unequipArticle = (
+  id: number,
+  articleId: number,
+  token: string
+): Promise<void> =>
+  apiClient.deleteAuthenticated(`/characters/${id}/equipment/${articleId}`, token);
 
 export const getGallery = (
   filters: GalleryFilters = {}

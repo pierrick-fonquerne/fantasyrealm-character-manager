@@ -21,6 +21,11 @@ vi.mock('../services/referenceDataService', () => ({
   fetchCharacterClasses: vi.fn().mockResolvedValue([
     { id: 1, name: 'Guerrier', description: 'Un combattant robuste.', iconUrl: null },
   ]),
+  fetchEquipmentSlots: vi.fn().mockResolvedValue([]),
+}));
+
+vi.mock('../services/articleService', () => ({
+  getArticles: vi.fn().mockResolvedValue({ items: [], totalCount: 0, page: 1, pageSize: 50, totalPages: 1 }),
 }));
 
 vi.mock('../services/characterService', () => ({
@@ -28,6 +33,9 @@ vi.mock('../services/characterService', () => ({
   updateCharacter: vi.fn(),
   submitCharacter: vi.fn(),
   checkNameAvailability: vi.fn().mockResolvedValue({ available: true }),
+  getEquipment: vi.fn().mockResolvedValue([]),
+  equipArticle: vi.fn().mockResolvedValue(undefined),
+  unequipArticle: vi.fn().mockResolvedValue(undefined),
 }));
 
 const mockCharacter: CharacterResponse = {

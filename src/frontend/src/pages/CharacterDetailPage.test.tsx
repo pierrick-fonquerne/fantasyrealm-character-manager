@@ -19,6 +19,17 @@ vi.mock('../context/AuthContext', () => ({
 
 vi.mock('../services/characterService', () => ({
   getCharacterPublic: vi.fn(),
+  getEquipment: vi.fn().mockResolvedValue([]),
+  equipArticle: vi.fn().mockResolvedValue(undefined),
+  unequipArticle: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('../services/referenceDataService', () => ({
+  fetchEquipmentSlots: vi.fn().mockResolvedValue([]),
+}));
+
+vi.mock('../services/articleService', () => ({
+  getArticles: vi.fn().mockResolvedValue({ items: [], totalCount: 0, page: 1, pageSize: 50, totalPages: 1 }),
 }));
 
 const mockCharacter: CharacterResponse = {

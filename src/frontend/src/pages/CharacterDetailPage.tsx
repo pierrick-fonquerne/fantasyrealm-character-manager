@@ -7,6 +7,7 @@ import { Header, Footer } from '../components/layout';
 import { Button, Badge, Alert } from '../components/ui';
 import { EditIcon, CLASS_ICONS } from '../components/ui/icons';
 import { CharacterPreview } from '../components/character/CharacterPreview';
+import EquipmentPanel from '../components/character/EquipmentPanel';
 import { CommentSection } from '../components/comments';
 
 const STATUS_CONFIG: Record<string, { label: string; variant: 'default' | 'info' | 'success' | 'warning' | 'error' }> = {
@@ -228,6 +229,11 @@ export default function CharacterDetailPage() {
                       <ShapeDetail label="Bouche" value={character.mouthShape} labels={MOUTH_SHAPE_LABELS} />
                     </div>
                   </section>
+
+                  {/* Equipment section (owner only) */}
+                  {character.isOwner && (
+                    <EquipmentPanel characterId={character.id} readOnly />
+                  )}
 
                   {/* Actions */}
                   <div className="mt-8 pt-6 border-t border-dark-700 flex flex-wrap gap-3">

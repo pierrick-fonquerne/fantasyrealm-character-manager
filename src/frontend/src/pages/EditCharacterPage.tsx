@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Header, Footer } from '../components/layout';
 import { CharacterForm } from '../components/character';
+import EquipmentPanel from '../components/character/EquipmentPanel';
 import { getCharacter, updateCharacter, submitCharacter } from '../services/characterService';
 import type { CreateCharacterData, CharacterResponse } from '../types';
 import { useAuth } from '../context/AuthContext';
@@ -118,16 +119,19 @@ const EditCharacterPage = () => {
           )}
 
           {!isLoading && !error && character && (
-            <CharacterForm
-              initialData={mapToFormData(character)}
-              characterId={character.id}
-              characterStatus={character.status}
-              onSaveDraft={handleSave}
-              onSubmitToModeration={canSubmitToModeration ? handleSubmitToModeration : undefined}
-              isLoadingDraft={isLoadingDraft}
-              isLoadingSubmit={isLoadingSubmit}
-              mode="edit"
-            />
+            <>
+              <CharacterForm
+                initialData={mapToFormData(character)}
+                characterId={character.id}
+                characterStatus={character.status}
+                onSaveDraft={handleSave}
+                onSubmitToModeration={canSubmitToModeration ? handleSubmitToModeration : undefined}
+                isLoadingDraft={isLoadingDraft}
+                isLoadingSubmit={isLoadingSubmit}
+                mode="edit"
+              />
+              <EquipmentPanel characterId={character.id} />
+            </>
           )}
         </div>
       </main>
